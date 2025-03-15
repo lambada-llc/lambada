@@ -1,0 +1,106 @@
+# === Bootstrapping ===
+# Tree Calculus "imports" and defines no data types.
+# It's crisp specification only talks about (unlabeled) trees and how
+# they should be rewritten until we are left with a value (binary tree).
+
+# 0. This coding environment here provides conveniences, no additional logic.
+
+# How we encode data as such binary trees is entirely up to us.
+# Note that the dialect in this environment here merely suggests
+# some conventions for booleans, numbers and strings, and offers us compact
+# notation that it expands to trees. But it provides no semantics:
+# What is addition, how to branch based on a boolean, how to concatenate
+# strings, what does it mean for a string to be empty?
+
+# Example: Nothing *happens* here, we're only leaning into the environment's
+# suggested conventions and notation to construct a fairly large tree, conveniently.
+△ 72 $ △ 101 "llo"
+# Conversely, the environment finds that the tree we created here fits its
+# convention for strings and thus renders it back to us as such, compactly.
+# But if no convention it knows about fits, it only shows us the full tree:
+△ "hello"
+
+# None of the above is Tree Calculus in action. No reduction rules have been applied, yet.
+
+# 1. Modeling booleans
+# What trees we decide to assign to mean "false" and "true" is up to us.
+# But the following convention turns out useful in practice:
+false = △
+true = △ △
+# The following function definition leans on the rewrite rules of Tree Calculus
+# for the first time, to implement branching based on a boolean condition.
+if = \condition \then \else △ (△ else (△ △ then)) △ condition
+if true 1 2
+if false 1 2
+# Further typical operations on booleans:
+not = \b if b false true
+and = △ (△ (\x false) (\_ \x x)) △
+or = △ (△ (\x x) (\_ \x true)) △
+# Note that these operations are also just binary trees:
+or
+and
+
+# 2. What about Church or Scott encodings?
+# This works of course. Here are Church numerals and two ways to define the number three that are extensionally equal (they *behave* the same when applied to an "f" and an "x"):
+zero = \f \x x
+succ = \n \f \x f (n f x)
+three1 = succ $ succ $ succ zero
+three2 = \f \x f $ f $ f x
+three1
+three2
+# But we can lean into trees for a more canonical encoding. Benefits:
+# - Identical data implies identical trees and vice versa.
+# - Faster to operate on in practice (but asymptotically the same).
+zero = △
+succ = \n △ n
+three3 = succ $ succ $ succ zero
+three4 = three1 succ zero
+three3
+three4
+# Note that [zero] and [succ] are both "△" (modulo eta-expansion), but -- lacking a type system -- rely
+# on appropriate use (that is, "succ" expects an argument) in order to be useful for code readability.
+
+# 3. More advanced example: unsigned int (32bit) and common operations
+# Helpers
+triage = \a \b \c △ (△ a b) c
+match_bool = \ot \of triage of (\_ ot) △
+match_list = \oe \oc triage oe △ oc
+match_pair = \op triage △ △ op
+fix = (\m \wait \f m (\x f (wait m x))) (\x x x) (\a \b \c △ (△ a) (△ △ c) b)
+add3bit =
+  match_bool
+    (match_bool
+       (\c △ c true)
+       (\c △ (not c) c))
+    (match_bool
+       (\c △ (not c) c)
+       (\c △ c false))
+foldr = \x \f fix $ \self match_list x (\hd \tl f hd (self tl))
+foldl = \f fix $ \self match_list (\x x) (\hd \tl \x self tl (f x hd))
+map = \f foldr [] (\e \a △ (f e) a)
+reverse = \l foldl (\a \b △ b a) l []
+as_bitstring = \n reverse $ map (\b △ b $ △ false $ △ false $ △ false $ △ true $ △ true △) n
+
+# Encoding 32bit ints as lists of 32 booleans (△ BOOL $ △ BOOL $ ... $ △), LSB first.
+zero = (\f (f $ f f f (△ false)) △) (\f \x f (f x))
+bitwise_complement = map not
+# Unchecked arithmetic operations (overflow without warning)
+succ = fix $ \self match_pair (match_bool (\tl △ false $ self tl) (△ true))
+_add = fix $ \self \a \b \c match_pair (\a \al match_pair (\b \bl match_pair (\r \c △ r $ self al bl c) $ add3bit a b c) b) a
+add = \a \b _add a b △
+sub = \a \b add a (succ $ bitwise_complement b)
+mul = \a \b foldr zero (\h \s add (△ false s) (match_bool b zero h)) a
+
+# Playground
+n2 = succ $ succ zero
+n3 = succ n2
+n5 = add n2 n3
+n10 = mul n2 n5
+as_bitstring n10
+add n10 $ sub n3 n10 # silently overflows (twice)
+
+# Checking overflow semantics of multiplication (e.g. compare to https://dotnetfiddle.net/7oqHCJ)
+square = \x mul x x
+x = square $ square $ square $ square $ square n3
+x
+square x

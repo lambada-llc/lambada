@@ -1,0 +1,52 @@
+# === Size and efficiency of example functions ===
+y = (\m \wait \f wait m (\x f (wait m x))) (\x x x) (\a \b \c △ (△ a) (△ △ c) b)
+triage = \a \b \c △ (△ a b) c
+compose = \f \g \x f $ g x
+succ = y $ \self triage 1 △ (triage (△ $ △ △) (\_ \tl △ △ $ self tl) △)
+size = \x (y $ \self \x compose succ $ triage (\x x) self (\x \y compose (self x) (self y)) x) x 0
+foldr = \f \x y $ \self triage x △ (\hd \tl f hd (self tl))
+map = \f foldr (\e \a △ (f e) a) []
+filter = \f foldr (\e \a triage (\x x) (\_ △ e) △ (f e) a) []
+length = foldr (\_ succ) 0
+concat = \a \b foldr △ b a
+let_pair = \p \op triage △ △ op p
+count_eval_steps = \a \b triage △ △ (\_ \cost cost 0) $ (y $ \self
+    triage
+      (\z △ (△ z) (\x x))
+      (\y \z △ (△ y z) (\x x))
+      (triage
+        (\y \z △ y succ)
+        (\x \y \z
+          let_pair (self x z) $ \r1 \cost1
+          let_pair (self y z) $ \r2 \cost2
+          let_pair (self r1 r2) $ \r \cost
+          △ r (compose (compose cost1 cost2) (compose cost succ))
+        )
+        (\w \x \y \z
+          triage
+            (△ w succ)
+            (\a
+                let_pair (self x a) $ \r \cost
+                △ r (compose cost succ))
+            (\a \b
+                let_pair (self y a) $ \r \cost1
+                let_pair (self r b) $ \r \cost2
+                △ r (compose (compose cost1 cost2) succ))
+            z))) a b
+
+# Size and efficiency of [succ], calculating the successor of a natural number (encoded as a list of bits)
+size succ
+count_eval_steps succ 8 # requires just flipping the LSB from 0 to 1
+count_eval_steps succ 7 # requires flipping 3 bits from 1 to 0 and appending another 1
+
+# Size and efficiency of [length] (which makes use of [succ], analyzed above)
+size length
+count_eval_steps length ""
+count_eval_steps length "a"
+count_eval_steps length "aaaaaaaaaa"
+
+# Some other functions
+filter_odds = filter $ triage △ △ (△ △)
+size filter_odds
+size size
+size count_eval_steps

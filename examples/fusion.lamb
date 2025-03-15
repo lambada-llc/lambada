@@ -1,0 +1,162 @@
+# === Optimization: Fusion ===
+# Chained calls to [map], [filter] or [filter_map] can all be fused into a single call of [filter_map]
+
+# Basics helpers
+_ = △
+id = \x x
+id2 = \a \b \c △ (△ a) (△ △ c) b
+compose = \f \g \x f (g x)
+let = \x \f f x
+fix = let (\x x x) $ \m
+      \f id2 m (\x f (id2 m x))
+# - Reflection
+triage = \a \b \c △ (△ a b) c
+match_bool = \ot \of triage of (\_ ot) △
+match_list = \oe \oc triage oe △ oc
+match_pair = \op triage △ △ op
+match_option = \on \os triage on os _
+# - Option
+none = △
+some = \x △ x
+# Note that [none] and [some] are both "△" (modulo eta-expansion), but -- lacking a type system -- rely
+# on appropriate use (that is, "some" expects an argument) in order to be useful for code readability.
+map_option = \f triage △ (\x △ $ f x) _
+first_some = \a \b match_option b some a
+compose_option = \f \g \x triage △ f _ $ g x
+# - Booleans
+false = △
+true = △ △
+and = match_bool id (\_ false)
+not = match_bool false true
+# - Natural numbers
+succ = fix $ \self match_list 1 (match_bool (\tl △ false $ self tl) (△ true))
+# - Lists
+foldr = \f \x fix $ \self match_list x (\hd \tl f hd (self tl))
+map = \f foldr (\e \a △ (f e) a) []
+filter = \f foldr (\e \a triage id (\_ △ e) △ (f e) a) []
+filter_map = \f foldr (\e \a triage id △ △ (f e) a) []
+# - Polymorphic helpers
+size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
+equal = fix $ \self triage
+    (triage true (\_ false) (\_ \_ false))
+    (\ax triage false (self ax) (\_ \_ false))
+    (\ax \ay triage false (\_ false) (\bx \by and (self ax bx) (self ay by)))
+# - Addition
+zip = fix $ \self \l1 \l2
+    (match_list
+        (\l2 map (\item2 △ △ item2))
+        (\h1 \t1 match_list (map (\item1 △ item1 △)) (\h2 \t2 △ (△ h1 h2)))
+        l1 l2)
+    (match_list
+        (\l2 l2)
+        (\h1 \t1 match_list (△ h1 t1) (\h2 \t2 self t1 t2))
+        l1 l2)
+add_3bits =
+  match_bool
+    (match_bool
+        (\c △ c true)
+        (\c △ (not c) c))
+    (match_bool
+        (\c △ (not c) c)
+        (\c △ c false))
+_add = fix $ \self
+      match_list
+        (match_bool (△ true △) false)
+        (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (add_3bits c) hd))
+add = \a \b _add (zip a b) false
+
+
+# Helpers for program analysis
+# - Given ref1, ref2 and x of identical shape except for some minimal subtree, returns the corresponding subtree of x.
+find_mismatch = fix $ \self \ref1 \ref2 \x
+  triage
+  (triage (triage (△ △ △) (\_ △) (\_ \_ △) x) (\_ △ x) (\_ \_ △ x) ref2)
+  (\r1 triage x (\r2 triage △ (\x self r1 r2 x) (\_ \_ △) x) (\_ \_ △ x) ref2)
+  (\r1a \r1b triage x (\_ △ x) (\r2a \r2b triage △ (\_ △) (\xa \xb triage △ △ (\_ \_ self r1b r2b xb) (self r1a r2a xa)) x) ref2)
+  ref1
+# - Computes the inverse of [f] on [res].
+#   Silly, because it only works if [f x] contains [x] entirely untouched, i.e. does not (partially) reduce it.
+#   But that's the case for [map], [filter], etc
+silly_inverse = \f \res find_mismatch (f △) (f $ △ △) res
+# - Detects compositions of shape "△ (△ (△ △ f)) g". Returns a fork "△ f g" on success and a leaf "△" otherwise.
+both = \a \b match_option none (\b match_option none (\a △ $ △ a b) a) b
+is_leaf = triage (some △) (\_ none) (\_ \_ none)
+is_stem = \pred triage none pred (\_ \_ none)
+is_fork = \pred1 \pred2 triage none (\_ none) (\a \b both (pred1 a) (pred2 b))
+is_composition = \x triage △ (triage _ _ (\a \b △ (triage _ _ (\a \b b) a) b)) _ 
+                  $ is_fork (is_stem $ is_fork is_leaf some) some x
+# - Attempt to extract a [filter_map] argument from various list processing functions.
+extract = \f
+  let (silly_inverse map f) $ \map_arg
+  let (map_option (\f \x △ $ f x) map_arg) $ \map_arg
+  let (silly_inverse filter f) $ \filter_arg
+  let (map_option
+        (\f # cut out potential [not] in [filter_arg]
+          let (is_composition f) $ \maybe_not_dot
+          let (triage △ _ (\maybe_not \other match_bool (△ other) △ $ equal maybe_not not) maybe_not_dot) $ \maybe_not_dot
+          match_option
+            (\x match_bool (△ x) △ $ f x)
+            (\f \x match_bool △ (△ x) $ f x)
+            maybe_not_dot
+        )
+  filter_arg) $ \filter_arg
+  let (silly_inverse filter_map f) $ \filter_map_arg
+  first_some map_arg $ first_some filter_arg filter_map_arg
+
+# Program analysis: Fuse list processing steps
+optimize = fix $ \self \f
+  let (is_composition f) $ triage f _ $ \a \b
+  let (self a) $ \a
+  let (self b) $ \b
+  let (extract a) $ \fa
+  let (extract b) $ \fb
+  let (both fa fb) $ \fs
+  triage (compose a b) (triage _ _ $ \fa \fb filter_map (compose_option fa fb)) _ fs
+
+
+# Helper for tests: Measure expression size and counting evaluator
+let_pair = \p \op triage _ _ op p
+count_eval_steps = \a \b triage _ _ (\_ \cost cost 0) $ (fix $ \self
+    triage
+      (\z △ (△ z) id)
+      (\y \z △ (△ y z) id)
+      (triage
+        (\y \z △ y succ)
+        (\x \y \z
+          let_pair (self x z) $ \r1 \cost1
+          let_pair (self y z) $ \r2 \cost2
+          let_pair (self r1 r2) $ \r \cost
+          △ r (compose (compose cost1 cost2)(compose cost succ))
+        )
+        (\w \x \y \z
+          triage
+            (△ w succ)
+            (\a
+                let_pair (self x a) $ \r \cost
+                △ r (compose cost succ))
+            (\a \b
+                let_pair (self y a) $ \r \cost1
+                let_pair (self r b) $ \r \cost2
+                △ r (compose (compose cost1 cost2) succ))
+            z))) a b
+
+# Test scenario: Drop spaces and convert to lower case
+upper_to_lowercase_char = \c add 32 c
+upper_to_lowercase = map upper_to_lowercase_char
+is_space = \c equal ' ' c
+drop_spaces = filter (\c not $ is_space c)
+
+f = \str upper_to_lowercase (drop_spaces str)
+f_opt = optimize f
+arg = "HELLO WORLD"
+
+
+# - sanity check
+f arg
+f_opt arg
+# - optimized program requires ~3% reduction steps (majority of time is spent in [equal] and [add])
+count_eval_steps f arg
+count_eval_steps f_opt arg
+# - optimized program is ~5% smaller (majority of size is spent on partially evaluated [equal 32] and [add 32])
+size f
+size f_opt

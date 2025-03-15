@@ -1,0 +1,74 @@
+# Helpers
+false = △
+true = △ △
+y = (\m \wait \f wait m (\x f (wait m x))) (\x x x) (\a \b \c △ (△ a) (△ △ c) b)
+triage = \a \b \c △ (△ a b) c
+match_bool = \of \ot triage of (\_ ot) △
+foldr = \f \x y $ \self triage x △ (\hd \tl f hd (self tl))
+map = \f foldr (\e \a △ (f e) a) []
+concat = \a \b foldr △ b a
+concats = foldr concat ""
+join = triage [] △ (\hd \tl triage △ △ (\_ \x x) $ foldr (\e \a concat "," $ concat e a) "" $ △ hd tl)
+equal = y $ \self triage
+    (triage true (\_ false) (\_ \_ false))
+    (\ax triage false (self ax) (\_ \_ false))
+    (\ax \ay triage false (\_ false) (\bx \by triage △ (\_ self ax bx) △ (self ay by)))
+
+# === Generating configuration ===
+# It is common to use code to generate configurations. Benefits
+# include the ability to *compute* parts of the configuration rather
+# than hard-coding it, and compactness in cases where the configuration
+# has repetition or patterns.
+# The benefit of Tree Calculus is that the generating code can be
+# executed anywhere, making the configuration easy to share and access,
+# for instance in a heterogeneous system using various platforms.
+
+# Here, we model (a simplified version of) JSON and make an example
+# configuration that depends on a parameter. See portability demos
+# about how one would be able to evaluate that configuration in
+# environments besides this playground here.
+JSON = Null | Bool b | String s | Array a | Object list_of_pairs_of_string_and_json # skipping numbers here
+ctrl_to_escape = (\s \e \d \c \b \a concat "\u00" $ △ (△ e 24) $
+  s (△ (△ a $ △ b $ △ c $ 6) △) (s (s (s "8" "9") (s "a" "b")) (s (s "c" "d") (s "e" "f")) c b a) d
+  ) match_bool
+is_ctrl_char = triage (\on_ctrl \on_other on_ctrl false false false false false) △ $ 
+            \a triage (\on_ctrl \on_other on_ctrl false false false false a) △ $
+            \b triage (\on_ctrl \on_other on_ctrl false false false b a) △ $
+            \c triage (\on_ctrl \on_other on_ctrl false false c b a) △ $
+            \d triage (\on_ctrl \on_other on_ctrl false d c b a) △ $
+            \e triage (\on_ctrl \on_other on_ctrl e d c b a) △ $
+            \_ \_ (\on_ctrl \on_other on_other)
+quote_string = \s concats $ map (\c is_ctrl_char c ctrl_to_escape $ match_bool (match_bool [c] [92,92] (equal 92 c)) [92,34] (equal 34 c)) s
+quote_string = \s concats [[34],quote_string s,[34]]
+to_string = y $ \self \json json
+  "null"
+  (triage "false" (\_ "true") △)
+  quote_string
+  (\a concats ["[", join $ map self a, "]"])
+  (\a concats ["{", join $ map (triage △ △ (\key \value concats [quote_string key,":",self value])) a, "}"])
+
+# Example generated config for Google App Engine (see bottom of https://cloud.google.com/appengine/docs/admin-api/creating-config-files).
+# Note how generation rules out certain kinds of bugs, from primitive ones like syntax errors
+# (generated JSON would never miss a closing "}" or leave a trailing "," in an array for instance)
+# to harder to spot copy-paste errors (e.g. the use of [rel_path] both as key and path to fetch the resource is
+# guaranteed, while it is easy to imagine updating one of the two if a new [files] entry was created manually)
+generate_file_entry = \bucket_id \rel_path
+    △ rel_path $ Object [
+      △ "sourceUrl" $ String $ concats [ "https://storage.googleapis.com/", bucket_id, "/example-application/", rel_path ]
+    ]
+generate_app_config = \bucket_id Object [
+    △ "deployment" $ Object [
+      △ "files" $ Object [
+        generate_file_entry bucket_id "example-resource-file1",
+        generate_file_entry bucket_id "images/example-resource-file2"
+      ]
+    ],
+    △ "id" $ String "v1",
+    △ "handlers" $ Array [ Object [
+      △ "urlRegex" $ String "/.*",
+      △ "script" $ Object [ △ "scriptPath" $ String "example-python-app.py" ]
+    ] ],
+    △ "runtime" $ String "python27",
+    △ "threadsafe" $ Bool true
+  ]
+to_string $ generate_app_config "my_bucket123"

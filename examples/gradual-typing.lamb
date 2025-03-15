@@ -1,0 +1,361 @@
+# === Type System Discussion ===
+# This demo environment has no built-in type system.
+# We build a simple one from scratch and illustrate its use with some examples,
+# but proving soundness (progress/preservation) would be beyond this demo.
+# It may well turn out unsound or the type checker buggy -- but that is orthogonal
+# to Tree Calculus or the points this demo tries to make:
+# - One can write a type checker as a function "has_type :: expression -> type -> bool".
+# - Static typing roughly amounts to calling this type checker on the entire program, before running it.
+# - Dynamic typing roughly amounts to calling the type checker during execution, where necessary or desired.
+# - The boundary between static and dynamic dissolves, it is entirely up to the developer where and when to add checks.
+# - Gradual typing with "pay-as-you-go" overhead (as per "Gradual typing for functional languages", Siek & Taha 2006)
+#   would require combining this with a program analysis ("just" another function!) that elides calls
+#   to the type checker that can be inferred to always hold, given prior checks.
+
+# Prerequisites (type system sketch starts at line 171)
+# - basics
+m = \x x x
+wait = \a \b \c △ (△ a) (△ △ c) b # identity that waits for [c] before applying [a] to [b]
+wait2 = \a \b wait (wait a b)
+_y = \id \f m (\x f (id m x))
+y = _y wait
+y2 = _y wait2
+triage = \a \b \c △ (△ a b) c
+_ = △
+let = \x \f f x
+# - pair
+mkpair = △
+match_pair = \op triage _ _ op
+# - bool
+true = △ △
+false = △
+match_bool = \ot \of triage of (\_ ot) (\_ \_ ot)
+if = \b \ot \of match_bool ot of b
+not = match_bool false true
+and = triage (\x false) (\_ \x x) _
+or = triage (\x x) (\_ \x true) _
+# - list
+match_list = \oe \oc triage oe _ oc
+map = \f y $ \self match_list []
+           $ \hd \tl mkpair (f hd)
+           $ self tl
+filter = \f y $ \self match_list []
+              $ \hd \tl match_bool (△ hd) (\x x) (f hd)
+              $ self tl
+_foldl = \f y $ \self match_list
+          (\x x)
+          (\hd \tl \x self tl (f x hd))
+foldl = \f \x \l _foldl f l x
+_foldr = \x \f y $ \self match_list
+           x
+           (\hd \tl f (self tl) hd)
+foldr = \f \x \l _foldr x f l
+concat = y $ \self match_list (\k k) (\h \tl \k mkpair h $ self tl k)
+concats = foldr (\a \b concat b a) ""
+any = \f \l match_list false (\_ \_ true) $ filter f l
+all = \f \l not $ any (\x not $ f x) l
+zip = y $ \self \l1 \l2
+    (match_list
+        (\l2 map (\item2 △ △ item2))
+        (\h1 \t1 match_list (map (\item1 △ item1 △)) (\h2 \t2 △ (△ h1 h2)))
+        l1 l2)
+    (match_list
+        (\l2 l2)
+        (\h1 \t1 match_list (△ h1 t1) (\h2 \t2 self t1 t2))
+        l1 l2)
+# - natural numbers
+add3bit =
+  match_bool
+    (match_bool
+       (\c mkpair c true)
+       (\c mkpair (not c) c))
+    (match_bool
+       (\c mkpair (not c) c)
+       (\c mkpair c false))
+is_zero = \n not $ any (\x x) n
+canonical = foldr (\acc \h match_bool (△ h acc) 0 (or acc h)) 0
+_add = y $ \self
+     match_list
+        (match_bool (mkpair true △) false)
+        (\hd \tl
+         \c match_pair
+                 (\s \c mkpair s (self tl c))
+                 (match_pair (add3bit c) hd)
+        )
+add = \a \b _add (zip a b) false
+_sub = y $ \self
+     match_list
+        (\c false)
+        (\hd \tl
+         \c match_pair
+                 (\s \c mkpair s (self tl c))
+                 (match_pair (\a \b add3bit c a (not b)) hd)
+        )
+sub = \a \b canonical $ _sub (zip a b) true
+succ = add 1
+double = \a match_list 0 (\_ \_ mkpair false a) a
+mul = \a \b foldr (\s \h add (double s) (match_bool b 0 h)) 0 a
+is_lte = \a \b foldl
+    (\acc match_pair
+            (match_bool
+                (match_bool acc false)
+                (match_bool true acc))
+    )
+    true
+    (zip a b)
+_divmod = y2 $ \self \big
+    match_list
+        (\small 0)
+        (\_ \big \small mkpair small (self big (double small)))
+        big
+divmod = \a \b foldr
+    (\acc match_pair
+        (\div \mod 
+            \b match_bool
+                (\div \mod \b mkpair (succ div) (sub mod b))
+                (\div \mod \b mkpair div mod)
+                (is_lte b mod)
+                (double div)
+                mod
+                b
+        )
+        acc
+    )
+    (mkpair 0 a)
+    (_divmod a b)
+_n_to_str = y $ \self \n \acc
+    match_bool 
+        (\acc acc)
+        (\acc match_pair
+            (\div \mod self div (mkpair (add 48 mod) acc))
+            (divmod n 10)
+        )
+        (is_zero n)
+        acc
+n_to_str = \n match_bool "0" (_n_to_str n "") (is_zero n)
+# - other
+equal = y $ \self triage
+    (triage true (\_ false) (\_ \_ false))
+    (\ax triage false (self ax) (\_ \_ false))
+    (\ax \ay triage false (\_ false) (\bx \by and (self ax bx) (self ay by)))
+match_option = \on \os \o triage on os _ o
+# - small number (0 = △, n+1 = △ n)
+sn0 = △
+sn1 = △ sn0
+sn2 = △ sn1
+sn_to_n = y $ \self triage 0 (\pred succ (self pred)) _
+sn_add = \a y $ \self triage a (\pred △ $ self pred) _
+sn_sub = y $ \self \a \b triage (△ a) (\pb triage △ (\pa self pa pb) _ a) _ b
+sn_lt = \a \b match_option true (\_ false) $ sn_sub a b
+sn_to_intro = y $ \self triage "" (\n concats ["∀v", n_to_str $ sn_to_n n, ". ", self n]) _
+
+
+# Type System sketch
+Type = T               # △ :: T
+     | App t1 t2       # a :: A   and   b :: B   =>  a b :: App A B
+     | Or t1 t2        # x :: A   or    x :: B   =>  x :: Or A B
+     | Fun sn t1 t2    # "sn" is number of variables bound by "t1"
+     | Var sn          # "sn" is zero-based De Bruijn index
+fun = Fun sn0
+fun_wildcard = Fun sn1 (Var sn0)
+t_bool = Or T (App T T)
+t_pair = \a \b App (App T a) b
+
+type_of = y $ \self
+              triage
+                T
+                (\x App T (self x))
+                (\x \y App (App T (self x)) (self y))
+type_to_str = y $ \self \ty ty
+              "△"
+              (\x \y concats ["(", self x, " ", self y, ")"])
+              (\x \y concats ["(", self x, " || ", self y, ")"])
+              # (\x \y "(Or ...)")
+              (\sn \x \y concats ["(", sn_to_intro sn, self x, " -> ", self y, ")"])
+              (\sn concat "v" $ n_to_str (sn_to_n sn))
+
+# Type checker, conservative under-approximation of what would be permitted by (omitted) inductive rules
+offset_vars = \sn y $ \self \ty \sm ty
+  T
+  (\t1 \t2 App (self t1 sm) (self t2 sm))
+  (\t1 \t2 Or (self t1 sm) (self t2 sm))
+  (\sn \t1 \t2 (\sm Fun sn (self t1 sm) (self t2 sm)) $ sn_add sn sm)
+  (\sx Var $ match_bool sx (sn_add sx sn) $ sn_lt sx sm)
+offset_vars = \sn \ty offset_vars sn ty △
+
+subst = y $ \self \ty \var \subst ty
+  T
+  (\x \y App (self x var subst) (self y var subst))
+  (\x \y Or (self x var subst) (self y var subst))
+  (\sn \x \y
+    let (sn_add sn var) $ \var 
+    let (offset_vars sn subst) $ \subst 
+    Fun sn (self x var subst) (self y var subst))
+  (\sn match_bool subst (Var sn) $ equal sn var)
+# var:sn -> subst:ty -> △:ty
+subst = \var \subs \ty subst ty var subs
+
+_issubtypeOfOr = \self \a \b1 \b2 or (self a b1) (self a b2)
+_issubtypeAppHelper = \self \ax \ay \b self ax (fun ay b)
+_issubtypeTriageWildcardVar = \self \a \b \c \y \var
+  and (and
+    (self a (subst var T y))
+    (self b (fun_wildcard (subst var (App T (Var sn0)) y))))
+    (self c (fun_wildcard (fun_wildcard (subst var (App (App T (Var sn1)) (Var sn0)) y))))
+
+_isT = \ty ty true false false false false
+_issubtypeTriageHelper2 = \a \b \c \this \y \by  \bw \bx \self \sn1 \sn2 bw
+                               (\self self (App (App (offset_vars sn2 c) bx) by) y)
+                               (\b1 \b2 \self
+                                 if (and (_isT b1) (_isT b2))
+                                 (this bx y)
+                                 false)
+                               (\b1 \b2 \self false)
+                               (\sn \b1 \b2 \self false)
+                               (\sn false)
+                             self
+_issubtypeTriageHelper1 = \a \b \c \this \y  \bx \by \self \sn1 \sn2 bx
+                             (\self \sn1 \sn2 self (App (offset_vars (sn_add sn1 sn2) b) by) y)
+                             (_issubtypeTriageHelper2 a b c this y by)
+                             (\b1 \b2 \self \sn1 \sn2 false)
+                             (\sn \b1 \b2 \self \sn1 \sn2 false)
+                             (\sn \self \sn1 \sn2 false)
+                           self sn1 sn2
+_issubtypeTriageHelper = \self \sn1 \sn2 \a \b \c y $ \this \x \y x
+                           (\self \sn1 \sn2 self (offset_vars (sn_add sn1 sn2) a) y)
+                           (_issubtypeTriageHelper1 a b c this y)
+                           (\b1 \b2 \self \sn1 \sn2 and (this b1 y) (this b2 y))
+                           (\_sn \_b1 \_b2 \self \sn1 \sn2 false)
+                           (\sn \self \sn1 \sn2 _issubtypeTriageWildcardVar self a b c y sn)
+                        self sn1 sn2
+_issubtypeTHelper = \sn1 \sn2 \b3 \b4 \self \b1 \b2 b1
+                      (\self \sn2 self (offset_vars sn2 b2) b4)
+                      (\bx \by \self \sn2 bx
+                        (\self \sn2 self (App (App (offset_vars (sn_add sn2 sn1) by) b3) (App (offset_vars sn2 b2) b3)) b4)
+                        (\bw \bx \self \sn2 bw
+                          (\self _issubtypeTriageHelper self sn1 sn2 bx by b2 b3 b4)
+                          (\bx \by \self false)
+                          (\b1 \b2 \self false)
+                          (\sn5 \b1 \b2 \self false)
+                          (\sn \self false)
+                        self)
+                        (\b1 \b2 \self \sn2 false)
+                        (\sn4 \b1 \b2 \self \sn2 false)
+                        (\sn \self \sn2 false)
+                      self
+                      sn2)
+                      (\b1 \b2 \self \sn2 false)
+                      (\sn3 \b1 \b2 \self \sn2 false)
+                      (\sn \self \sn2 false)
+                    self
+                    sn2
+_issubtypeTHelper = \self \sn0 \b1 \b2 b2
+                      (\self false)
+                      (\bx \by \self and (self T bx) (self b1 by))
+                      (\bx \by \self _issubtypeOfOr self T (Fun sn0 b1 bx) (Fun sn0 b1 by))
+                      (\sn1 \b2 \b3 \self b3
+                        (\self \sn1 false)
+                        (\bx \by \self \sn1 and (self T (fun (offset_vars sn1 b1) bx)) (self b2 by))
+                        (\b1 \b2 \self \sn1 false)
+                        (\sn2 \b3 \b4 \self \sn1 _issubtypeTHelper sn1 sn2 b3 b4 self b1 b2)
+                        (\sn \self \sn1 false)
+                      self
+                      sn1)
+                      (\sn \self false)
+                    self
+_issubtypeT = \self \b b
+                  true
+                  (\bx \by false)
+                  (_issubtypeOfOr self T)
+                  (_issubtypeTHelper self)
+                  (\sn false)
+_issubtypeApp = \ax \ay \self \b or (_issubtypeAppHelper self ax ay b) $ b
+                  false
+                  (\bx \by and (self ax bx) (self ay by))
+                  (_issubtypeOfOr self (App ax ay))
+                  (\sn \b1 \b2 false)
+                  (\sn false)
+_issubtypeOr = \a1 \a2 \self \b and (self a1 b) (self a2 b)
+_maybeInstantiate = \sn \x \y \other
+                let (mkpair x y) $ \noinst
+                x
+                  noinst
+                  (\x \y noinst)
+                  (\x \y noinst)
+                  (\sn \x \y noinst)
+                  (\v match_bool (mkpair other (subst v other y)) noinst $ sn_lt v sn)
+_issubtypeFun = \sna \a1 \a2 \self \b b
+                  (\self \a1 \a2 false)
+                  (\bx \by \self \a1 \a2 false)
+                  (\b1 \b2 \self \a1 \a2 _issubtypeOfOr self (Fun sna a1 a2) b1 b2)
+                  (\snb \b1 \b2 \self \a1 \a2
+                    let (_maybeInstantiate sna a1 a2 b1) $ match_pair $ \a1 \a2
+                    and (self b1 a1) (self a2 b2))
+                  (\sn \self \a1 \a2 false)
+                self
+                a1 a2
+_issubtypeVarHelper = \snb \b1 \b2 \self \sna b2
+                  (\self false)
+                  (\bx \by \self and (self (Var (sn_add sna snb)) bx) (self b1 by))
+                  (\bx \by \self false)
+                  (\sn \bx \by \self false)
+                  (\sn \self false)
+                  self
+is_subtype = y2 $ \self \a \b
+                a
+                  _issubtypeT
+                  _issubtypeApp
+                  _issubtypeOr
+                  _issubtypeFun
+                  (\sna \self \b b
+                    (\self \sna false)
+                    (\bx \by \self \sna false)
+                    (\b1 \b2 \self \sna false)
+                    _issubtypeVarHelper
+                    (\snb \self \sna equal sna snb)
+                  self
+                  sna)
+                self
+                b
+has_type = \x \ty is_subtype (type_of x) ty
+
+# Demo scenario
+# 1. "static typing" of various top-level functions and values
+id = \x x
+t_id = Fun sn1 (Var sn0) (Var sn0) # a -> a
+has_type id t_id # a high-level language could have syntactic sugar for this, e.g. "id :: a -> a"
+const = \x \y x
+t_const = Fun sn1 (Var sn0) (Fun sn1 (Var sn0) (Var sn1)) # a -> b -> a
+has_type const t_const
+t_add3bit = fun t_bool (fun t_bool (fun t_bool (t_pair t_bool t_bool))) # bool -> bool -> bool -> bool * bool
+has_type add3bit t_add3bit
+t_if = fun t_bool (Fun sn1 (Var sn0) (fun (Var sn0) (Var sn0))) # bool -> a -> a -> a
+has_type if t_if
+some_bool = true
+has_type some_bool t_bool
+
+# 2. nonsense does not typecheck
+has_type id t_const
+has_type const t_id
+has_type 42 t_bool
+has_type 42 t_id
+
+# 3. "dynamic typing" in "add3bit", checking arguments at runtime
+add3bit 1 const 3 # without checks, and assuming no static typing saved us from this: nonsensical arguments result in odd behavior (expected: pair of booleans)
+add3bit_safe = # err out by returning "△" for nonsensical arguments
+   \a \b \c if (all (\x has_type x t_bool) [a,b,c])
+  (add3bit a b c)
+  △
+add3bit_safe 1 const 3 # = △
+add3bit_safe true true false # = original result = △ false true
+# In principle, we would now be able to show that "add3bit_safe" has a sane return type for arbitrary arguments,
+# but the demo type checker is too weak to derive this ("has_type" is too big to reason about at once).
+t_or_error = \ty Or T ty
+t_add3bit_safe = fun_wildcard $ fun_wildcard $ fun_wildcard $ t_or_error $ t_pair t_bool t_bool # a -> b -> c -> (bool * bool)?
+# has_type add3bit_safe t_add3bit_safe # type checker too weak
+
+# Conversely, at call sites that are known to only ever call "add3bit_safe" with boolean arguments,
+# one could lean on static analysis to elide the extra checks and effectively rewrite "add3bit_safe"
+# back to "add3bit", resulting in pay-as-you-go overhead due to runtime checks: The further "left"
+# (from function bodies towards preconditions, from function definitions towards call sites, etc)
+# we introduce checks, the more runtime checks can be elided; with fully static checking at the extreme.

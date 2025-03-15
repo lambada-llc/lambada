@@ -1,0 +1,123 @@
+# === Serializing programs ===
+# Every value in Tree Calculus is an (unlabeled) binary tree.
+# Functions/programs are values like any other kind of data.
+# Since our communication channels tend to speak in terms of
+# bits/bytes rather than trees, we demonstrate how to encode
+# and decode expressions as such.
+
+# Helpers
+_ = △
+false = △
+true = △ △
+let = \x \f f x
+fix = let (\x x x) $ \m
+    let (\a \b \c △ (△ a) (△ △ c) b) $ \wait
+    \f wait m (\x f (wait m x))
+triage = \a \b \c △ (△ a b) c
+foldr = \f \x fix $ \self triage x △ (\hd \tl f hd (self tl))
+foldl = \f fix $ \self \x triage x △ (\hd \tl self (f x hd) tl)
+map = \f foldr (\e \a △ (f e) a) []
+concat = \a \b foldr △ b a
+concats = foldr concat ""
+
+# 0. Example values
+example_number = 42
+example_string = "Hello"
+example_program = \first_name \last_name concats [example_string, " ", first_name, " ", last_name, "!"]
+example_program "Jane" "Doe"
+
+# 1. Bitstring from pre-order traversal
+bitstr_encode = \x (fix $ \self triage (△ true) (\x \rest △ false $ △ true $ self x rest) (\x \y \rest △ false $ △ false $ △ true $ self x $ self y rest)) x △
+bitstr_decode = \str triage △ △ (\x \_ x) $ foldr (triage (triage △ △ (\a triage △ △ (\b △ (a b)))) (\_ △ △) △) [] str
+# Demo
+bitstr_decode $ bitstr_encode example_number
+bitstr_encode example_program # note: lists of bits are interpreted and rendered as a natural number by this environment
+map (\bit △ bit 24) $ bitstr_encode example_program # rendering the bits as a string instead
+(bitstr_decode $ bitstr_encode example_program) "Max" "Mustermann"
+
+# 2. S-expression, balanced parentheses (less useful for transmission, but e.g. relevant in the context of succinct tree representations, see for instance https://ae.iti.kit.edu/download/gog10advantages.pdf)
+bps_encode = \x (fix $ \self \x \rest △ '(' $ triage (\x x) self (\x \y \rest self x $ self y rest) x $ △ ')' rest) x △
+bps_encode example_program
+bps_decode = \x
+  let (map (triage △ △ (\hd \tl hd)) x) $ \bits
+  let (foldl (\s \b triage (△ △) (\_ triage △ △ $ \hd2 \tl let tl $ triage △ △ $ \hd1 △ (hd1 hd2)) △ b s) [\x x] bits) $ \stack
+  triage △ △ (\hd \tl hd) stack
+
+js_array_encode = \x (fix $ \self \x \rest △ '[' $ triage (\x x) self (\x \y \rest self x $ △ ',' $ self y rest) x $ △ ']' rest) x △
+js_array_encode example_program
+js_array_decode = \x
+  let (map (triage △ △ (\_ triage △ △ (\hd \tl hd))) x) $ \bits
+  let (foldl (\s \b triage (triage △ △ $ \hd2 \tl let tl $ triage △ △ $ \hd1 △ (hd1 hd2)) (\_ △ △) △ b s) [\x x] bits) $ \stack
+  triage △ △ (\hd \tl hd) stack
+
+# 3. Ternary, Polish notation
+ternary_encode = \x (fix $ \self \x \rest triage (△ '0') (\x \rest △ '1' $ self x rest) (\x \y \rest △ '2' $ self x $ self y rest) x rest) x △
+ternary_encode example_program
+ternary_decode =
+  \x (fix $ \self \str
+    let str $ triage _ _ $ \hd \tl
+    let hd $ triage _ _ $ \d0 \hd
+    let hd $ triage _ _ $ \d1 \hd
+    let (\tl \f f △ tl) $ \on0
+    let (\tl self tl $ \res \tl \f f (△ res) tl) $ \on1
+    let (\tl self tl $ \resl \tl self tl $ \resr \tl \f f (△ resl resr) tl) $ \on2
+    triage (triage on0 (\_ on1) _ d0) (\_ on2) _ d1 tl
+  )
+  x (\res \tail res)
+
+# 4. Explicit binary tree (F = fork, S = stem, L = leaf)
+tree_encode = \x (fix $ \self \x \rest triage (\x △ 'L' x) (\x \rest △ '(' $ △ 'S' $ self x $ △ ')' rest) (\x \y \rest △ '(' $ △ 'F' $ self x $ self y $ △ ')' rest) x rest) x △
+tree_encode example_program
+
+# 5. base64
+match_list = \oe \oc triage oe △ oc
+match_pair = \op triage △ △ op
+match_bool = \ot \of triage of (\_ ot) △
+map_empty = △
+map_set = \k \v \m (fix $ \self \k \m
+  match_list v (\khd \ktl
+    let (self ktl) $ \child_proc
+    let (triage (△ △ △) △ △ m) $ match_pair $
+    match_bool (\l \r △ l (child_proc r)) (\l \r △ (child_proc l) r) khd
+  ) k) (bitstr_encode k) m
+map_get = \k \m foldl (\m \k triage △ △ (\a \b match_bool b a k) m) m (bitstr_encode k)
+
+succ = fix $ \self match_list 1 (match_bool (\tl △ false $ self tl) (△ true))
+pred = fix $ \self match_list 0 (match_bool (match_list △ (\hd \tl △ false $ △ hd tl)) (\tl △ true $ self tl))
+take = fix $ \self triage (\_ []) △ (\nhd \ntl match_list [] (\hd \tl △ hd $ self (pred $ △ nhd ntl) tl))
+mapi = \f \l (fix $ \self match_list (\_ []) (\hd \tl \i △ (f hd i) $ self tl (succ i))) l 0
+
+base64alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+base64alphabet_tree = 
+  let (\f match_pair $ \a \b △ (f a) (f b)) $ \map_pair
+  let (foldr (\e match_pair $ \a \b △ (△ e b) a) (△ [] [])) $ \splitter
+  let (\x \y map_pair x $ splitter y) $ \split
+  (split $ split $ split $ split $ split splitter) base64alphabet
+bitstr_of_base64 =
+  let (mapi (\x \i △ x (concat $ take 6 $ concat i [false,false,false,false,false,false])) base64alphabet) $ \entries
+  let (foldl (\m match_pair $ \k \v map_set k v m) map_empty entries) $ \map
+  foldr (\b64 \res (map_get b64 map) res) []
+
+pair_at = \b match_pair (match_bool (\a \b b) (\a \b a) b)
+head = match_list △ (\hd \tl hd)
+base64alphabet_tree_get = \x0 \x1 \x2 \x3 \x4 \x5 head $ pair_at x5 $ pair_at x4 $ pair_at x3 $ pair_at x2 $ pair_at x1 $ pair_at x0 base64alphabet_tree
+bitstr_to_base64 = fix $ \self match_list [] $ \x0
+                             match_list [base64alphabet_tree_get x0 false false false false false] $ \x1
+                             match_list [base64alphabet_tree_get x0 x1 false false false false] $ \x2
+                             match_list [base64alphabet_tree_get x0 x1 x2 false false false] $ \x3
+                             match_list [base64alphabet_tree_get x0 x1 x2 x3 false false] $ \x4
+                             match_list [base64alphabet_tree_get x0 x1 x2 x3 x4 false] $ \x5 \xs
+                             △ (base64alphabet_tree_get x0 x1 x2 x3 x4 x5) (self xs)
+
+base64_decode = \x bitstr_decode $ bitstr_of_base64 x
+base64_encode = \x bitstr_to_base64 $ bitstr_encode x
+base64_encode example_program
+
+# 6. Source code
+to_source =
+  let (△ '△') $ \qa
+  let (\q (\x \r △ '(' (△ '△' (△ ' ' (q x (△ ')' r)))))) $ \qb
+  let (\q (\x \y \r △ '(' (△ '△' (△ ' ' (q x (△ ' ' (q y (△ ')' r)))))))) $ \qc
+  let (fix $ \self \x triage qa (qb self) (qc self) x) $ \q
+  \x q x ""
+to_source example_program

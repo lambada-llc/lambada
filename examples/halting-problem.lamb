@@ -1,0 +1,42 @@
+# Helpers
+if = \condition \then \else △ (△ else (△ △ then)) △ condition
+run_forever = \_ △ (△ $ \x x x) (△ △ _) (\x x x) # never terminates (after passing a dummy argument -- this is necessary so eager evaluators do not get stuck on this unconditionally)
+terminate = \_ _ # identity function that "terminates" immmediately (by returning its argument)
+
+# === Halting Problem ===
+# The halting problem is conceptually simple: Determine whether a given
+# program with given input will terminate or run forever. While this is
+# straightforward for some cases, there cannot exist a general algorithm
+# that performs this task on any program and any input. The problem is *undecidable*.
+
+# Proof
+# 1. Assume there exists program [halts] that returns "true" if [program argument] terminates, otherwise "false":
+halts = \program \argument △ # insert algorithm here!
+# 2. Construct program [tricky] that takes a program and runs forever if [program program] halts, otherwise terminates
+tricky = \program if (halts program program) run_forever terminate △
+# 3. Notice that for a working [halts], [tricky tricky] neither terminates nor runs forever, meaning a working [halts] can not exist. Steps:
+# Note: [tricky tricky] evaluates to [if (halts tricky tricky) run_forever terminate △]
+# Case [halts tricky tricky] is true: [tricky tricky] further evaluates to [run_forever △] => it does not terminate => [halts tricky tricky] must be false
+# Case [halts tricky tricky] is false: [tricky tricky] further evaluates to [terminate △] => it terminates => [halts tricky tricky] must be true
+# Conclusion: Both cases lead to a contradiction. So there can exist no [halts] with the behavior we want.
+
+# Where is the problem? There is none, with Tree Calculus as the substrate and language, it is that simple!
+# Specifically:
+# - All programs are values, making it valid and meaningful to have [halts] just take a program as an argument.
+# - Programs can be reflected upon *without quotation*, which means that [halts] has the means to perform whatever program analysis imaginable directly.
+# - The set of all possible programs is enumerable (all binary trees of finite size), making statements of the form "there exists" or "for all" meaningful.
+
+# To summarize, thanks to the above properties of Tree Calculus, the following statement is meaningful and precise:
+# There exists no program [halts] that can decide for any given [program] and [argument] whether [program argument] terminates.
+
+# Compare this to https://en.wikipedia.org/wiki/Halting_problem for instance, which tends to need more words to describe things accurately. Examples:
+# - "from a description of an arbitrary computer program" (in Tree Calculus, a program and its description are one and the same)
+# - "What is important is that the formalization allows a straightforward mapping of algorithms to some data type that the algorithm can operate upon." (in Tree Calculus, this mapping is the identity function)
+# - "The concept above shows the general method of the proof, but the computable function halts does not directly take a subroutine as an argument; instead it takes the source code of a program."
+
+# These subtleties are understandable and necessary given the formalisms we are used to.
+# However, Tree Calculus demonstrates that there is another way. It demonstrates that
+# picking a different substrate and language can allow formally modeling conceptually simple
+# things more straightforwardly. We believe Tree Calculus is a more canonical choice for
+# modeling and formally describing theoretical computer science concepts.
+
