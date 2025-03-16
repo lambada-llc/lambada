@@ -1,0 +1,29 @@
+triage = \a \b \c △ (△ a b) c
+fix = (\m \wait  \f wait m (\x f (wait m x)))
+  (\x x x)
+  (\a \b \c △ (△ a) (△ △ c) b)
+
+eager = \f \x triage (f △) (\u f (△ u)) (\u \v f (△ u v)) x
+apply_branch_first = fix $ \self
+  triage
+    (\u △ u)
+    (\u \v △ u v)
+    (triage
+      (\u2 \v u2)
+      (\u1 \u2 \v eager (self (self u1 v)) (self u2 v))
+      (\u0 \u1 \u2 \v
+        triage
+          u0
+          (\v self u1 v)
+          (\v1 \v2 self (self u2 v1) v2)
+          v))
+
+# Example: Negating booleans
+_false = △
+_true = △ △
+_not = △ (△ _true (△ △ _false)) △
+apply_branch_first _not _false # △ △ = _true
+apply_branch_first _not _true  # △   = _false
+# Direct evaluation for reference
+_not _false
+_not _true

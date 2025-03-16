@@ -1,13 +1,7 @@
-# Welcome to the interactive tree calculus playground!
-# Check out the landing page for a wide range of interactive demos.
-
-# To make the tree node operator "△" more accessible, it is aliased to "t"
-# or can be entered via some subset of Alt-N, Alt-T, Ctrl-N or Ctrl-T (depending on OS and browser).
-
 # Syntactic sugar quick reference:
 # - Lambda abstractions "\variable body" desugar via abstraction elimination (combinatory logic)
-# - Boolean convention:  false = t  and  true = t t
-# - Lists "[ ... ]" desugar to (t ... (t ... (t ... t)))
+# - Boolean convention:  false = △  and  true = △ △
+# - Lists "[ ... ]" desugar to (△ ... (△ ... (△ ... △)))
 # - Natural numbers desugar to lists of booleans (binary, LSB as first list element)
 # - String constants desugar to lists of natural numbers representing unicode code points
 # - ADTs "Foo = Bar | Baz x y" desugar into Scott encoded constructors
