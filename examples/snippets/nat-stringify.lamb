@@ -1,0 +1,6 @@
+# Converting natural numbers to and from strings
+_nat_to_str = fix $ \self match_list 
+    id
+    (\hd \tl \acc match_pair (\div \mod self div (△ (add '0' mod) acc)) (divmod (△ hd tl) 10))
+nat_to_str = \n match_bool "0" (_nat_to_str n "") (is_zero n)
+str_to_nat = foldl (\i \c add (mul i 10) (sub c '0')) 0

@@ -1,0 +1,36 @@
+# Basics
+id = \x x
+id2 = \a \b \c △ (△ a) (△ △ c) b
+compose = \f \g \x f (g x)
+let = \x \f f x
+fix = let (\x x x) $ \m
+      \f id2 m (\x f (id2 m x))
+# - Reflection
+triage = \a \b \c △ (△ a b) c
+match_bool = \ot \of triage of (\_ ot) △
+match_list = \oe \oc triage oe △ oc
+match_pair = \op triage △ △ op
+# - Booleans
+false = △
+true = △ △
+and = match_bool id (\_ false)
+or  = match_bool (\_ true) id
+not = match_bool false true
+# - Natural numbers
+succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
+pred = fix $ \self match_list 0 (\hd \tl match_bool (\_ match_list △ (\hd \tl △ false $ △ hd tl)) (\self \tl △ true $ self tl) hd self tl)
+# - Lists
+foldr = \f \x fix $ \self match_list x (\hd \tl f hd (self tl))
+foldl = \f fix $ \self \x match_list x (\hd \tl self (f x hd) tl)
+reverse = foldl (\a \b △ b a) []
+map = \f foldr (\e \a △ (f e) a) []
+filter = \f foldr (\e \a triage id (\_ △ e) △ (f e) a) []
+length = foldr (\_ succ) 0
+concat = \a \b foldr △ b a
+concat_list = foldr concat ""
+# - Polymorphic helpers
+size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
+equal = fix $ \self triage
+    (triage true (\_ false) (\_ \_ false))
+    (\ax triage false (self ax) (\_ \_ false))
+    (\ax \ay triage false (\_ false) (\bx \by and (self ax bx) (self ay by)))

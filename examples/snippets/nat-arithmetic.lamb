@@ -1,0 +1,55 @@
+# Arithmetic on natural numbers
+is_zero = match_list true (\_ \_ false)
+zip = fix $ \self \l1 \l2
+    (match_list
+        (\l2 map (\item2 △ △ item2))
+        (\h1 \t1 match_list (map (\item1 △ item1 △)) (\h2 \t2 △ (△ h1 h2)))
+        l1 l2)
+    (match_list
+        (\l2 l2)
+        (\h1 \t1 match_list (△ h1 t1) (\h2 \t2 self t1 t2))
+        l1 l2)
+add_3bits =
+  match_bool
+    (match_bool
+        (\c △ c true)
+        (\c △ (not c) c))
+    (match_bool
+        (\c △ (not c) c)
+        (\c △ c false))
+_add = fix $ \self
+      match_list
+        (match_bool (△ true △) false)
+        (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (add_3bits c) hd))
+add = \a \b _add (zip a b) false
+_sub = fix $ \self
+      match_list
+        (\c false)
+        (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (\a \b add_3bits c a (not b)) hd))
+sub = \a \b let (foldr (\h \acc match_bool (△ h acc) 0 (or (match_list false (\_ \_ true) acc) h)) 0) $ \canonicalize
+            canonicalize $ _sub (zip a b) true
+double = \a match_list 0 (\_ \_ △ false a) a
+mul = \a \b foldr (\h \s add (double s) (match_bool b 0 h)) 0 a
+is_lte = \a \b foldl
+    (\acc match_pair (match_bool (match_bool acc false) (match_bool true acc)))
+    true
+    (zip a b)
+_divmod = fix $ \self id2 $ match_list (\small 0) (\_ \big \small △ small (self big (double small)))
+divmod = \a \b foldr
+    (\h \acc match_pair
+        (\div \mod 
+            \b match_bool
+                (\div \mod \b △ (succ div) (sub mod b))
+                (\div \mod \b △ div mod)
+                (is_lte b mod)
+                (double div)
+                mod
+                b
+        )
+        acc
+        h
+    )
+    (△ 0 a)
+    (_divmod a b)
+div = \a \b match_pair (\div \mod div) $ divmod a b
+mod = \a \b match_pair (\div \mod mod) $ divmod a b
