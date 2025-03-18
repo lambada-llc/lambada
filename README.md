@@ -4,6 +4,8 @@ LambAda is lightweight syntactic sugar for writing programs using minimal calcul
 [The interactive tree calculus playground](https://treecalcul.us/live/) uses LambAda
 and this repo focuses on writing programs in [tree calculus, specifically _triage calculus_](https://treecalcul.us/specification/).
 
+The program compiling LambAda syntax down to trees is a tree that was written in LambAda.
+
 ## Example
 ```
 \a \b a (\c c 0) "A" [b]
