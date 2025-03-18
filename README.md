@@ -11,10 +11,12 @@ The program compiling LambAda syntax down to trees is a tree that was written in
 \a \b a (\c c 0) "A" [b]
 ```
 would be notation for
-$\lambda a.\lambda b.a~(\lambda c.c~0)~\text{``A''}~[b]$
-where $0$ is a natural number, $\text{``A''}$ is a string of text, and $[b]$ is a singleton array containing $b$.
+$\lambda a.\lambda b.a\ (\lambda c.c\ 0)\ “A”\ [b]$
+where $0$ is a natural number, $“A”$ is a string of text, and $[b]$ is a singleton array containing $b$.
 It desugars to
+
 <img src="./README-example.png" width="128">
+
 or
 ```
 △ (△ (△ (△ (△ △ (△ (△ (△ △ (△ (△ (△ △ △)) △))) (△ △)))) (△ (△ (△ (△ (△ (△ (△ △)) △)) (△ △ (△ (△ (△ (△ (△ △)) △)) (△ △ △))))) (△ △ (△ (△ (△ △) (△ △ (△ △ (△ △ (△ △ (△ △ (△ (△ △) △))))))) △))))) (△ △ (△ (△ △) (△ △ △)))
