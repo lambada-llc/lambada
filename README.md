@@ -4,7 +4,8 @@ LambAda is lightweight syntactic sugar for writing programs using minimal calcul
 [The interactive tree calculus playground](https://treecalcul.us/live/) uses LambAda
 and this repo focuses on writing programs in [tree calculus, specifically _triage calculus_](https://treecalcul.us/specification/).
 
-The program compiling LambAda syntax down to trees is a tree that was written in LambAda.
+The program compiling LambAda syntax down to trees is a tree that [is written in LambAda](./compiler).
+LambAda goes back over a decade, targeting [different calculi over the years](https://lambada.pages.dev/) before most recently locking in on triage calculus.
 
 ## Example
 ```
@@ -52,5 +53,3 @@ What is notable is that, being reflective, tree calculus can all by itself conve
 - String constants `"foo"` desugar like a list of their corresponding unicode code points would.
 - Expressions can be assigned to names using `=`, which hides any potential previous meaning of that same name to all code that follows. Those names may not start with an uppercase ASCII character, because those are reserved for:
 - ADTs `List = Nil | Cons hd tl` desugar into [Scott encoded](https://en.wikipedia.org/wiki/Mogensen%E2%80%93Scott_encoding) constructors, e.g. `Nil = \on_nil \on_cons on_nil` and `Cons = \hd \tl \on_nil \on_cons on_cons hd tl` in this case. ADT definitions must use type and constructor names that start with an uppercase ASCII character `A..Z`.
-
-

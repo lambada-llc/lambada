@@ -1,0 +1,686 @@
+# Basics
+_ = △
+id = \x x
+id2 = \a \b \c △ (△ a) (△ △ c) b
+compose = \f \g \x f (g x)
+let = \x \f f x
+fix = let (\x x x) $ \m
+      \f id2 m (\x f (id2 m x))
+# - Reflection
+triage = \a \b \c △ (△ a b) c
+match_bool = \ot \of triage of (\_ ot) △
+match_list = \oe \oc triage oe △ oc
+match_pair = \op triage △ △ op
+# - Booleans
+false = △
+true = △ △
+and = match_bool id (\_ false)
+or  = match_bool (\_ true) id
+not = match_bool false true
+# - Option = △ | △ value
+none = △
+some = △
+option_map = \f triage none (compose some f) _
+option_bind = \f triage none f _
+option_get_value = \m \a triage a id _ m
+# - Pair = △ left right
+mk_pair = △
+let_pair = \p \f match_pair f p
+fst = match_pair (\a \b a)
+snd = match_pair (\a \b b)
+change_fst = \pair \f match_pair (\a \b mk_pair (f a) b) pair
+change_snd = \pair \f match_pair (\a \b mk_pair a (f b)) pair
+# - Natural numbers
+succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
+pred = fix $ \self match_list 0 (\hd \tl match_bool (\_ match_list △ (\hd \tl △ false $ △ hd tl)) (\self \tl △ true $ self tl) hd self tl)
+# - Lists
+is_empty = match_list true (\_ \_ false)
+is_not_empty = match_list false (\_ \_ true)
+head = match_list _ (\hd \tl hd)
+tail = match_list _ (\hd \tl tl)
+foldr = \f \x fix $ \self match_list x (\hd \tl f hd (self tl))
+foldl = \f fix $ \self \x match_list x (\hd \tl self (f x hd) tl)
+reverse = foldl (\a \b △ b a) []
+map = \f foldr (\e \a △ (f e) a) []
+mapi = \f \l (fix $ \self match_list (\_ []) (\hd \tl \i △ (f hd i) $ self tl (succ i))) l 0
+filter = \f foldr (\e \a triage id (\_ △ e) △ (f e) a) []
+length = foldr (\_ succ) 0
+concat = \a \b foldr △ b a
+concat_list = foldr concat ""
+join = \sepa \l (match_list [] (foldl (\cur \new concat new (concat sepa cur)))) (reverse l)
+any = \f \l is_not_empty $ filter f l
+drop = fix $ \self triage (\l l) △ (\nhd \ntl match_list [] (\hd \tl self (pred $ △ nhd ntl) tl))
+take = fix $ \self triage (\_ []) △ (\nhd \ntl match_list [] (\hd \tl △ hd $ self (pred $ △ nhd ntl) tl))
+list_bind = \f \l foldl (\a \b concat a (f b)) [] l
+# - Polymorphic helpers
+size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
+equal = fix $ \self triage
+    (triage true (\_ false) (\_ \_ false))
+    (\ax triage false (self ax) (\_ \_ false))
+    (\ax \ay triage false (\_ false) (\bx \by and (self ax bx) (self ay by)))
+
+# Arithmetic on natural numbers
+is_zero = match_list true (\_ \_ false)
+zip = fix $ \self \l1 \l2
+    (match_list
+        (\l2 map (\item2 △ △ item2))
+        (\h1 \t1 match_list (map (\item1 △ item1 △)) (\h2 \t2 △ (△ h1 h2)))
+        l1 l2)
+    (match_list
+        (\l2 l2)
+        (\h1 \t1 match_list (△ h1 t1) (\h2 \t2 self t1 t2))
+        l1 l2)
+add_3bits =
+  match_bool
+    (match_bool
+        (\c △ c true)
+        (\c △ (not c) c))
+    (match_bool
+        (\c △ (not c) c)
+        (\c △ c false))
+_add = fix $ \self
+      match_list
+        (match_bool (△ true △) false)
+        (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (add_3bits c) hd))
+add = \a \b _add (zip a b) false
+_sub = fix $ \self
+      match_list
+        (\c false)
+        (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (\a \b add_3bits c a (not b)) hd))
+sub = \a \b let (foldr (\h \acc match_bool (△ h acc) 0 (or (match_list false (\_ \_ true) acc) h)) 0) $ \canonicalize
+            canonicalize $ _sub (zip a b) true
+double = \a match_list 0 (\_ \_ △ false a) a
+mul = \a \b foldr (\h \s add (double s) (match_bool b 0 h)) 0 a
+is_lte = \a \b foldl
+    (\acc match_pair (match_bool (match_bool acc false) (match_bool true acc)))
+    true
+    (zip a b)
+_divmod = fix $ \self id2 $ match_list (\small 0) (\_ \big \small △ small (self big (double small)))
+divmod = \a \b foldr
+    (\h \acc match_pair
+        (\div \mod 
+            \b match_bool
+                (\div \mod \b △ (succ div) (sub mod b))
+                (\div \mod \b △ div mod)
+                (is_lte b mod)
+                (double div)
+                mod
+                b
+        )
+        acc
+        h
+    )
+    (△ 0 a)
+    (_divmod a b)
+div = \a \b match_pair (\div \mod div) $ divmod a b
+mod = \a \b match_pair (\div \mod mod) $ divmod a b
+
+is_eq = fix $ \self
+    match_list
+        is_zero
+        (\h1 \t1 \l2
+            (match_list
+                (\t1 is_zero (△ h1 t1))
+                (\h2 \t2 match_bool (\t1 self t1 t2) (\t1 false) (match_bool h1 (not h1) h2))
+                l2
+                t1)
+        )
+is_gte = \a \b is_lte b a
+is_lt = \a \b not $ is_lte a b
+is_gt = \a \b not $ is_lte a b
+
+# Converting natural numbers to and from strings
+_nat_to_str = fix $ \self match_list 
+    id
+    (\hd \tl \acc match_pair (\div \mod self div (△ (add '0' mod) acc)) (divmod (△ hd tl) 10))
+nat_to_str = \n match_bool "0" (_nat_to_str n "") (is_zero n)
+str_to_nat = foldl (\i \c add (mul i 10) (sub c '0')) 0
+
+
+# (a -> b) -> a -> _ -> b
+stage = \f \x \_ (\_ f) _ x
+
+str_from_maybe = \formatter triage "None" formatter _
+
+list_cut_at = \f fix $ \self
+  match_list
+    (mk_pair [] [])
+    (\h \t
+        match_bool
+            (\self mk_pair [] (mk_pair h t))
+            (\self change_fst (self t) (mk_pair h))
+            (f h)
+            self
+    )
+
+# t Parser = (string => t Parse_result)
+Parse_result = Parse_result_fail | Parse_result remaining item
+
+parse_return = \x (\input Parse_result input x)
+parse_fail = \input Parse_result_fail
+parse_result_map = \conv \res res Parse_result_fail (\remaining \item Parse_result remaining (conv item))
+parser_map = \conv \p (\string parse_result_map conv (p string))
+parser_compose_dep = \p1 \cp2 (\input (p1 input) Parse_result_fail (\remaining \item cp2 item remaining))
+parser_compose = \compose \p1 \p2 parser_compose_dep p1 (\item \remaining parse_result_map (compose item) (p2 remaining))
+parser_compose_fst = parser_compose (\a \b a)
+parser_compose_snd = parser_compose (\a \b b)
+parser_compose_pair = parser_compose mk_pair
+
+parse_if = \cond (match_list Parse_result_fail $ \head \tail match_bool (parse_return head tail) Parse_result_fail (cond head))
+parse_this = \c parse_if (is_eq c)
+parse_any = parse_if (\_ true)
+parse_until = \cond \str match_pair parse_return (list_cut_at cond str)
+parse_while = \cond parse_until (compose not cond)
+parse_nonempty_str_while = \cond \str
+  (\res match_bool
+    Parse_result_fail
+    res
+    (is_empty (Parse_result_Dispatch (\_ \item item) "" res))
+  )
+  (parse_while cond str)
+
+parser_either = \p1 \p2 (\string (p1 string) (p2 string) Parse_result)
+parser_any = fix $ \self \ps
+  (\string match_list
+    Parse_result_fail
+    (\head \tail (head string) (self tail) (\r \i \_ Parse_result r i) string)
+    ps
+  )
+
+is_whitespace_char = \c is_lte c ' '
+is_lowercase_char = \c and (is_lte 'a' c) (is_lte c 'z')
+is_uppercase_char = \c and (is_lte 'A' c) (is_lte c 'Z')
+is_digit_char = \c and (is_lte '0' c) (is_lte c '9')
+# very broad definition to support special characters without fuzz
+is_alpha_char = \c and (is_lte 64 c) (not $ or (and (is_lte 91 c) (is_lte c 94)) (and (is_lte 123 c) (is_lte c 127)))
+is_alphanum_char = \c or (is_alpha_char c) (is_digit_char c)
+
+parse_whitespace = parse_while is_whitespace_char
+parse_with_whitespace = \p parser_compose_fst (parser_compose_snd parse_whitespace p) parse_whitespace
+parse_identifier = parser_compose mk_pair (parse_if is_alpha_char) (parse_while is_alphanum_char) 
+parse_nat = parser_map str_to_nat $ parse_nonempty_str_while is_digit_char
+
+parse_result_value_if = \restFilter \res res none (\remaining \item match_bool (some item) none (restFilter remaining))
+parse_result_value_if_consumed = parse_result_value_if is_empty
+parse_result_value = parse_result_value_if (\_ true)
+
+fail = "fail"
+parse_many = 
+    fix $ \self id2 $
+        \parser \s 
+        (parser s)
+            (Parse_result s [])
+            (\remaining \item 
+                (self parser remaining)
+                Parse_result_fail # unreachable
+                (\rremaining \ritems Parse_result rremaining (mk_pair item ritems))
+            )
+
+# special chars
+Special_char = Schar_paren_open
+             | Schar_paren_close
+             | Schar_backslash
+             | Schar_equals
+             | Schar_sqbracket_open
+             | Schar_sqbracket_close
+             | Schar_comma
+             | Schar_pipe
+             | Schar_dollar
+
+schar_eq =
+  let (\s s 0 1 2 3 4 5 6 7 8) $ \id
+  \a \b is_eq (id a) (id b)
+
+# tokens
+Token = Token_special_char schar     # schar
+      | Token_identifier name        # string
+      | Token_identifier_adt name    # string
+      | Token_const_str value        # string
+      | Token_const_nat value        # nat
+      | Token_comment value          # string
+
+token_identifier = \name match_bool Token_identifier_adt Token_identifier (is_uppercase_char (head name)) name
+
+# :: Parser Token
+parse_special_char = parser_any
+        [
+            let (parse_this '(') $ parser_map $ \_ Token_special_char Schar_paren_open, 
+            let (parse_this ')') $ parser_map $ \_ Token_special_char Schar_paren_close,
+            let (parse_this '\') $ parser_map $ \_ Token_special_char Schar_backslash,
+            let (parse_this '=') $ parser_map $ \_ Token_special_char Schar_equals,
+            let (parse_this '[') $ parser_map $ \_ Token_special_char Schar_sqbracket_open, 
+            let (parse_this ']') $ parser_map $ \_ Token_special_char Schar_sqbracket_close, 
+            let (parse_this ',') $ parser_map $ \_ Token_special_char Schar_comma,
+            let (parse_this '|') $ parser_map $ \_ Token_special_char Schar_pipe,
+            let (parse_this '$') $ parser_map $ \_ Token_special_char Schar_dollar
+        ]
+_is_quot = \x is_eq x '"'
+parse_str  = parser_map Token_const_str (parser_compose_snd (parse_if _is_quot) (parser_compose_fst (parse_until _is_quot) (parse_if _is_quot)))
+_is_quot = \x is_eq x '''
+parse_char  = parser_map Token_const_nat (parser_compose_snd (parse_if _is_quot) (parser_compose_fst parse_any (parse_if _is_quot)))
+parse_nat  = parser_map Token_const_nat parse_nat
+char_is_newline = \x or (is_eq x 10) (is_eq x 13)
+parse_comment = parser_map Token_comment (parser_compose_snd (parse_this 39) (parse_until char_is_newline))
+
+parse_token = parse_with_whitespace $ parser_any 
+        [ 
+            parse_special_char,
+            parser_map token_identifier parse_identifier, 
+            parse_str,
+            parse_char,
+            parse_nat,
+            parse_comment
+        ]
+            
+
+# str => Token list option
+compiler_tokenize = compose parse_result_value_if_consumed $ parse_many parse_token
+
+Syntax_tree = Syntax_identifier name                        # string
+            | Syntax_const_nat value                        # nat
+            | Syntax_const_str value                        # string
+            | Syntax_list list                              # Syntax_tree list
+            | Syntax_abs literal body                       # string Syntax_tree
+            | Syntax_app o1 o2                              # Syntax_tree Syntax_tree
+            | Syntax_assignment literal o                   # string Syntax_tree
+            | Syntax_adt literalType listPairInstanceArgs   # string (string * string list) list
+
+syntax_app = match_list _ (foldl Syntax_app)
+syntax_abs = \vars \body foldr Syntax_abs body vars
+syntax_contains_name = \name fix $ \self \s s
+    (equal name)
+    (\v false)
+    (\v false)
+    (any self)
+    (\lit \body match_bool (\_ false) self (equal name lit) body)
+    (\o1 \o2 match_bool (\_ true) self (self o1) o2)
+    (\l \o false)
+    (\t \ps false)
+
+# _expr :=  name=expr | \name expr | identifier | str | nat | (expr) | comment | [expr*]
+# expr :=  app  :=  _expr* | _expr* $ expr
+
+parse_abs_tail = \e 
+    parser_compose_dep
+        parse_any
+        (Token_identifier_Dispatch 
+            (\literal parser_map
+                (\rese [Syntax_abs literal rese])
+                e
+            )
+            parse_fail)
+
+parse_schar = \schar_expected 
+    parser_compose_dep
+        parse_any
+        (Token_special_char_Dispatch  
+            (\schar match_bool
+                (parse_return id)
+                parse_fail
+                (schar_eq schar_expected schar)
+            )
+            parse_fail)
+
+parse_identifier = parser_compose_dep
+        parse_any
+        (Token_identifier_Dispatch parse_return parse_fail)
+parse_identifier_adt = parser_compose_dep
+        parse_any
+        (Token_identifier_adt_Dispatch parse_return parse_fail)
+        
+parse_paren_close = parse_schar Schar_paren_close
+parse_sqbracket_close = parse_schar Schar_sqbracket_close
+parse_comma = parse_schar Schar_comma
+parse_equals = parse_schar Schar_equals
+parse_pipe = parse_schar Schar_pipe
+parse_dollar = parse_schar Schar_dollar
+
+        
+parse_list_tail = \e parser_compose_fst 
+                    (parser_map
+                        (\list [Syntax_list list])
+                        (
+                            parser_either
+                            (
+                                parser_compose
+                                    mk_pair
+                                    e
+                                    (parse_many $ parser_compose_snd parse_comma e)
+                            )
+                            (parse_return [])
+                        )
+                    )
+                    parse_sqbracket_close
+
+parse_assign_tail = \literal \e parser_map
+                        (\body [Syntax_assignment literal body])
+                        (parser_compose_snd parse_equals e)
+
+parse_adt_variant = parser_compose
+                            mk_pair
+                            parse_identifier_adt
+                            (parse_many parse_identifier)
+parse_adt_tail = \literal \e parser_map 
+                        (\list [Syntax_adt literal list])
+                        (parser_compose_snd
+                            parse_equals
+                            (parser_compose
+                              mk_pair
+                              parse_adt_variant
+                              (parse_many (parser_compose_snd parse_pipe parse_adt_variant)))) 
+
+parse__expr = \e
+    parser_compose_dep
+        parse_any
+        (\token token
+            (\schar schar
+                (parser_compose_fst (parser_map (\x [x]) e) parse_paren_close)
+                parse_fail
+                (parse_abs_tail e)
+                parse_fail
+                (parse_list_tail e)
+                parse_fail
+                parse_fail
+                parse_fail
+                parse_fail
+            )
+            (\literal 
+                parser_either
+                    (parse_assign_tail literal e)
+                    (parse_return [Syntax_identifier literal])
+            )
+            (\literal 
+                parser_either
+                    (parse_adt_tail literal e)
+                    (parse_return [Syntax_identifier literal])
+            )
+            (\value parse_return $ [Syntax_const_str value])
+            (\value parse_return $ [Syntax_const_nat value])
+            (\_ parse_return [])
+        )
+
+parse_expr = \e 
+    parser_compose_dep
+        (parse_many $ parse__expr e)
+        (\list 
+            (\ops 
+                match_bool 
+                parse_fail
+                (parser_map
+                    (\tailx match_list
+                        _  
+                        (foldl Syntax_app)
+                        $ concat ops tailx)
+                    (parser_either
+                        (parser_map (\x [x]) (parser_compose_snd parse_dollar e))
+                        (parse_return [])
+                    )
+                )
+                (is_empty ops)
+            ) (list_bind id list)
+        )
+
+parse_exprs = parse_many $ fix parse_expr
+
+# Token list => Syntax_tree list option
+compiler_parse = compose parse_result_value_if_consumed parse_exprs
+
+space = mk_pair ' '
+newline = mk_pair 10
+
+Native_stmt = Native_assignment literal o  # str * Native
+            | Native_expr o                # Native
+Native_expr = Native_identifier literal    # str
+            | Native_app o1 o2             # Native * Native
+            | Native_emit f                # gen_bin -> dag:Scont * identifier:Scont * gen_bin
+
+nativeT = Native_identifier ":t"
+nativeI = Native_identifier ":i"
+nativeK = Native_identifier ":k"
+nativeB = Native_identifier ":b"
+nativeC = Native_identifier ":c"
+nativeS = Native_identifier ":s"
+
+# Native_expr => S => B
+native_contains_name = \eq_name fix $ \this \n
+    n
+        (\literal eq_name literal)
+        (\o1 \o2 match_bool true (this o2) (this o1))
+        (\_emit false)
+
+_contT = concat ":t"
+_contId = concat ":i"
+_contListEmpty = concat ":t"
+_contFalse = concat ":t"
+_contTrue = concat ":k"
+_contBool = match_bool _contTrue _contFalse
+_dag_nat = \fresh_res \fresh_helper foldr
+        (\b \dag \tl dag $
+          fresh_helper$space$_contT$space$_contBool b$newline $
+          fresh_res$space$fresh_helper$space$fresh_res$newline $ tl)
+        (\tl fresh_res$space$_contId$space$_contListEmpty$newline $ tl)
+_dag_str = \fresh_res \fresh_helper1 \fresh_helper2 foldr
+        (\n \dag \tl dag $
+          _dag_nat fresh_helper1 fresh_helper2 n $
+          fresh_helper1$space$_contT$space$fresh_helper1$newline $
+          fresh_res$space$fresh_helper1$space$fresh_res$newline $ tl)
+        (\tl fresh_res$space$_contId$space$_contListEmpty$newline $ tl)
+
+quote_nat = \n Native_emit $ \gen_bin
+  let_pair (gen_bin _) $ \fresh_res \gen_bin
+  let_pair (gen_bin _) $ \fresh_helper \gen_bin # could call this _gen_bin to make subsequent dag reuse IDs
+    \ontriple ontriple (_dag_nat fresh_res fresh_helper n) fresh_res gen_bin
+quote_str = \s Native_emit $ \gen_bin
+  let_pair (gen_bin _) $ \fresh_res \gen_bin
+  let_pair (gen_bin _) $ \fresh_helper1 \gen_bin
+  let_pair (gen_bin _) $ \fresh_helper2 \gen_bin
+    \ontriple ontriple (_dag_str fresh_res fresh_helper1 fresh_helper2 s) fresh_res gen_bin
+
+
+# SYNTAX => NATIVE
+_syntax_to_native_abs = \eq_name fix $ \strip \nbody nbody
+                (\literal
+                    match_bool
+                    nativeI
+                    (Native_app nativeK $ Native_identifier literal)
+                    $ eq_name literal
+                )
+                (\a \b
+                    match_bool
+                    (
+                        match_bool
+                        (\strip Native_app (Native_app nativeS (strip a)) (strip b))
+                        (\strip Native_app (Native_app nativeC (strip a)) b)
+                    )
+                    (
+                        match_bool
+                        ( # check for: \b a b
+                            \strip b
+                              (\_lit a)
+                              (\_a \_b Native_app (Native_app nativeB a) (strip b))
+                              (\_emit _)
+                        )
+                        (\strip Native_app nativeK $ Native_app a b)
+                    )
+                    (native_contains_name eq_name a)
+                    (native_contains_name eq_name b)
+                    strip
+                )
+                (\emit Native_app nativeK $ Native_emit emit)
+_syntax_to_native = fix $ \this \syntax
+    syntax
+        Native_identifier
+        quote_nat
+        quote_str
+        (\list foldr (\item \list Native_app (Native_app nativeT (this item)) list) nativeT list)
+        (\literal \body match_bool (_syntax_to_native_abs (equal literal)) (Native_app nativeK) (syntax_contains_name literal body) (this body))
+        (\o1 \o2 Native_app (this o1) (this o2))
+        (\literal \o Native_assignment fail nativeT)
+        (\typeLiteral Native_assignment fail nativeT)
+
+
+twice = \ll \tail ll (ll tail)
+_repeat = fix $ \self \n \e match_list id (\hd \tl compose (match_bool (mk_pair e) id hd) (twice (self tl e))) n
+repeat = \n \e _repeat n e []
+
+_create_unique_name_from_nat = \n concat "::" (nat_to_str n)
+_syntax_emit_adt_variant = \items \ctr_arg_list \index \args \name
+    [
+        Native_assignment 
+            name
+            (
+                _syntax_to_native
+                (syntax_abs (concat args ctr_arg_list) (syntax_app (map Syntax_identifier (mk_pair (_create_unique_name_from_nat index) args))))
+            ),
+        Native_assignment
+            (concat name "_Dispatch")
+            (
+                _syntax_to_native
+                (
+                    (\argDisp \argAlt \argItem syntax_abs [argDisp, argAlt, argItem] 
+                        (syntax_app 
+                            (mk_pair
+                                (Syntax_identifier argItem)
+                                (map (\item 
+                                    match_bool
+                                        (Syntax_identifier argDisp)
+                                        (syntax_abs (snd (fst item)) (Syntax_identifier argAlt))
+                                        (is_eq index (snd item))
+                                ) items)
+                            )
+                        )
+                    )
+                    "::f" # function to dispatch
+                    "::a" # alternative value
+                    "::x" # object to match on
+                )
+            )
+    ]
+_syntax_emit_adt = \type_name \items \ctr_arg_list
+        list_bind 
+        (match_pair (\pair \index _syntax_emit_adt_variant items ctr_arg_list index (snd pair) (fst pair)))
+        items
+
+_make_top_level_expr = \syntax_expr [Native_expr (_syntax_to_native syntax_expr)]
+
+syntax_to_native = \syntax
+    syntax
+        (\literal       _make_top_level_expr (Syntax_identifier literal))
+        (\value         _make_top_level_expr (Syntax_const_nat value))
+        (\value         _make_top_level_expr (Syntax_const_str value))
+        (\list          _make_top_level_expr (Syntax_list list))
+        (\literal \body _make_top_level_expr (Syntax_abs literal body))
+        (\o1 \o2        _make_top_level_expr (Syntax_app o1 o2))
+        (\literal \o    [Native_assignment literal (_syntax_to_native o)]) 
+        (\typeLiteral \pairs
+            (_syntax_emit_adt typeLiteral (mapi △ pairs) (mapi (\_ _create_unique_name_from_nat) pairs))
+        )
+
+# Syntax list => Native list option
+compiler_lower = \synts some $ list_bind syntax_to_native synts
+
+# t generator = () -> t * t generator
+_str2_from_nat = \n \cont foldr (\h \a mk_pair (match_bool 49 48 h) a) cont n
+str2_from_nat_cont = \n match_bool (mk_pair 48) (_str2_from_nat n) (is_zero n)
+str2_from_nat = \n str2_from_nat_cont n △
+str2_from_nat 12345612
+_gen_bin = fix $ \self \i \_ mk_pair (stage str2_from_nat_cont i _) (self $ stage succ i _)
+gen_bin = _gen_bin 0
+# fst (snd (snd (gen_bin _) _) _) ""
+
+# Native => str cont
+_native_expr_to_dag_cont = fix $ \self \n \gen_bin n
+    (\literal \triple triple (\tl tl) (concat literal) gen_bin)
+    (\o1 \o2 
+         self o1 gen_bin $ \res1 \l1 \gen_bin
+         self o2 gen_bin $ \res2 \l2 \gen_bin
+         \triple
+            match_pair
+              (\fresh \gen_bin
+                triple
+                  (\tl res1 $ res2 $ fresh$space$l1$space$l2$newline $ tl)
+                  fresh
+                  gen_bin)
+              (gen_bin _)
+    )
+    (\emit emit gen_bin)
+native_def_to_dag_cont = \n n
+   (\literal \o
+     _native_expr_to_dag_cont o gen_bin $ \res \l \_
+      \tl res $ concat literal $ space $ l $ newline $ tl
+   )
+   (\o
+     _native_expr_to_dag_cont o gen_bin $ \res \l \_
+      \tl res $ l $ newline $ tl
+   )
+
+# native_def_to_dag_cont (Native_expr (Native_identifier "△")) △
+# native_def_to_dag_cont (Native_expr (Native_app (Native_identifier "△") (Native_identifier "△"))) △
+
+compiler_emit_dag = \natives foldr native_def_to_dag_cont "" natives
+compile_to_dag = \s
+    (option_get_value
+        $ option_map compiler_emit_dag
+        $ option_bind compiler_lower
+        $ option_bind compiler_parse
+        $ compiler_tokenize s)
+    ""
+
+size add # 683
+size size # 252
+size compiler_tokenize # 43327
+size compile_to_dag # 289113, was 151k!
+
+
+compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # 6.7M
+compile_to_dag "x = 42" # 95k, was 88k
+compile_to_dag $ concat_list [ ['"'], repeat 100 '1', ['"'] ] # 565k
+compile_to_dag $ concat_list [ repeat 100 '1' ] # 342M, was 332M
+compile_to_dag "\d \a \i i d (\x \x a) a a a a" # 579k
+compile_to_dag
+
+str_split = \c foldr (\hd match_bool (match_pair $ \p \ps △ "" (△ p ps)) (match_pair $ \p \ps △ (△ hd p) ps) $ equal c hd) (△ "" [])
+
+
+# - Map
+bitstr_encode = \x (fix $ \self triage (△ true) (\x \rest △ false $ △ true $ self x rest) (\x \y \rest △ false $ △ false $ △ true $ self x $ self y rest)) x △
+bitstr_decode = \str triage △ △ (\x \_ x) $ foldr (triage (triage △ △ (\a triage △ △ (\b △ (a b)))) (\_ △ △) △) [] str
+map_empty = △
+map_set = \k \v \m (fix $ \self \k \m
+  match_list v (\khd \ktl
+    let (self ktl) $ \child_proc
+    let (triage (△ △ △) △ △ m) $ match_pair $
+    match_bool (\l \r △ l (child_proc r)) (\l \r △ (child_proc l) r) khd
+  ) k) (bitstr_encode k) m
+map_get = \k \m foldl (\m \k triage △ △ (\a \b match_bool b a k) m) m (bitstr_encode k)
+
+dag_to_val = \str let (str_split 10 str) $ \lines
+               let (filter is_not_empty lines) $ \lines
+               let (
+                 foldl (\map \line
+                    let (str_split 32 line) $
+                    match_list _ $ \a
+                    match_list (map_get a map) $ \b
+                    match_list (map_set a (map_get b map) map) $ \c \_
+                    map_set a (map_get b map $ map_get c map) map
+                 )
+                 (
+                   map_set "△" △ $
+                   map_set "t" △ $
+                   map_set ":t" △ $
+                   map_set ":k" (\a \b a) $
+                   map_set ":i" (\x x) $
+                   map_set ":s" (\a \b \c a c (b c)) $
+                   map_set ":b" (\a \b \c a (b c)) $
+                   map_set ":c" (\a \b \c a c b) $
+                   map_empty
+                 )
+               ) $ \emit
+               match_bool △ (emit lines) (is_empty lines)
+
+compile = compose dag_to_val compile_to_dag
+
+compile "[65,123,65]"
+compile "123"
+compile "\x x"
+compile ""
