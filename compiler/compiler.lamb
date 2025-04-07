@@ -399,7 +399,7 @@ parse__expr = \e
             (\_ parse_return [])
         )
 
-parse_expr = \e 
+parse_expr = fix $ \e 
     parser_compose_dep
         (parse_many $ parse__expr e)
         (\list 
@@ -420,10 +420,11 @@ parse_expr = \e
             ) (list_bind id list)
         )
 
-parse_exprs = parse_many $ fix parse_expr
+parse_exprs = parse_many parse_expr
 
 # Token list => Syntax_tree list option
 compiler_parse = compose parse_result_value_if_consumed parse_exprs
+compiler_parse_expr_exn = compose parse_result_value parse_expr
 
 space = mk_pair ' '
 newline = mk_pair 10
@@ -565,19 +566,40 @@ _make_top_level_expr = \syntax_expr [Native_expr (_syntax_to_native syntax_expr)
 
 syntax_to_native = \syntax
     syntax
-        (\literal       _make_top_level_expr (Syntax_identifier literal))
-        (\value         _make_top_level_expr (Syntax_const_nat value))
-        (\value         _make_top_level_expr (Syntax_const_str value))
-        (\list          _make_top_level_expr (Syntax_list list))
-        (\literal \body _make_top_level_expr (Syntax_abs literal body))
-        (\o1 \o2        _make_top_level_expr (Syntax_app o1 o2))
-        (\literal \o    [Native_assignment literal (_syntax_to_native o)]) 
-        (\typeLiteral \pairs
-            (_syntax_emit_adt typeLiteral (mapi △ pairs) (mapi (\_ _create_unique_name_from_nat) pairs))
+        (\name       _make_top_level_expr (Syntax_identifier name))
+        (\value      _make_top_level_expr (Syntax_const_nat value))
+        (\value      _make_top_level_expr (Syntax_const_str value))
+        (\list       _make_top_level_expr (Syntax_list list))
+        (\name \body _make_top_level_expr (Syntax_abs name body))
+        (\o1 \o2     _make_top_level_expr (Syntax_app o1 o2))
+        (\name \o    [Native_assignment name (_syntax_to_native o)]) 
+        (\type_name \pairs
+            (_syntax_emit_adt type_name (mapi △ pairs) (mapi (\_ _create_unique_name_from_nat) pairs))
         )
 
+syntax_error = Syntax_identifier "ERROR"
+to_internal△ = fix $ \self \syntax syntax
+  (\name       Syntax_identifier "__ENV△")
+  (\value      syntax_error)
+  (\value      syntax_error)
+  (\list       syntax_error)
+  (\name \body syntax_error)
+  (\o1 \o2     Syntax_app (self o1) (self o2))
+  (\_name \_o  syntax_error) 
+  (\_type_name \_pairs syntax_error)
+
+quick_parse_exn = \s to_internal△ $ option_get_value (option_bind compiler_parse_expr_exn $ compiler_tokenize s) syntax_error
+syntax_prelude =
+  [ Syntax_assignment ":t" $ quick_parse_exn "△"
+  , Syntax_assignment ":k" $ quick_parse_exn "△ △"
+  , Syntax_assignment ":i" $ quick_parse_exn "△ (△ (△ △)) △"
+  , Syntax_assignment ":s" $ quick_parse_exn "△ (△ (△ △ △)) △"
+  , Syntax_assignment ":b" $ quick_parse_exn "△ (△ (△ △ (△ (△ (△ △ △)) △))) (△ △)"
+  , Syntax_assignment ":c" $ quick_parse_exn "△ (△ (△ (△ (△ △ (△ (△ (△ △ △)) △))) (△ (△ (△ △ (△ △))) (△ (△ (△ △ △)) △)))) (△ △ (△ △))"
+  ]
+
 # Syntax list => Native list option
-compiler_lower = \synts some $ list_bind syntax_to_native synts
+compiler_lower = \synts some $ list_bind syntax_to_native $ concat syntax_prelude synts
 
 # t generator = () -> t * t generator
 _str2_from_nat = \n \cont foldr (\h \a mk_pair (match_bool 49 48 h) a) cont n
