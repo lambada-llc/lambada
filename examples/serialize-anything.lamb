@@ -121,3 +121,27 @@ to_source =
   let (fix $ \self \x triage qa (qb self) (qc self) x) $ \q
   \x q x ""
 to_source example_program
+to_source $ \a \b \c a c (b c)
+
+# 6a. Source code with higher level descriptions for subtrees, where
+# K = △ △
+# K1{x} = △ △ x
+# S1{x} = △ (△ x)
+# triage2{x,y} = △ (△ x y)
+# triage3{x,y,z} = △ (△ x y) z
+s_ = concat
+to_source =
+  let (\q \r s_"△" $ r) $ \ql
+  let (\q \r s_"K" $ r) $ \qsl
+  let (\x \q \r s_"K1{" $ q x $ s_"}" $ r) $ \qfl
+  let (\x \q \r s_"S1{" $ q x $ s_"}" $ r) $ \qss
+  let (\x \y \q \r s_"S2{" $ q x $ s_"," $ q y $ s_"}" $ r) $ \qfs
+  let (\x \y \q \r s_"triage2{" $ q x $ s_"," $ q y $ s_"}" $ r) $ \qsf
+  let (\x \y \z \q \r s_"triage3{" $ q x $ s_"," $ q y $ s_"," $ q z $ s_"}" $ r) $ \qff
+  let (fix $ \self \x triage ql (triage qsl qss qsf) (triage qfl qfs qff) x self) $ \q
+  \x q x ""
+to_source $ let
+to_source $ fix
+to_source $ triage △ △
+to_source $ triage △ △ △
+to_source $ \a \b \c a c (b c)
