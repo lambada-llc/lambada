@@ -145,3 +145,171 @@ to_source $ fix
 to_source $ triage △ △
 to_source $ triage △ △ △
 to_source $ \a \b \c a c (b c)
+
+# 6b. Allow code to represent expressions that *reduce* to the original tree
+# K = △ △
+# S = △ (△ (△ △ △)) △
+# triage = △ (△ (△ △ (△ (△ (△ △ △))))) △
+to_source =
+  let (\q \r s_"△" $ r) $ \ql
+  let (\q \r s_"K" $ r) $ \qsl
+  let (\x \q \r s_"(K " $ q x $ s_")" $ r) $ \qfl
+  let (\x \q \r s_"(S " $ q x $ s_")" $ r) $ \qss
+  let (\x \y \q \r s_"(S " $ q x $ s_" " $ q y $ s_")" $ r) $ \qfs
+  let (\x \y \q \r s_"(triage " $ q x $ s_" " $ q y $ s_")" $ r) $ \qsf
+  let (\x \y \z \q \r s_"(triage " $ q x $ s_" " $ q y $ s_" " $ q z $ s_")" $ r) $ \qff
+  let (fix $ \self \x triage ql (triage qsl qss qsf) (triage qfl qfs qff) x self) $ \q
+  \x q x ""
+to_source $ let
+to_source $ fix
+to_source $ triage △
+to_source $ triage △ △
+to_source $ triage △ △ △
+to_source $ \a \b \c a c (b c)
+to_source $ \a a
+to_source $ \a \b a
+
+# 6c. Detect further patterns, completely automatic and extensible
+defs = [ # matched in reverse, so specify in increasing order of complexity
+    △ "△" $ △, # do not remove this, acts as base case
+    △ "K" $ \a \b a,
+    △ "S" $ \a \b \c a c (b c),
+    △ "I" $ \a a,
+    △ "triage" $ triage,
+    △ "fix" $ fix,
+    △ "map" $ map,
+    △ "succ" $ succ
+  ]
+
+# Some more generic helpers
+equal = fix $ \self triage
+    (triage true (\_ false) (\_ \_ false))
+    (\ax triage false (self ax) (\_ \_ false))
+    (\ax \ay triage false (\_ false) (\bx \by match_bool (self ax bx) false (self ay by)))
+zip = fix $ \self \l1 \l2
+    (match_list
+        (\l2 map (\item2 △ △ item2))
+        (\h1 \t1 match_list (map (\item1 △ item1 △)) (\h2 \t2 △ (△ h1 h2)))
+        l1 l2)
+    (match_list
+        (\l2 l2)
+        (\h1 \t1 match_list (△ h1 t1) (\h2 \t2 self t1 t2))
+        l1 l2)
+none = △
+some = \x △ x
+# Note that [none] and [some] are both "△" (modulo eta-expansion), but -- lacking a type system -- rely
+# on appropriate use (that is, "some" expects an argument) in order to be useful for code readability.
+match_option = \on \os triage on os _
+# 'a option list -> 'a list option
+all = foldr (\o \ol 
+    let o $ match_option none $ \o
+    let ol $ match_option none $ \ol
+    some (△ o ol)
+  ) (some [])
+
+# 'a encoding <=> meaning
+# - △     <=> △
+# - △ a b <=> a b
+# - △ 'a  <=> 'a  (treated as opaque, blocks evaluation)
+quote = fix $ \f triage △ (\x △ △ (f x)) (\x \y △ (△ △ (f x)) (f y))
+qapp = \f \args foldl △ f args
+qstem = \a qapp △ [a]
+qfork = \a \b qapp △ [a, b]
+
+qtriage = \apply \ounk \ot \os \of fix $ \self \x
+  let x $
+  triage ot (\a ounk x a) $
+  triage os (\a \_ ounk x a) $
+  triage of (\a \_ \_ ounk x a) $ \x00 \x0 \x1 \x2
+  let (apply (△ (△ x00 x0) x1) x2) $ match_pair $ \x \blocker
+  match_option self (\blocker \x ounk x blocker) blocker x
+
+# 'a encoding_evaled := 'a encoding (max. lazy evaluated) * 'a option (blocking 'a, if exists)
+
+# for opaque x, when does x block:
+# x ?
+# △ x ? ?
+# △ (△ ? ?) ? x
+# 'a encoding (max. evaluated) -> 'a encoding (max. evaluated) -> 'a encoding_evaled
+apply =
+  let △ $ \pair
+  let (match_pair $ \res \block res) $ \ignore_blocker
+  fix $ \self \a \b
+    qtriage self
+      (\a \blocker \b pair (△ a b) $ some blocker)
+      (\b pair (qstem b) none) # △ b => no reduction
+      (\a1 \b pair (qfork a1 b) none) # △ a1 b => no reduction
+      (\a1 \a2 \b # △ a1 a2 b
+        qtriage self
+          (\a1 \blocker \a2 \b pair (△ (qfork a1 a2) b) $ some blocker)
+          (\a2 \b pair a2 △) # △ △ a2 b
+          (\a1 \a2 \b self (ignore_blocker $ self a1 b) (ignore_blocker $ self a2 b)) # △ (△ a1) a2 b
+          (\a0 \a1 \a2 \b # △ (△ a0 a1) a2 b
+            qtriage self
+              (\b \blocker pair (△ (qfork (qfork a0 a1) a2) b) $ some blocker)
+              (pair a0 none) # b = △
+              (\y self a1 y) # b = △ y
+              (\x \y self (ignore_blocker $ self a2 x) y) # b = △ x y
+              b
+          )
+          a1
+          a2
+          b
+      )
+      a
+      b
+qtriage = qtriage apply
+
+# 'a encoding -> 'a encoding_evaled
+eval = \x qtriage (\x \blocker △ x $ △ blocker) (△ △ △) (\a △ (qstem a) △) (\a \b △ (qfork a b) △) x
+
+# 'a list -> x -> 'a encoding_evaled -> x option list option
+match = \as
+  let (\x \_ \b some $ map (\a match_bool (some x) none $ equal a b) as) $ \onvar
+  let (\xm \ym \res
+    let res $ match_option none $ \res
+    let xm $ match_option (some $ △ ym res) $ \xm
+    let ym $ match_option (some $ △ (some xm) res) $ \ym
+    match_bool (some $ △ (some xm) res) none $ equal xm ym
+  ) $ \unify
+  fix $ \self triage
+    (qtriage (onvar △) (some $ map (\a none) as) (\_ none) (\_ \_ none))
+    (\ax qtriage (onvar $ △ ax) none (self ax) (\_ \_ none))
+    (\ax \ay qtriage (onvar $ △ ax ay) none (\_ false) (\bx \by
+      let (self ax bx) $ match_option none $ \xm
+      let (self ay by) $ match_option none $ \ym
+      let (zip xm ym) $ \m
+      foldr (match_pair unify) (some []) m
+    ))
+# 'a list -> x -> 'a encoding_evaled -> x list option
+match = \as \x \q let (match as x q) $ match_option none $ all
+
+# invert (f a b c ...) f = some [a, b, c, ...]
+invert = \x \f
+  let (quote f) $ \q
+  let (fix $ \self \as
+    let (eval $ qapp q $ map △ as) $ match_pair $ \q \block
+    match_option (
+      match_option
+        (\self self $ △ △ $ map △ as)
+        (\res \self some res)
+        (match as x q)
+    ) (\_ \self none) block self
+  ) $ \iter
+  iter []
+
+to_source =
+  let (\name match_list (\r s_ name r) (\x \xs \r s_"(" $ s_ name $ s_" " $ foldl (\s \x \r s $ s_" " $ x $ r) x xs $ s_")" $ r)) $ \format
+  let (\q \x match_pair $ \name \def match_option none (\args some $ format name $ map q args) $ invert x def) $ \for_def
+  let (\q \x match_option _ (\x x) $ foldr (\def \res match_option (\def for_def q x def) (\res \def some res) res def) none defs) $ \for_defs
+  \x fix for_defs x ""
+to_source $ foldr
+to_source $ map (\x x)
+to_source $ map (\n succ $ succ n)
+to_source $ let
+to_source $ fix
+to_source $ fix △
+to_source $ triage △
+to_source $ triage △ △
+to_source $ triage △ △ △
+to_source $ equal
