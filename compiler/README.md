@@ -1,3 +1,26 @@
+## Examples
+
+``` bash
+# Emit function that generates an app config from the emit-json example
+cat ../examples/emit-json.lamb | ./compile.sh '\bucket_id to_string $ generate_app_config bucket_id' > /tmp/generate_app_config.dag
+# Generate some app configs
+node ./tree-calculus.js -dag -file /tmp/generate_app_config.dag -string foo
+node ./tree-calculus.js -dag -file /tmp/generate_app_config.dag -string some_much_longer_bucket_id
+```
+
+``` bash
+# Compile the portability example and evaluate the translation of the example_program into bash
+cat ../examples/portability.lamb | ./compile.sh 'to_bash example_program' > /tmp/example_program.dag
+# Extract and store bash script from dag
+node ./tree-calculus.js -dag -file /tmp/example_program.dag -string > /tmp/example_program.sh
+chmod +x /tmp/example_program.sh
+# Test that bash script indeed behaves like example_program
+echo -n nonsense | /tmp/example_program.sh; echo
+echo -n secret | /tmp/example_program.sh; echo
+```
+
+## Changelog
+
 The LambAda "language" and compiler have been developed on and off over years, turning out useful over and over again during calculus explorations:
 
 * 2012: First version of LambAda created for [this project](https://lambada.pages.dev/) that experiments with bootstrapping a language from the [Iota combinator](https://en.wikipedia.org/wiki/Iota_and_Jot). LambAda compiler and Iota runtime written in C# and transpiled to JavaScript using [Script#](https://github.com/nikhilk/scriptsharp). The only conveniences LambAda provides at this point are assignments and abstraction elimination.
