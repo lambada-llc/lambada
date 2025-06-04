@@ -260,7 +260,7 @@ _is_quot = \x is_eq x '''
 parse_char  = parser_map Token_const_nat (parser_compose_snd (parse_if _is_quot) (parser_compose_fst parse_any (parse_if _is_quot)))
 parse_nat  = parser_map Token_const_nat parse_nat
 char_is_newline = \x or (is_eq x 10) (is_eq x 13)
-parse_comment = parser_map Token_comment (parser_compose_snd (parse_this 39) (parse_until char_is_newline))
+parse_comment = parser_map Token_comment (parser_compose_snd (parse_this 35) (parse_until char_is_newline))
 
 parse_token = parse_with_whitespace $ parser_any 
         [ 
@@ -396,7 +396,7 @@ parse__expr = \e
             )
             (\value parse_return $ [Syntax_const_str value])
             (\value parse_return $ [Syntax_const_nat value])
-            (\_ parse_return [])
+            (\_ parse_fail)
         )
 
 parse_expr = fix $ \e 
@@ -422,8 +422,10 @@ parse_expr = fix $ \e
 
 parse_exprs = parse_many parse_expr
 
+drop_comments = filter (Token_comment_Dispatch (\_ false) true)
+
 # Token list => Syntax_tree list option
-compiler_parse = compose parse_result_value_if_consumed parse_exprs
+compiler_parse = \ts parse_result_value_if_consumed $ parse_exprs $ drop_comments ts
 compiler_parse_expr_exn = compose parse_result_value parse_expr
 
 space = mk_pair ' '

@@ -20,7 +20,7 @@ export -f compile_chunk
 (
   >&2 echo -n Compiling chunks
   echo '__ENV△ △'
-  sed 's/#.*//' | perl -pe 's/^([^\s].*)$/\x0$1/' | parallel --null --keep-order compile_chunk | grep ' ';
+  perl -pe 's/^([^\s].*)$/\x0$1/' | parallel --null --keep-order compile_chunk | grep ' ';
   compile_chunk "$1"
   >&2 echo
   >&2 echo Linking...
