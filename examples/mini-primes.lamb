@@ -36,12 +36,12 @@ primes = (fix $ \self \next \test
 # Evaluation
 
 
+succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
 size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
 size $ fix △
 size divides
 size primes
 
-succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
 pred = fix $ \self match_list 0 (\hd \tl match_bool (\_ match_list △ (\hd \tl △ false $ △ hd tl)) (\self \tl △ true $ self tl) hd self tl)
 sn_to_n = fix $ \self triage 0 (\pred succ (self pred)) _
 
