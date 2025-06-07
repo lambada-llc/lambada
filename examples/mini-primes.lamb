@@ -1,0 +1,51 @@
+# Basics
+_ = △
+id = \x x
+id2 = \a \b \c △ (△ a) (△ △ c) b
+compose = \f \g \x f (g x)
+let = \x \f f x
+fix = let (\x x (\_ x)) $ \mk
+    let (\a \b \c △ (△ a) (△ △ c) b) $ \wait
+    let (\a \b \c △ (△ a) (△ △ c) (b c)) $ \wait1
+    \f wait mk (\x f (wait1 mk x))
+# - Reflection
+triage = \a \b \c △ (△ a b) c
+match_bool = \ot \of triage of (\_ ot) △
+match_list = \oe \oc triage oe △ oc
+# - Booleans
+false = △
+true = △ △
+or  = match_bool (\_ true) id
+
+# natural number: 0 = △, n+1 = △ n
+zero = △
+succ = △
+pred = triage _ id _
+divides = \m1 fix $ \self1 triage true (\n1 (fix $ \self2 triage self1 (\m2 triage false (self2 m2) _) _) m1 n1) _
+primes = (fix $ \self \next \test
+    \on_cons
+      let ((fix $ \self \n match_bool self pred (test n) $ succ n) next) $ \next
+      on_cons
+        next
+        (self next (\n or (test n) (divides (pred next) n)))
+  )
+  (succ $ succ zero)
+  (\_ false)
+
+
+# Evaluation
+
+
+size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
+size $ fix △
+size divides
+size primes
+
+succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
+pred = fix $ \self match_list 0 (\hd \tl match_bool (\_ match_list △ (\hd \tl △ false $ △ hd tl)) (\self \tl △ true $ self tl) hd self tl)
+sn_to_n = fix $ \self triage 0 (\pred succ (self pred)) _
+
+primes $ \hd \tl sn_to_n hd
+primes $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl sn_to_n hd
+primes $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl sn_to_n hd
+primes $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl tl $ \hd \tl sn_to_n hd
