@@ -22,17 +22,17 @@ zero = △
 succ = △
 pred = triage _ id _
 match_n = \oz \os triage oz os os
-divides = \m1 fix $ \self1 match_n true $ \n1 (fix $ \self2 match_n self1 $ \m2 match_n false $ self2 m2) m1 n1
-primes = (fix $ \self \next \test
+divides = \m1 \fix fix $ \self1 match_n true $ \n1 (fix $ \self2 match_n self1 $ \m2 match_n false $ self2 m2) m1 n1
+primes = \fix (fix $ \self \next \test
     \on_cons
       let ((fix $ \self \n match_bool self pred (test n) $ succ n) next) $ \next
       on_cons
         next
-        (self next (\n or (test n) (divides (pred next) n)))
+        (self next (\n or (test n) (divides (pred next) fix n)))
   )
   (succ $ succ zero)
   (\_ false)
-
+primes = id2 primes fix
 
 # Evaluation
 
