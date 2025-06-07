@@ -1,4 +1,5 @@
-# Syntactic sugar quick reference:
+# The little language used here is nothing but syntactic sugar on top of tree calculus.
+# Quick reference:
 # - Lambda abstractions "\variable body" desugar via abstraction elimination (combinatory logic)
 # - Boolean convention:  false = △  and  true = △ △
 # - Lists "[ ... ]" desugar to (△ ... (△ ... (△ ... △)))
@@ -6,3 +7,4 @@
 # - String constants desugar to lists of natural numbers representing unicode code points
 # - ADTs "Foo = Bar | Baz x y" desugar into Scott encoded constructors
 # - "$" like in Haskell
+# Learn more: https://github.com/lambada-llc/lambada
