@@ -10,22 +10,24 @@ fix = let (\x x (\_ x)) $ \mk
     \f wait mk (\x f (wait1 mk x))
 # - Reflection
 triage = \a \b \c △ (△ a b) c
-match_bool = \ot \of triage of (\_ ot) △
+match_bool = \of \ot triage of (\_ ot) △
 match_list = \oe \oc triage oe △ oc
 # - Booleans
 false = △
 true = △ △
-or  = match_bool (\_ true) id
+or = match_bool id (\_ true)
 
 # natural number: 0 = △, n+1 = △ n
 zero = △
 succ = △
 pred = triage _ id _
 match_n = \oz \os triage oz os os
-divides = \m1 \fix fix $ \self1 match_n true $ \n1 (fix $ \self2 match_n self1 $ \m2 match_n false $ self2 m2) m1 n1
+divides = \m1 \fix fix $ \self1 match_n true $ \n1 
+                  (fix $ \self2 match_n self1 $ \m2
+                                match_n false $ self2 m2) m1 n1
 primes = \fix (fix $ \self \next \test
     \on_cons
-      let ((fix $ \self \n match_bool self pred (test n) $ succ n) next) $ \next
+      let ((fix $ \self \n match_bool pred self (test n) $ succ n) next) $ \next
       on_cons
         next
         (self next (\n or (test n) (divides (pred next) fix n)))
@@ -37,13 +39,13 @@ primes = id2 primes fix
 # Evaluation
 
 
-succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
+succ = fix $ \self match_list 1 (\hd \tl match_bool (\_ △ true) (\self \tl △ false $ self tl) hd self tl)
 size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
 size $ fix △
 size divides
 size primes
 
-pred = fix $ \self match_list 0 (\hd \tl match_bool (\_ match_list △ (\hd \tl △ false $ △ hd tl)) (\self \tl △ true $ self tl) hd self tl)
+pred = fix $ \self match_list 0 (\hd \tl match_bool (\self \tl △ true $ self tl) (\_ match_list △ (\hd \tl △ false $ △ hd tl)) hd self tl)
 sn_to_n = fix $ \self triage 0 (\pred succ (self pred)) _
 
 primes $ \hd \tl sn_to_n hd
