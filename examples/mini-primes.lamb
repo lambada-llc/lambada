@@ -21,7 +21,8 @@ or  = match_bool (\_ true) id
 zero = △
 succ = △
 pred = triage _ id _
-divides = \m1 fix $ \self1 triage true (\n1 (fix $ \self2 triage self1 (\m2 triage false (self2 m2) _) _) m1 n1) _
+match_n = \oz \os triage oz os os
+divides = \m1 fix $ \self1 match_n true $ \n1 (fix $ \self2 match_n self1 $ \m2 match_n false $ self2 m2) m1 n1
 primes = (fix $ \self \next \test
     \on_cons
       let ((fix $ \self \n match_bool self pred (test n) $ succ n) next) $ \next
