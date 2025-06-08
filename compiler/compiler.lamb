@@ -140,8 +140,6 @@ str_to_nat = foldl (\i \c add (mul i 10) (sub c '0')) 0
 # (a -> b) -> a -> _ -> b
 stage = \f \x \_ (\_ f) _ x
 
-str_from_maybe = \formatter triage "None" formatter _
-
 list_cut_at = \f fix $ \self
   match_list
     (mk_pair [] [])
@@ -166,18 +164,15 @@ parser_compose_fst = parser_compose (\a \b a)
 parser_compose_snd = parser_compose (\a \b b)
 parser_compose_pair = parser_compose mk_pair
 
-parse_if = \cond (match_list Parse_result_fail $ \head \tail match_bool (parse_return head tail) Parse_result_fail (cond head))
+parse_if = \cond match_list Parse_result_fail $ \head \tail match_bool (parse_return head tail) Parse_result_fail (cond head)
 parse_this = \c parse_if (is_eq c)
 parse_any = parse_if (\_ true)
 parse_until = \cond \str match_pair parse_return (list_cut_at cond str)
 parse_while = \cond parse_until (compose not cond)
 parse_nonempty_str_while = \cond \str
-  (\res match_bool
-    Parse_result_fail
-    res
-    (is_empty (Parse_result_Dispatch (\_ \item item) "" res))
-  )
-  (parse_while cond str)
+  let (parse_while cond str) $ \res
+  let (is_empty (Parse_result_Dispatch (\_ \item item) "" res)) $
+  match_bool Parse_result_fail res
 
 parser_either = \p1 \p2 (\string (p1 string) (p2 string) Parse_result)
 parser_any = fix $ \self \ps
@@ -350,7 +345,7 @@ parse_list_tail = \e parser_compose_fst
                             (parse_return [])
                         )
                     )
-                    parse_sqbracket_close
+                    (parser_either parse_sqbracket_close (parser_compose_fst parse_comma parse_sqbracket_close))
 
 parse_assign_tail = \literal \e parser_map
                         (\body [Syntax_assignment literal body])
@@ -704,6 +699,7 @@ dag_to_val = \str let (str_split 10 str) $ \lines
 
 compile = compose dag_to_val compile_to_dag
 
+compile "[65,123,65,]"
 compile "[65,123,65]"
 compile "123"
 compile "\x x"
