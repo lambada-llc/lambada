@@ -1,0 +1,193 @@
+# Basics
+_ = △
+id = \x x
+const = \a \b a
+id2 = \a \b \c △ (△ a) (△ △ c) b
+compose = \f \g \x f (g x)
+let = \x \f f x
+fix = let (\x x x) $ \m
+      \f id2 m (\x f (id2 m x))
+# - Reflection
+triage = \a \b \c △ (△ a b) c
+match_bool = \ot \of triage of (\_ ot) △
+match_option = \on \os triage on os _
+match_list = \oe \oc triage oe △ oc
+# - Booleans
+false = △
+true = △ △
+not = match_bool false true
+# - Options
+some = △
+none = △
+bind_option = \f \o match_option none f o
+# - Natural numbers
+succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
+pred = fix $ \self match_list 0 (\hd \tl match_bool (\_ match_list △ (\hd \tl △ false $ △ hd tl)) (\self \tl △ true $ self tl) hd self tl)
+# - Map
+down = \cont \m triage (cont △ △) △ cont m
+right = \f down $ \l \r △ l (f r)
+left = \f down $ \l \r △ (f l) r
+path = fix $ \self triage
+    (\f right f)
+    (\x \f left $ right $ self x f)
+    (\x \y \f left $ left $ right $ self x $ self y f)
+map_empty = △
+map_set = \k \v \m path k (\_ v) m
+
+left = triage △ △ (\a \b a)
+right = triage △ △ (\a \b b)
+map_get = fix $ \self triage
+    right
+    (\x \m self x $ right $ left m)
+    (\x \y \m self y $ self x $ right $ left $ left m)
+
+scott_pair = \a \b \p p a b
+# key -> key -> X * key value map
+count_eval_steps = fix $ \self
+    triage
+      (\z scott_pair (△ z) id)
+      (\y \z scott_pair (△ y z) id)
+      (triage
+        (\y \z scott_pair y succ)
+        (\x \y \z
+          self x z $ \r1 \cost1
+          self y z $ \r2 \cost2
+          self r1 r2 $ \r \cost
+          scott_pair r (compose (compose cost1 cost2)(compose cost succ))
+        )
+        (\w \x \y \z
+          triage
+            (scott_pair w succ)
+            (\a
+                self x a $ \r \cost
+                scott_pair r (compose cost succ))
+            (\a \b
+                self y a $ \r \cost1
+                self r b $ \r \cost2
+                scott_pair r (compose (compose cost1 cost2) succ))
+            z))
+
+count_eval_steps (fix $ \self triage △ (\n △ (self n) (self n)) △) (△ $ △ $ △ $ △ △) $ \res \cost cost 0
+count_eval_steps = \a \b count_eval_steps a b $ \res \cost cost 0
+
+count_eval_steps id 3
+
+
+
+
+# state = { decode : Shallow_node.t Map.M(Id).t; cache : App_res.t Map.M(App).t }
+# encoded as Scott triple (third element is always [Map.length decode])
+
+state_empty = \dcn dcn map_empty map_empty 1
+
+state_alloc = \x \dcn
+  dcn $ \decode \cache \next
+  scott_pair (\dcn dcn (map_set next x decode) cache (succ next)) next
+
+decode = \id \dcn dcn $ \decode \_cache \_next map_get id decode
+apply = fix $ \apply \dcn \a \b
+  let (△ a b) $ \cache_key
+  match_option
+    (\dcn
+      triage
+        (\dcn state_alloc (△ b) dcn)
+        (\a \dcn state_alloc (△ a b) dcn)
+        (\x \y \dcn
+          triage
+            (\dcn scott_pair dcn y)
+            (\a1 \dcn
+              apply dcn a1 b $ \dcn \a1
+              apply dcn y b $ \dcn \y
+              apply dcn a1 y
+            )
+            (\a1 \a2 \dcn
+              triage
+                (\dcn scott_pair dcn a1)
+                (\u \dcn apply dcn a2 u)
+                (\u \v \dcn
+                  apply dcn y u $ \dcn \res
+                  apply dcn res v
+                )
+                (decode b dcn)
+                dcn
+            )
+            (decode x dcn)
+            dcn
+        )
+        (decode a dcn)
+        dcn
+      $ \dcn \res
+      scott_pair (dcn $ \decode \cache \next  \dcn dcn decode (map_set cache_key (some res) cache) next) res
+    )
+    (\res \dcn scott_pair dcn res)
+    (dcn $ \_decode \cache \_next map_get cache_key cache)
+    dcn
+
+encode = fix $ \encode \dcn \x triage
+  (\dcn scott_pair dcn 0)
+  (\a \dcn
+    encode dcn a $ \dcn \a
+    apply dcn 0 a
+  )
+  (\a \b \dcn
+    encode dcn a $ \dcn \a
+    encode dcn b $ \dcn \b
+    apply dcn 0 a $ \dcn \res
+    apply dcn res b
+  )
+  x
+  dcn
+
+decode = \dcn
+  dcn $ \decode \_cache \_next
+  fix $ \self \cache \id
+    match_option
+      (\cache 
+        triage
+          (scott_pair cache △)
+          (\a
+            self cache a $ \cache \a
+            scott_pair cache $ △ a)
+          (\a \b
+            self cache a $ \cache \a
+            self cache b $ \cache \b
+            scott_pair cache $ △ a b)
+          (map_get id decode)
+        $ \cache \res
+        scott_pair (map_set id (some res) cache) res
+      )
+      (\res \cache scott_pair cache res)
+    (map_get id cache)
+    cache
+
+size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
+
+
+decode = \dcn \id decode dcn map_empty id $ \_cache \res res
+
+exp = fix $ \self triage △ (\n △ (self n) (self n)) △
+exp_sharing = fix $ \self triage △ (\n (\x △ x x) (self n)) △
+
+n_to_sn = fix $ \self triage △ _ (\hd \tl △ $ self $ pred $ △ hd tl)
+
+apply = \a \b
+  let state_empty $ \dcn
+  encode dcn a $ \dcn \a_id
+  encode dcn b $ \dcn \b_id
+  apply dcn a_id b_id $ \dcn \res_id
+  decode dcn res_id
+
+n = n_to_sn 16
+
+exp n
+apply exp n # 10M
+
+size $ exp n
+size $ apply exp n
+# apply apply exp n8
+apply not false
+apply not true
+
+n = n_to_sn 0
+count_eval_steps exp n
+# count_eval_steps (apply exp) n
