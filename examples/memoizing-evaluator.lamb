@@ -78,11 +78,13 @@ count_eval_steps id 3
 # state = { decode : Shallow_node.t Map.M(Id).t; cache : App_res.t Map.M(App).t }
 # encoded as Scott triple (third element is always [Map.length decode])
 
-state_empty = \dcn dcn map_empty map_empty 1
+id0 = △
+next_id = fix $ \self triage (△ △ id0) (\tl △ △ tl) (\_ \tl △ $ self tl)
+state_empty = \dcn dcn map_empty map_empty (next_id id0)
 
 state_alloc = \x \dcn
   dcn $ \decode \cache \next
-  scott_pair (\dcn dcn (map_set next x decode) cache (succ next)) next
+  scott_pair (\dcn dcn (map_set next x decode) cache (next_id next)) next
 
 decode = \id \dcn dcn $ \decode \_cache \_next map_get id decode
 apply = fix $ \apply \dcn \a \b
@@ -170,14 +172,14 @@ exp_sharing = fix $ \self triage △ (\n (\x △ x x) (self n)) △
 
 n_to_sn = fix $ \self triage △ _ (\hd \tl △ $ self $ pred $ △ hd tl)
 
-apply = \a \b
+apply =
   let state_empty $ \dcn
-  encode dcn a $ \dcn \a_id
-  encode dcn b $ \dcn \b_id
+  \a encode dcn a $ \dcn \a_id
+  \b encode dcn b $ \dcn \b_id
   apply dcn a_id b_id $ \dcn \res_id
   decode dcn res_id
 
-n = n_to_sn 16
+n = n_to_sn 14
 
 exp n
 apply exp n # 10M
@@ -190,4 +192,5 @@ apply not true
 
 n = n_to_sn 0
 count_eval_steps exp n
-# count_eval_steps (apply exp) n
+count_eval_steps apply exp
+count_eval_steps (apply exp) n
