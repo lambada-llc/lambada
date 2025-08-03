@@ -147,16 +147,6 @@ divmod = \a \b foldr
 div = \a \b match_pair (\div \mod div) $ divmod a b
 mod = \a \b match_pair (\div \mod mod) $ divmod a b
 
-is_eq = fix $ \self
-    match_list
-        is_zero
-        (\h1 \t1 \l2
-            (match_list
-                (\t1 is_zero (△ h1 t1))
-                (\h2 \t2 match_bool (\t1 self t1 t2) (\t1 false) (match_bool h1 (not h1) h2))
-                l2
-                t1)
-        )
 is_gte = \a \b is_lte b a
 is_lt = \a \b not $ is_lte a b
 is_gt = \a \b not $ is_lte a b
@@ -232,7 +222,7 @@ parser_compose_snd = parser_compose (\a \b b)
 parser_compose_pair = parser_compose mk_pair
 
 parse_if = \cond match_list Parse_result_fail $ \head \tail match_bool (parse_return head tail) Parse_result_fail (cond head)
-parse_this = \c parse_if (is_eq c)
+parse_this = \c parse_if (equal c)
 parse_any = parse_if (\_ true)
 parse_until = \cond \str match_pair parse_return (list_cut_at cond str)
 parse_while = \cond parse_until (compose not cond)
@@ -261,6 +251,11 @@ parse_whitespace = parse_while is_whitespace_char
 parse_with_whitespace = \p parser_compose_fst (parser_compose_snd parse_whitespace p) parse_whitespace
 parse_identifier = parser_compose mk_pair (parse_if is_alpha_char) (parse_while is_alphanum_char) 
 parse_nat = parser_map str_to_nat $ parse_nonempty_str_while is_digit_char
+
+count_eval_steps (is_lte 64) 'x' # 1313
+count_eval_steps is_alpha_char 'x' # 7898
+count_eval_steps (parse_if is_alpha_char) "x" # 8039
+
 
 parse_result_value_if = \restFilter \res res none (\remaining \item match_bool (some item) none (restFilter remaining))
 parse_result_value_if_consumed = parse_result_value_if is_empty
@@ -291,7 +286,7 @@ Special_char = Schar_paren_open
 
 schar_eq =
   let (\s s 0 1 2 3 4 5 6 7 8) $ \id
-  \a \b is_eq (id a) (id b)
+  \a \b equal (id a) (id b)
 
 # tokens
 Token = Token_special_char schar     # schar
@@ -316,12 +311,12 @@ parse_special_char = parser_any
             let (parse_this '|') $ parser_map $ \_ Token_special_char Schar_pipe,
             let (parse_this '$') $ parser_map $ \_ Token_special_char Schar_dollar
         ]
-_is_quot = \x is_eq x '"'
+_is_quot = equal '"'
 parse_str  = parser_map Token_const_str (parser_compose_snd (parse_if _is_quot) (parser_compose_fst (parse_until _is_quot) (parse_if _is_quot)))
-_is_quot = \x is_eq x '''
+_is_quot = equal '''
 parse_char  = parser_map Token_const_nat (parser_compose_snd (parse_if _is_quot) (parser_compose_fst parse_any (parse_if _is_quot)))
 parse_nat  = parser_map Token_const_nat parse_nat
-char_is_newline = \x or (is_eq x 10) (is_eq x 13)
+char_is_newline = \x or (equal 10 x) (equal 13 x)
 parse_comment = parser_map Token_comment (parser_compose_snd (parse_this 35) (parse_until char_is_newline))
 
 parse_token = parse_with_whitespace $ parser_any 
@@ -337,6 +332,8 @@ parse_token = parse_with_whitespace $ parser_any
 
 # str => Token list option
 compiler_tokenize = compose parse_result_value_if_consumed $ parse_many parse_token
+count_eval_steps compiler_tokenize "x" # 27449
+
 
 Syntax_tree = Syntax_identifier name                        # string
             | Syntax_const_nat value                        # nat
@@ -610,7 +607,7 @@ _syntax_emit_adt_variant = \items \ctr_arg_list \index \args \name
                                     match_bool
                                         (Syntax_identifier argDisp)
                                         (syntax_abs (snd (fst item)) (Syntax_identifier argAlt))
-                                        (is_eq index (snd item))
+                                        (equal index (snd item))
                                 ) items)
                             )
                         )
@@ -713,17 +710,17 @@ compile_to_dag = \s
     ""
 
 size add # 599
-size compiler_tokenize # 39517
-size compile_to_dag # 293357, was 151k!
+size compiler_tokenize # 37192
+size compile_to_dag # 287413, was 151k!
 
 
 
-count_eval_steps compile_to_dag "x" # 164172
-count_eval_steps compile_to_dag "42" # 173247
-count_eval_steps compile_to_dag "1337" # 180871
-count_eval_steps compile_to_dag "[42]" # 208144
-count_eval_steps compile_to_dag "\x x" # 222809
-count_eval_steps compile_to_dag "x = 42" # 225407
+count_eval_steps compile_to_dag "x" # 161745
+count_eval_steps compile_to_dag "42" # 169362
+count_eval_steps compile_to_dag "1337" # 178830
+count_eval_steps compile_to_dag "[42]" # 198461
+count_eval_steps compile_to_dag "\x x" # 215953
+count_eval_steps compile_to_dag "x = 42" # 217020
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 583261
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
