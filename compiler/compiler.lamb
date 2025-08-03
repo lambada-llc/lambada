@@ -1,11 +1,12 @@
 # Basics
 _ = △
 id = \x x
-id2 = \a \b \c △ (△ a) (△ △ c) b
+wait = \a \b \c △ (△ a) (△ △ c) b
 compose = \f \g \x f (g x)
 let = \x \f f x
-fix = let (\x x x) $ \m
-      \f id2 m (\x f (id2 m x))
+wait1 = \m △ (△ $ \b \c m c b)
+self_apply_k = \x x (\_ x)
+fix = \f wait self_apply_k (\x f (wait1 self_apply_k x))
 # - Reflection
 triage = \a \b \c △ (△ a b) c
 match_bool = \ot \of triage of (\_ ot) △
@@ -95,7 +96,7 @@ is_lte = \a \b foldl
     (\acc match_pair (match_bool (match_bool acc false) (match_bool true acc)))
     true
     (zip a b)
-_divmod = fix $ \self id2 $ match_list (\small 0) (\_ \big \small △ small (self big (double small)))
+_divmod = fix $ \self wait $ match_list (\small 0) (\_ \big \small △ small (self big (double small)))
 divmod = \a \b foldr
     (\h \acc match_pair
         (\div \mod 
@@ -201,7 +202,7 @@ parse_result_value = parse_result_value_if (\_ true)
 
 fail = "fail"
 parse_many = 
-    fix $ \self id2 $
+    fix $ \self wait $
         \parser \s 
         (parser s)
             (Parse_result s [])
@@ -645,17 +646,48 @@ compile_to_dag = \s
         $ compiler_tokenize s)
     ""
 
-size add # 683
-size size # 252
-size compiler_tokenize # 43327
-size compile_to_dag # 289113, was 151k!
+size add # 635
+size compiler_tokenize # 41479
+size compile_to_dag # 295727, was 151k!
 
 
-compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # 6.7M
-compile_to_dag "x = 42" # 95k, was 88k
-compile_to_dag $ concat_list [ ['"'], repeat 100 '1', ['"'] ] # 565k
-compile_to_dag $ concat_list [ repeat 100 '1' ] # 342M, was 332M
-compile_to_dag "\d \a \i i d (\x \x a) a a a a" # 579k
+count_eval_steps = fix $ \self
+    \a \b \cost
+    triage
+      (\z \cost △ (△ z) cost)
+      (\y \z \cost △ (△ y z) cost)
+      (triage
+        (\y \z \cost △ y cost)
+        (\x \y \z \cost
+          match_pair (\r1 \cost
+          match_pair (\r2 \cost
+            (self r1 r2 cost)
+          ) (self y z cost)
+          ) (self x z cost)
+        )
+        (\w \x \y \z
+          triage
+            (\cost △ w cost)
+            (\a \cost self x a cost)
+            (\a \b \cost let_pair (self y a cost) $ \r \cost self r b cost)
+            z))
+      a b (succ cost)
+count_eval_steps = \a \b match_pair (\_ \cost cost) $ count_eval_steps a b 0
+count_eval_steps (count_eval_steps id) 123 # 584
+
+count_eval_steps compile_to_dag "x" # 164172
+count_eval_steps compile_to_dag "42" # 197424
+count_eval_steps compile_to_dag "1337" # 250255
+count_eval_steps compile_to_dag "[42]" # 232321
+count_eval_steps compile_to_dag "\x x" # 222809
+count_eval_steps compile_to_dag "x = 42" # 249584
+# count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 583261
+# count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
+# count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
+# count_eval_steps compile_to_dag $ concat_list [ ['"'], repeat 100 '1', ['"'] ] # 883925
+# count_eval_steps compile_to_dag $ concat_list [ repeat 100 '1' ] # ?
+# count_eval_steps compile_to_dag "\d \a \i i d (\x \x a) a a a a" # ?
+
 compile_to_dag
 
 str_split = \c foldr (\hd match_bool (match_pair $ \p \ps △ "" (△ p ps)) (match_pair $ \p \ps △ (△ hd p) ps) $ equal c hd) (△ "" [])
