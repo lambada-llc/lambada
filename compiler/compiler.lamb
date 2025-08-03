@@ -9,15 +9,16 @@ self_apply_k = \x x (\_ x)
 fix = \f wait self_apply_k (\x f (wait1 self_apply_k x))
 # - Reflection
 triage = \a \b \c △ (△ a b) c
-match_bool = \ot \of triage of (\_ ot) △
-match_list = \oe \oc triage oe △ oc
-match_pair = \op triage △ △ op
+match_bool = \ot \of triage of (\_ ot) _
+match_bool_ft = \of \ot triage of (\_ ot) _
+match_list = \oe \oc triage oe _ oc
+match_pair = \op triage _ _ op
 # - Booleans
 false = △
 true = △ △
 and = match_bool id (\_ false)
 or  = match_bool (\_ true) id
-not = match_bool false true
+not = match_bool_ft true false
 # - Option = △ | △ value
 none = △
 some = △
@@ -32,8 +33,8 @@ snd = match_pair (\a \b b)
 change_fst = \pair \f match_pair (\a \b mk_pair (f a) b) pair
 change_snd = \pair \f match_pair (\a \b mk_pair a (f b)) pair
 # - Natural numbers
-succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
-pred = fix $ \self match_list 0 (\hd \tl match_bool (\_ match_list △ (\hd \tl △ false $ △ hd tl)) (\self \tl △ true $ self tl) hd self tl)
+succ = fix $ \self match_list 1 (\hd \tl match_bool_ft (\_ △ true) (\self \tl △ false $ self tl) hd self tl)
+pred = fix $ \self match_list 0 (\hd \tl match_bool_ft (\self \tl △ true $ self tl) (\_ match_list △ (\hd \tl △ false $ △ hd tl)) hd self tl)
 # - Lists
 is_empty = match_list true (\_ \_ false)
 is_not_empty = match_list false (\_ \_ true)
@@ -50,8 +51,8 @@ concat = \a \b foldr △ b a
 concat_list = foldr concat ""
 join = \sepa \l (match_list [] (foldl (\cur \new concat new (concat sepa cur)))) (reverse l)
 any = \f \l is_not_empty $ filter f l
-drop = fix $ \self triage (\l l) △ (\nhd \ntl match_list [] (\hd \tl self (pred $ △ nhd ntl) tl))
-take = fix $ \self triage (\_ []) △ (\nhd \ntl match_list [] (\hd \tl △ hd $ self (pred $ △ nhd ntl) tl))
+drop = fix $ \self triage (\l l) _ (\nhd \ntl match_list [] (\hd \tl self (pred $ △ nhd ntl) tl))
+take = fix $ \self triage (\_ []) _ (\nhd \ntl match_list [] (\hd \tl △ hd $ self (pred $ △ nhd ntl) tl))
 list_bind = \f \l foldl (\a \b concat a (f b)) [] l
 # - Polymorphic helpers
 size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
@@ -59,6 +60,33 @@ equal = fix $ \self triage
     (triage true (\_ false) (\_ \_ false))
     (\ax triage false (self ax) (\_ \_ false))
     (\ax \ay triage false (\_ false) (\bx \by and (self ax bx) (self ay by)))
+
+count_eval_steps = fix $ \self
+    \a \b \cost
+    triage
+      (\z \cost △ (△ z) cost)
+      (\y \z \cost △ (△ y z) cost)
+      (triage
+        (\y \z \cost △ y cost)
+        (\x \y \z \cost
+          match_pair (\r1 \cost
+          match_pair (\r2 \cost
+            (self r1 r2 cost)
+          ) (self y z cost)
+          ) (self x z cost)
+        )
+        (\w \x \y \z
+          triage
+            (\cost △ w cost)
+            (\a \cost self x a cost)
+            (\a \b \cost let_pair (self y a cost) $ \r \cost self r b cost)
+            z))
+      a b (succ cost)
+count_eval_steps = \a \b match_pair (\_ \cost cost) $ count_eval_steps a b 0
+# count_eval_steps (count_eval_steps id) 123 # 584
+
+# count_eval_steps succ 123 # 96
+# count_eval_steps succ 124 # 30
 
 # Arithmetic on natural numbers
 is_zero = match_list true (\_ \_ false)
@@ -72,24 +100,27 @@ zip = fix $ \self \l1 \l2
         (\h1 \t1 match_list (△ h1 t1) (\h2 \t2 self t1 t2))
         l1 l2)
 add_3bits =
-  match_bool
-    (match_bool
-        (\c △ c true)
-        (\c △ (not c) c))
-    (match_bool
-        (\c △ (not c) c)
+  match_bool_ft
+    (match_bool_ft
         (\c △ c false))
+        (\c △ (not c) c)
+    (match_bool_ft
+        (\c △ (not c) c))
+        (\c △ c true)
 _add = fix $ \self
       match_list
         (match_bool (△ true △) false)
         (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (add_3bits c) hd))
 add = \a \b _add (zip a b) false
+count_eval_steps add 1234 # 1002
+count_eval_steps (add 1234) 1234 # 1448
+
 _sub = fix $ \self
       match_list
         (\c false)
         (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (\a \b add_3bits c a (not b)) hd))
-sub = \a \b let (foldr (\h \acc match_bool (△ h acc) 0 (or (match_list false (\_ \_ true) acc) h)) 0) $ \canonicalize
-            canonicalize $ _sub (zip a b) true
+nat_canonicalize = foldr (\h \acc match_bool (△ h acc) 0 (or (match_list false (\_ \_ true) acc) h)) 0
+sub = \a \b nat_canonicalize $ _sub (zip a b) true
 double = \a match_list 0 (\_ \_ △ false a) a
 mul = \a \b foldr (\h \s add (double s) (match_bool b 0 h)) 0 a
 is_lte = \a \b foldl
@@ -135,8 +166,43 @@ _nat_to_str = fix $ \self match_list
     id
     (\hd \tl \acc match_pair (\div \mod self div (△ (add '0' mod) acc)) (divmod (△ hd tl) 10))
 nat_to_str = \n match_bool "0" (_nat_to_str n "") (is_zero n)
-str_to_nat = foldl (\i \c add (mul i 10) (sub c '0')) 0
 
+char_to_nat =
+  match_list _ $ match_bool_ft
+  (match_list _ $ match_bool_ft
+   (match_list _ $ match_bool_ft
+    (match_list _ $ match_bool_ft
+     (\_ 0)
+     (\_ 8)
+    )
+    (\_ 4)
+   )
+   (match_list _ $ match_bool_ft
+    (\_ 2)
+    (\_ 6)
+   )
+  )
+  (match_list _ $ match_bool_ft
+   (match_list _ $ match_bool_ft
+    (match_list _ $ match_bool_ft
+     (\_ 1)
+     (\_ 9)
+    )
+    (\_ 5)
+   )
+   (match_list _ $ match_bool_ft
+    (\_ 3)
+    (\_ 7)
+   )
+  )
+# count_eval_steps char_to_nat '4' # 8
+# count_eval_steps char_to_nat '9' # 11
+
+mul10 = match_list 0 $ \hd \tl add (△ false $ △ hd tl) (△ false $ △ false $ △ false $ △ hd tl)
+str_to_nat = foldl (\i \c add (mul10 i) (char_to_nat c)) 0
+
+# str_to_nat "123456"
+# count_eval_steps str_to_nat "123456" # 33016
 
 # (a -> b) -> a -> _ -> b
 stage = \f \x \_ (\_ f) _ x
@@ -646,41 +712,18 @@ compile_to_dag = \s
         $ compiler_tokenize s)
     ""
 
-size add # 635
-size compiler_tokenize # 41479
-size compile_to_dag # 295727, was 151k!
+size add # 599
+size compiler_tokenize # 39517
+size compile_to_dag # 293357, was 151k!
 
 
-count_eval_steps = fix $ \self
-    \a \b \cost
-    triage
-      (\z \cost △ (△ z) cost)
-      (\y \z \cost △ (△ y z) cost)
-      (triage
-        (\y \z \cost △ y cost)
-        (\x \y \z \cost
-          match_pair (\r1 \cost
-          match_pair (\r2 \cost
-            (self r1 r2 cost)
-          ) (self y z cost)
-          ) (self x z cost)
-        )
-        (\w \x \y \z
-          triage
-            (\cost △ w cost)
-            (\a \cost self x a cost)
-            (\a \b \cost let_pair (self y a cost) $ \r \cost self r b cost)
-            z))
-      a b (succ cost)
-count_eval_steps = \a \b match_pair (\_ \cost cost) $ count_eval_steps a b 0
-count_eval_steps (count_eval_steps id) 123 # 584
 
 count_eval_steps compile_to_dag "x" # 164172
-count_eval_steps compile_to_dag "42" # 197424
-count_eval_steps compile_to_dag "1337" # 250255
-count_eval_steps compile_to_dag "[42]" # 232321
+count_eval_steps compile_to_dag "42" # 173247
+count_eval_steps compile_to_dag "1337" # 180871
+count_eval_steps compile_to_dag "[42]" # 208144
 count_eval_steps compile_to_dag "\x x" # 222809
-count_eval_steps compile_to_dag "x = 42" # 249584
+count_eval_steps compile_to_dag "x = 42" # 225407
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 583261
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
