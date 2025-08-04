@@ -104,11 +104,11 @@ zip = fix $ \self \l1 \l2
 add_3bits =
   match_bool_ft
     (match_bool_ft
-        (\c △ c false))
-        (\c △ (not c) c)
-    (match_bool_ft
+        (\c △ c false)
         (\c △ (not c) c))
-        (\c △ c true)
+    (match_bool_ft
+        (\c △ (not c) c)
+        (\c △ c true))
 _add = fix $ \self
       match_list
         (match_bool (△ true △) false)
