@@ -126,18 +126,26 @@ sub = \a \b nat_canonicalize $ _sub (zip a b) true
 double = \a match_list 0 (\_ \_ △ false a) a
 mul = \a \b foldr (\h \s add (double s) (match_bool b 0 h)) 0 a
 idd = triage △ △ △
-is_lte = \a \b foldl
-    (match_bool_ft
-          (match_pair (match_bool (\_ false) idd))
-          (match_pair (match_bool idd (\_ true)))
-    )
-    true
-    (zip a b)
+_is_lte = match_bool_ft
+          (match_bool (\_ true) idd)
+          (match_bool idd (\_ false))
+is_lte = \a foldr
+  (\b \cont \acc \tl match_list false (\hd \tl cont (_is_lte b acc hd) tl) tl)
+  (\acc match_list acc $ \hd \tl true)
+  a
+  true
 
-# count_eval_steps is_lte 1337 # 978
-# count_eval_steps (is_lte 1337) 13 # 1095
-# count_eval_steps (is_lte 1337) 1337 # 871
-# count_eval_steps (is_lte 1337) 13370 # 1183
+# is_lte 1337 0
+# is_lte 1337 1
+# is_lte 1337 1336
+# is_lte 1337 1337
+# is_lte 1337 1338
+# is_lte 1337 13360
+
+# count_eval_steps is_lte 1337 # 822
+# count_eval_steps (is_lte 1337) 13 # 51
+# count_eval_steps (is_lte 1337) 1337 # 144
+# count_eval_steps (is_lte 1337) 13370 # 141
 
 _divmod = fix $ \self wait $ match_list (\small 0) (\_ \big \small △ small (self big (double small)))
 divmod = \a \b foldr
@@ -256,9 +264,16 @@ is_whitespace_char = \c is_lte c ' '
 is_uppercase_char = is_between_incl 'A' 'Z'
 is_digit_char = is_between_incl '0' '9'
 # very broad definition to support special characters without fuzz
-is_alpha_char = lazy_and (\c is_lte 64 c) (lazy_not $ lazy_and (\c is_lte 91 c) $ lazy_or (is_between_incl 91 94) (is_between_incl 123 127))
-is_alpha_char = lazy_and (\c is_lte 64 c) (lazy_not $ lazy_or (is_between_incl 91 94) (is_between_incl 123 127))
+is_alpha_char =
+  lazy_and (is_lte 64) $ lazy_not $
+  lazy_and (is_lte 91) $ lazy_not $
+  lazy_and (is_lte 95) $ lazy_not $
+  lazy_and (is_lte 123) $ lazy_not $
+            is_lte 128
 is_alphanum_char = lazy_or is_alpha_char is_digit_char
+# count_eval_steps is_alpha_char '=' # 85
+# count_eval_steps is_alpha_char 'C' # 210
+# count_eval_steps is_alpha_char 'c' # 430
 
 # is_alpha_char 'A'
 # is_alpha_char 'x'
@@ -270,9 +285,11 @@ parse_with_whitespace = \p parser_compose_fst (parser_compose_snd parse_whitespa
 parse_identifier = parser_compose mk_pair (parse_if is_alpha_char) (parse_while is_alphanum_char) 
 parse_nat = parser_map str_to_nat $ parse_nonempty_str_while is_digit_char
 
-count_eval_steps (is_lte 64) 'x' # 561
-count_eval_steps is_alpha_char 'x' # 2942
-count_eval_steps (parse_if is_alpha_char) "x" # 3083
+# count_eval_steps parse_identifier "compiler_tokenize" # 11247
+
+# count_eval_steps (is_lte 64) 'x' # 91
+# count_eval_steps is_alpha_char 'x' # 416
+# count_eval_steps (parse_if is_alpha_char) "x" # 557
 
 
 parse_result_value_if = \restFilter \res res none (\remaining \item match_bool (some item) none (restFilter remaining))
@@ -327,7 +344,7 @@ parse_special_char = parser_any
             let (parse_this ']') $ parser_map $ \_ Token_special_char Schar_sqbracket_close, 
             let (parse_this ',') $ parser_map $ \_ Token_special_char Schar_comma,
             let (parse_this '|') $ parser_map $ \_ Token_special_char Schar_pipe,
-            let (parse_this '$') $ parser_map $ \_ Token_special_char Schar_dollar
+            let (parse_this '$') $ parser_map $ \_ Token_special_char Schar_dollar,
         ]
 _is_quot = equal '"'
 parse_str  = parser_map Token_const_str (parser_compose_snd (parse_if _is_quot) (parser_compose_fst (parse_until _is_quot) (parse_if _is_quot)))
@@ -339,8 +356,8 @@ parse_comment = parser_map Token_comment (parser_compose_snd (parse_this 35) (pa
 
 parse_token = parse_with_whitespace $ parser_any 
         [ 
-            parse_special_char,
             parser_map token_identifier parse_identifier, 
+            parse_special_char,
             parse_str,
             parse_char,
             parse_nat,
@@ -350,7 +367,6 @@ parse_token = parse_with_whitespace $ parser_any
 
 # str => Token list option
 compiler_tokenize = compose parse_result_value_if_consumed $ parse_many parse_token
-count_eval_steps compiler_tokenize "x" # 16672
 
 
 Syntax_tree = Syntax_identifier name                        # string
@@ -728,17 +744,17 @@ compile_to_dag = \s
     ""
 
 size add # 634
-size compiler_tokenize # 33636
-size compile_to_dag # 282017, was 151k!
+size compiler_tokenize # 23082
+size compile_to_dag # 270223, was 151k!
 
 
 
-count_eval_steps compile_to_dag "x" # 153395
-count_eval_steps compile_to_dag "42" # 164833
-count_eval_steps compile_to_dag "1337" # 180859
-count_eval_steps compile_to_dag "[42]" # 188027
-count_eval_steps compile_to_dag "\x x" # 186008
-count_eval_steps compile_to_dag "x = 42" # 190873
+count_eval_steps compile_to_dag "x" # 144923
+count_eval_steps compile_to_dag "42" # 162007
+count_eval_steps compile_to_dag "1337" # 176221
+count_eval_steps compile_to_dag "[42]" # 183181
+count_eval_steps compile_to_dag "\x x" # 166509
+count_eval_steps compile_to_dag "x = 42" # 176666
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 583261
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
