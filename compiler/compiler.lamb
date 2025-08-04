@@ -16,8 +16,8 @@ match_pair = \op triage _ _ op
 # - Booleans
 false = △
 true = △ △
-and = match_bool id (\_ false)
-or  = match_bool (\_ true) id
+# and = match_bool id (\_ false)
+# or  = match_bool (\_ true) id
 not = match_bool_ft true false
 # - Option = △ | △ value
 none = △
@@ -56,6 +56,7 @@ take = fix $ \self triage (\_ []) _ (\nhd \ntl match_list [] (\hd \tl △ hd $ s
 list_bind = \f \l foldl (\a \b concat a (f b)) [] l
 # - Polymorphic helpers
 size = \x (fix $ \self \x compose succ $ triage id self (\x \y compose (self x) (self y)) x) x 0
+or2 = \a \xb \x match_bool_ft id (\_ \_ true) a xb x
 and2 = \a \xb \x match_bool_ft (\_ \_ false) id a xb x
 equal = fix $ \self triage
     (triage true (\_ false) (\_ \_ false))
@@ -120,7 +121,7 @@ _sub = fix $ \self
       match_list
         (\c false)
         (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (\a \b add_3bits c a (not b)) hd))
-nat_canonicalize = foldr (\h \acc match_bool (△ h acc) 0 (or (match_list false (\_ \_ true) acc) h)) 0
+nat_canonicalize = foldr (\h \acc match_bool (△ h acc) 0 (or2 h (match_list false (\_ \_ true)) acc)) 0
 sub = \a \b nat_canonicalize $ _sub (zip a b) true
 double = \a match_list 0 (\_ \_ △ false a) a
 mul = \a \b foldr (\h \s add (double s) (match_bool b 0 h)) 0 a
@@ -323,7 +324,7 @@ parse_str  = parser_map Token_const_str (parser_compose_snd (parse_if _is_quot) 
 _is_quot = equal '''
 parse_char  = parser_map Token_const_nat (parser_compose_snd (parse_if _is_quot) (parser_compose_fst parse_any (parse_if _is_quot)))
 parse_nat  = parser_map Token_const_nat parse_nat
-char_is_newline = \x or (equal 10 x) (equal 13 x)
+char_is_newline = lazy_or (equal 10) (equal 13)
 parse_comment = parser_map Token_comment (parser_compose_snd (parse_this 35) (parse_until char_is_newline))
 
 parse_token = parse_with_whitespace $ parser_any 
@@ -717,8 +718,8 @@ compile_to_dag = \s
     ""
 
 size add # 599
-size compiler_tokenize # 35896
-size compile_to_dag # 284549, was 151k!
+size compiler_tokenize # 35907
+size compile_to_dag # 284536, was 151k!
 
 
 
