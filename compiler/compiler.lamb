@@ -258,7 +258,8 @@ parser_any = fix $ \self \ps
 lazy_and = \a \b \x match_bool id (\_ \_ false) (a x) b x
 lazy_or  = \a \b \x match_bool (\_ \_ true) id (a x) b x
 lazy_not = \a \x match_bool_ft true false (a x)
-is_between_incl = \a \b lazy_and (\c is_lte a c) (\c is_lte c b)
+is_gte = \a \b not (is_lte (succ a) b)
+is_between_incl = \a \b lazy_and (\c is_lte a c) (\c is_gte b c)
 
 is_whitespace_char = \c is_lte c ' '
 is_uppercase_char = is_between_incl 'A' 'Z'
@@ -271,9 +272,10 @@ is_alpha_char =
   lazy_and (is_lte 123) $ lazy_not $
             is_lte 128
 is_alphanum_char = lazy_or is_alpha_char is_digit_char
-# count_eval_steps is_alpha_char '=' # 85
-# count_eval_steps is_alpha_char 'C' # 210
-# count_eval_steps is_alpha_char 'c' # 430
+count_eval_steps is_alpha_char '=' # 85
+count_eval_steps is_alpha_char 'C' # 210
+count_eval_steps is_alpha_char 'c' # 430
+count_eval_steps is_alphanum_char '3' # 274
 
 # is_alpha_char 'A'
 # is_alpha_char 'x'
@@ -744,17 +746,17 @@ compile_to_dag = \s
     ""
 
 size add # 634
-size compiler_tokenize # 23082
-size compile_to_dag # 270223, was 151k!
+size compiler_tokenize # 23051
+size compile_to_dag # 270192, was 151k!
 
 
 
-count_eval_steps compile_to_dag "x" # 144923
-count_eval_steps compile_to_dag "42" # 162007
-count_eval_steps compile_to_dag "1337" # 176221
-count_eval_steps compile_to_dag "[42]" # 183181
-count_eval_steps compile_to_dag "\x x" # 166509
-count_eval_steps compile_to_dag "x = 42" # 176666
+count_eval_steps compile_to_dag "x" # 144385
+count_eval_steps compile_to_dag "42" # 161075
+count_eval_steps compile_to_dag "1337" # 174349
+count_eval_steps compile_to_dag "[42]" # 181724
+count_eval_steps compile_to_dag "\x x" # 165433
+count_eval_steps compile_to_dag "x = 42" # 175196
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 583261
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
