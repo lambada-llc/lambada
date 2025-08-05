@@ -696,7 +696,9 @@ syntax_prelude =
   ]
 
 # Syntax list => Native list option
-compiler_lower = \synts some $ list_bind syntax_to_native $ concat syntax_prelude synts
+compiler_lower = \synts some $ concat
+  (list_bind syntax_to_native syntax_prelude)
+  (list_bind syntax_to_native synts)
 
 # t generator = () -> t * t generator
 _str2_from_nat = \n \cont foldr (\h \a mk_pair (match_bool 49 48 h) a) cont n
@@ -747,16 +749,16 @@ compile_to_dag = \s
 
 size add # 634
 size compiler_tokenize # 23051
-size compile_to_dag # 270192, was 151k!
+size compile_to_dag # 267828, was 151k!
 
 
 
-count_eval_steps compile_to_dag "x" # 144385
-count_eval_steps compile_to_dag "42" # 161075
-count_eval_steps compile_to_dag "1337" # 174349
-count_eval_steps compile_to_dag "[42]" # 181724
-count_eval_steps compile_to_dag "\x x" # 165433
-count_eval_steps compile_to_dag "x = 42" # 175196
+count_eval_steps compile_to_dag "x" # 110698
+count_eval_steps compile_to_dag "42" # 127388
+count_eval_steps compile_to_dag "1337" # 140662
+count_eval_steps compile_to_dag "[42]" # 148037
+count_eval_steps compile_to_dag "\x x" # 131746
+count_eval_steps compile_to_dag "x = 42" # 141509
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 583261
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
