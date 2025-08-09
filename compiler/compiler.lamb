@@ -262,7 +262,7 @@ lazy_not = \a \x match_bool_ft true false (a x)
 is_gte = \a \b not (is_lte (succ a) b)
 is_between_incl = \a \b lazy_and (\c is_lte a c) (\c is_gte b c)
 
-is_whitespace_char = \c is_lte c ' '
+is_whitespace_char = is_gte ' '
 is_uppercase_char = is_between_incl 'A' 'Z'
 is_digit_char = is_between_incl '0' '9'
 # very broad definition to support special characters without fuzz
@@ -749,21 +749,21 @@ compile_to_dag = \s
     ""
 
 size add # 634
-size compiler_tokenize # 23051
-size compile_to_dag # 239125, was 151k!
+size compiler_tokenize # 23025
+size compile_to_dag # 239099, was 151k!
 
 
 
-count_eval_steps compile_to_dag "x" # 110299
-count_eval_steps compile_to_dag "42" # 125043
-count_eval_steps compile_to_dag "1337" # 136927
-count_eval_steps compile_to_dag "[42]" # 145692
-count_eval_steps compile_to_dag "\x x" # 131347
-count_eval_steps compile_to_dag "x = 42" # 139134
-# count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 583261
+count_eval_steps compile_to_dag "x" # 109774
+count_eval_steps compile_to_dag "42" # 124584
+count_eval_steps compile_to_dag "1337" # 136472
+count_eval_steps compile_to_dag "[42]" # 143205
+count_eval_steps compile_to_dag "\x x" # 128254
+count_eval_steps compile_to_dag "x = 42" # 135843
+# count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 302827
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
-# count_eval_steps compile_to_dag $ concat_list [ ['"'], repeat 100 '1', ['"'] ] # 883925
+# count_eval_steps compile_to_dag $ concat_list [ ['"'], repeat 100 '1', ['"'] ] # 599286
 # count_eval_steps compile_to_dag $ concat_list [ repeat 100 '1' ] # ?
 # count_eval_steps compile_to_dag "\d \a \i i d (\x \x a) a a a a" # ?
 
