@@ -248,16 +248,8 @@ parse_nonempty_str_while = \cond \str
   let (is_empty (Parse_result_Dispatch (\_ \item item) "" res)) $
   match_bool Parse_result_fail res
 
-parser_either = \p1 \p2 (\string (p1 string) (p2 string) Parse_result)
-parser_any = fix $ \self \ps
-  (\string match_list
-    Parse_result_fail
-    (\head \tail (head string) (self tail) (\r \i \_ Parse_result r i) string)
-    ps
-  )
-parser_any = foldr
-    (\parser \acc \string (parser string) acc (\r \i \_ Parse_result r i) string)
-    (\string Parse_result_fail)
+parser_either = \p1 \p2 (\string (p1 string) p2 (\r \i \_ Parse_result r i) string)
+parser_any = foldr parser_either parse_fail
 
 lazy_and = \a \b \x match_bool id (\_ \_ false) (a x) b x
 lazy_or  = \a \b \x match_bool (\_ \_ true) id (a x) b x
