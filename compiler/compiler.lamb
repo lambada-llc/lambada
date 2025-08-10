@@ -226,13 +226,13 @@ list_cut_at = \f fix $ \self
     )
 
 # t Parser = (string => t Parse_result)
-Parse_result = Parse_result_fail | Parse_result remaining item
+Parse_result = Parse_result_fail | Parse_result item remaining
 
-parse_return = \x (\input Parse_result input x)
+parse_return = \x (\input Parse_result x input)
 parse_fail = \input Parse_result_fail
-parse_result_map = \conv \res res Parse_result_fail (\remaining \item Parse_result remaining (conv item))
+parse_result_map = \conv \res res Parse_result_fail (\item \remaining Parse_result (conv item) remaining)
 parser_map = \conv \p (\string parse_result_map conv (p string))
-parser_compose_dep = \p1 \cp2 (\input (p1 input) Parse_result_fail (\remaining \item cp2 item remaining))
+parser_compose_dep = \p1 \cp2 (\input (p1 input) Parse_result_fail cp2)
 parser_compose = \compose \p1 \p2 parser_compose_dep p1 (\item \remaining parse_result_map (compose item) (p2 remaining))
 parser_compose_fst = parser_compose (\a \b a)
 parser_compose_snd = parser_compose (\a \b b)
@@ -245,10 +245,10 @@ parse_until = \cond \str match_pair parse_return (list_cut_at cond str)
 parse_while = \cond parse_until (compose not cond)
 parse_nonempty_str_while = \cond \str
   let (parse_while cond str) $ \res
-  let (is_empty (Parse_result_Dispatch (\_ \item item) "" res)) $
+  let (is_empty (Parse_result_Dispatch (\item \_ item) "" res)) $
   match_bool Parse_result_fail res
 
-parser_either = \p1 \p2 (\string (p1 string) p2 (\r \i \_ Parse_result r i) string)
+parser_either = \p1 \p2 (\string (p1 string) p2 (\i \r \_ Parse_result i r) string)
 parser_any = foldr parser_either parse_fail
 
 lazy_and = \a \b \x match_bool id (\_ \_ false) (a x) b x
@@ -290,7 +290,7 @@ parse_nat = parser_map str_to_nat $ parse_nonempty_str_while is_digit_char
 # count_eval_steps (parse_if is_alpha_char) "x" # 557
 
 
-parse_result_value_if = \restFilter \res res none (\remaining \item match_bool (some item) none (restFilter remaining))
+parse_result_value_if = \restFilter \res res none (\item \remaining match_bool (some item) none (restFilter remaining))
 parse_result_value_if_consumed = parse_result_value_if is_empty
 parse_result_value = parse_result_value_if (\_ true)
 
@@ -299,11 +299,11 @@ parse_many =
     fix $ \self wait $
         \parser \s 
         (parser s)
-            (Parse_result s [])
-            (\remaining \item 
+            (Parse_result [] s)
+            (\item  \remaining
                 (self parser remaining)
                 Parse_result_fail # unreachable
-                (\rremaining \ritems Parse_result rremaining (mk_pair item ritems))
+                (\ritems \rremaining Parse_result (mk_pair item ritems) rremaining)
             )
 
 # special chars
@@ -744,25 +744,23 @@ compile_to_dag = \s
     ""
 
 size add # 634
-size compiler_tokenize # 22760
-size compile_to_dag # 238834, was 151k!
+size compiler_tokenize # 22003
+size compile_to_dag # 236400, was 151k!
 
 
 
-count_eval_steps compile_to_dag "x" # 105620
-count_eval_steps compile_to_dag "42" # 117113
-count_eval_steps compile_to_dag "1337" # 129001
-count_eval_steps compile_to_dag "[42]" # 132014
-count_eval_steps compile_to_dag "\x x" # 122612
-count_eval_steps compile_to_dag "x = 42" # 126636
+count_eval_steps compile_to_dag "x" # 105065
+count_eval_steps compile_to_dag "42" # 116462
+count_eval_steps compile_to_dag "1337" # 128350
+count_eval_steps compile_to_dag "[42]" # 130427
+count_eval_steps compile_to_dag "\x x" # 121538
+count_eval_steps compile_to_dag "x = 42" # 125445
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 302827
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
 # count_eval_steps compile_to_dag $ concat_list [ ['"'], repeat 100 '1', ['"'] ] # 599286
 # count_eval_steps compile_to_dag $ concat_list [ repeat 100 '1' ] # ?
 # count_eval_steps compile_to_dag "\d \a \i i d (\x \x a) a a a a" # ?
-
-compile_to_dag
 
 str_split = \c foldr (\hd match_bool (match_pair $ \p \ps △ "" (△ p ps)) (match_pair $ \p \ps △ (△ hd p) ps) $ equal c hd) (△ "" [])
 
