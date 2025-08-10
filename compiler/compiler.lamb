@@ -255,6 +255,9 @@ parser_any = fix $ \self \ps
     (\head \tail (head string) (self tail) (\r \i \_ Parse_result r i) string)
     ps
   )
+parser_any = foldr
+    (\parser \acc \string (parser string) acc (\r \i \_ Parse_result r i) string)
+    (\string Parse_result_fail)
 
 lazy_and = \a \b \x match_bool id (\_ \_ false) (a x) b x
 lazy_or  = \a \b \x match_bool (\_ \_ true) id (a x) b x
@@ -749,17 +752,17 @@ compile_to_dag = \s
     ""
 
 size add # 634
-size compiler_tokenize # 23025
-size compile_to_dag # 239099, was 151k!
+size compiler_tokenize # 22760
+size compile_to_dag # 238834, was 151k!
 
 
 
-count_eval_steps compile_to_dag "x" # 109774
-count_eval_steps compile_to_dag "42" # 124584
-count_eval_steps compile_to_dag "1337" # 136472
-count_eval_steps compile_to_dag "[42]" # 143205
-count_eval_steps compile_to_dag "\x x" # 128254
-count_eval_steps compile_to_dag "x = 42" # 135843
+count_eval_steps compile_to_dag "x" # 105620
+count_eval_steps compile_to_dag "42" # 117113
+count_eval_steps compile_to_dag "1337" # 129001
+count_eval_steps compile_to_dag "[42]" # 132014
+count_eval_steps compile_to_dag "\x x" # 122612
+count_eval_steps compile_to_dag "x = 42" # 126636
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 302827
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
