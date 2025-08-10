@@ -226,30 +226,31 @@ list_cut_at = \f fix $ \self
     )
 
 # t Parser = (string => t Parse_result)
-Parse_result = Parse_result_fail | Parse_result item remaining
+parse_result_fail = △
+parse_return = \item \remaining △ item remaining
+match_parse_result = \on_fail \on_succ \res triage on_fail _ on_succ res 
 
-parse_return = \x (\input Parse_result x input)
-parse_fail = \input Parse_result_fail
-parse_result_map = \conv \res res Parse_result_fail (\item \remaining Parse_result (conv item) remaining)
+parser_fail = \input parse_result_fail
+parse_result_map = \conv match_parse_result parse_result_fail (\item \remaining parse_return (conv item) remaining)
 parser_map = \conv \p (\string parse_result_map conv (p string))
-parser_compose_dep = \p1 \cp2 (\input (p1 input) Parse_result_fail cp2)
+parser_compose_dep = \p1 \cp2 (\input match_parse_result parse_result_fail cp2 $ p1 input)
 parser_compose = \compose \p1 \p2 parser_compose_dep p1 (\item \remaining parse_result_map (compose item) (p2 remaining))
 parser_compose_fst = parser_compose (\a \b a)
 parser_compose_snd = parser_compose (\a \b b)
 parser_compose_pair = parser_compose mk_pair
 
-parse_if = \cond match_list Parse_result_fail $ \head \tail match_bool (parse_return head tail) Parse_result_fail (cond head)
+parse_if = \cond match_list parse_result_fail $ \head \tail match_bool (parse_return head tail) parse_result_fail (cond head)
 parse_this = \c parse_if (equal c)
 parse_any = parse_if (\_ true)
 parse_until = \cond \str match_pair parse_return (list_cut_at cond str)
 parse_while = \cond parse_until (compose not cond)
 parse_nonempty_str_while = \cond \str
   let (parse_while cond str) $ \res
-  let (is_empty (Parse_result_Dispatch (\item \_ item) "" res)) $
-  match_bool Parse_result_fail res
+  let (match_parse_result true (\item \_ is_empty item) res) $
+  match_bool parse_result_fail res
 
-parser_either = \p1 \p2 (\string (p1 string) p2 (\i \r \_ Parse_result i r) string)
-parser_any = foldr parser_either parse_fail
+parser_either = \p1 \p2 (\string match_parse_result p2 (\i \r \_ parse_return i r) (p1 string) string)
+parser_any = foldr parser_either parser_fail
 
 lazy_and = \a \b \x match_bool id (\_ \_ false) (a x) b x
 lazy_or  = \a \b \x match_bool (\_ \_ true) id (a x) b x
@@ -290,7 +291,7 @@ parse_nat = parser_map str_to_nat $ parse_nonempty_str_while is_digit_char
 # count_eval_steps (parse_if is_alpha_char) "x" # 557
 
 
-parse_result_value_if = \restFilter \res res none (\item \remaining match_bool (some item) none (restFilter remaining))
+parse_result_value_if = \restFilter match_parse_result none (\item \remaining match_bool (some item) none (restFilter remaining))
 parse_result_value_if_consumed = parse_result_value_if is_empty
 parse_result_value = parse_result_value_if (\_ true)
 
@@ -298,13 +299,15 @@ fail = "fail"
 parse_many = 
     fix $ \self wait $
         \parser \s 
-        (parser s)
-            (Parse_result [] s)
+        match_parse_result
+            (parse_return [] s)
             (\item  \remaining
-                (self parser remaining)
-                Parse_result_fail # unreachable
-                (\ritems \rremaining Parse_result (mk_pair item ritems) rremaining)
+                match_parse_result
+                  parse_result_fail # unreachable
+                  (\ritems \rremaining parse_return (mk_pair item ritems) rremaining)
+                  (self parser remaining)
             )
+            (parser s)
 
 # special chars
 Special_char = Schar_paren_open
@@ -399,7 +402,7 @@ parse_abs_tail = \e
                 (\rese [Syntax_abs literal rese])
                 e
             )
-            parse_fail)
+            parser_fail)
 
 parse_schar = \schar_expected 
     parser_compose_dep
@@ -407,17 +410,17 @@ parse_schar = \schar_expected
         (Token_special_char_Dispatch  
             (\schar match_bool
                 (parse_return id)
-                parse_fail
+                parser_fail
                 (schar_eq schar_expected schar)
             )
-            parse_fail)
+            parser_fail)
 
 parse_identifier = parser_compose_dep
         parse_any
-        (Token_identifier_Dispatch parse_return parse_fail)
+        (Token_identifier_Dispatch parse_return parser_fail)
 parse_identifier_adt = parser_compose_dep
         parse_any
-        (Token_identifier_adt_Dispatch parse_return parse_fail)
+        (Token_identifier_adt_Dispatch parse_return parser_fail)
         
 parse_paren_close = parse_schar Schar_paren_close
 parse_sqbracket_close = parse_schar Schar_sqbracket_close
@@ -466,14 +469,14 @@ parse__expr = \e
         (\token token
             (\schar schar
                 (parser_compose_fst (parser_map (\x [x]) e) parse_paren_close)
-                parse_fail
+                parser_fail
                 (parse_abs_tail e)
-                parse_fail
+                parser_fail
                 (parse_list_tail e)
-                parse_fail
-                parse_fail
-                parse_fail
-                parse_fail
+                parser_fail
+                parser_fail
+                parser_fail
+                parser_fail
             )
             (\literal 
                 parser_either
@@ -487,7 +490,7 @@ parse__expr = \e
             )
             (\value parse_return $ [Syntax_const_str value])
             (\value parse_return $ [Syntax_const_nat value])
-            (\_ parse_fail)
+            (\_ parser_fail)
         )
 
 parse_expr = fix $ \e 
@@ -496,7 +499,7 @@ parse_expr = fix $ \e
         (\list 
             (\ops 
                 match_bool 
-                parse_fail
+                parser_fail
                 (parser_map
                     (\tailx match_list
                         _  
@@ -744,17 +747,17 @@ compile_to_dag = \s
     ""
 
 size add # 634
-size compiler_tokenize # 22003
-size compile_to_dag # 236400, was 151k!
+size compiler_tokenize # 18085
+size compile_to_dag # 227341, was 151k!
 
 
 
-count_eval_steps compile_to_dag "x" # 105065
-count_eval_steps compile_to_dag "42" # 116462
-count_eval_steps compile_to_dag "1337" # 128350
-count_eval_steps compile_to_dag "[42]" # 130427
-count_eval_steps compile_to_dag "\x x" # 121538
-count_eval_steps compile_to_dag "x = 42" # 125445
+count_eval_steps compile_to_dag "x" # 102865
+count_eval_steps compile_to_dag "42" # 113827
+count_eval_steps compile_to_dag "1337" # 125715
+count_eval_steps compile_to_dag "[42]" # 125289
+count_eval_steps compile_to_dag "\x x" # 117539
+count_eval_steps compile_to_dag "x = 42" # 120807
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 302827
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
