@@ -30,8 +30,6 @@ mk_pair = △
 let_pair = \p \f match_pair f p
 fst = match_pair (\a \b a)
 snd = match_pair (\a \b b)
-change_fst = \pair \f match_pair (\a \b mk_pair (f a) b) pair
-change_snd = \pair \f match_pair (\a \b mk_pair a (f b)) pair
 # - Natural numbers
 succ = fix $ \self match_list 1 (\hd \tl match_bool_ft (\_ △ true) (\self \tl △ false $ self tl) hd self tl)
 pred = fix $ \self match_list 0 (\hd \tl match_bool_ft (\self \tl △ true $ self tl) (\_ match_list △ (\hd \tl △ false $ △ hd tl)) hd self tl)
@@ -219,10 +217,10 @@ list_cut_at = \f fix $ \self
     (mk_pair [] [])
     (\h \t
         match_bool
-            (\self mk_pair [] (mk_pair h t))
-            (\self change_fst (self t) (mk_pair h))
+            (\h \t mk_pair [] (mk_pair h t))
+            (\h \t match_pair (\l \r mk_pair (mk_pair h l) r) $ self t)
             (f h)
-            self
+            h t
     )
 
 # t Parser = (string => t Parse_result)
@@ -778,17 +776,17 @@ compile_to_dag = \s
     ""
 
 size add # 634
-size compiler_tokenize # 78757
-size compile_to_dag # 288013
+size compiler_tokenize # 77881
+size compile_to_dag # 287137
 
 
 
-count_eval_steps compile_to_dag "x" # 102228
-count_eval_steps compile_to_dag "42" # 113375
-count_eval_steps compile_to_dag "1337" # 124949
-count_eval_steps compile_to_dag "[42]" # 123811
-count_eval_steps compile_to_dag "\x x" # 115540
-count_eval_steps compile_to_dag "x = 42" # 119155
+count_eval_steps compile_to_dag "x" # 102261
+count_eval_steps compile_to_dag "42" # 113174
+count_eval_steps compile_to_dag "1337" # 124514
+count_eval_steps compile_to_dag "[42]" # 123019
+count_eval_steps compile_to_dag "\x x" # 114901
+count_eval_steps compile_to_dag "x = 42" # 118165
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 302827
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
