@@ -777,6 +777,22 @@ compile_to_dag = \s
         $ compiler_tokenize s)
     ""
 
+compile_to_dag_bench = \s
+  let (count_eval_steps compiler_tokenize s) $ \n_tokenize
+  let (compiler_tokenize s) $ match_option _ $ \s
+  let (count_eval_steps compiler_parse s) $ \n_parse
+  let (compiler_parse s) $ match_option _ $ \s
+  let (count_eval_steps compiler_lower s) $ \n_lower
+  let (compiler_lower s) $ match_option _ $ \s
+  let (count_eval_steps compiler_emit_dag s) $ \n_emit
+  let (compiler_emit_dag s) $ \s
+  concat_list [
+    "Tokenize: ", nat_to_str n_tokenize, [10],
+    "Parse:    ", nat_to_str n_parse, [10],
+    "Lower:    ", nat_to_str n_lower, [10],
+    "Emit:     ", nat_to_str n_emit, [10],
+  ]
+
 size add # 634
 size compiler_tokenize # 77881
 size compile_to_dag # 287137
