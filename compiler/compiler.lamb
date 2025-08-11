@@ -799,12 +799,22 @@ size compile_to_dag # 287137
 
 
 
-count_eval_steps compile_to_dag "x" # 102261
-count_eval_steps compile_to_dag "42" # 113174
+compile_to_dag_bench "x"
+# Tokenize: 1097
+# Parse:    3908
+# Lower:    558
+# Emit:     96484
+
+compile_to_dag_bench "42"
+# Tokenize: 9464
+# Parse:    3683
+# Lower:    588
+# Emit:     99195
+
 count_eval_steps compile_to_dag "1337" # 124514
 count_eval_steps compile_to_dag "[42]" # 123019
 count_eval_steps compile_to_dag "\x x" # 114901
-count_eval_steps compile_to_dag "x = 42" # 118165
+count_eval_steps compile_to_dag "x = 42" # 117781
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 278449
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
