@@ -258,6 +258,30 @@ lazy_not = \a \x match_bool_ft true false (a x)
 is_gte = \a \b not (is_lte (succ a) b)
 is_between_incl = \a \b lazy_and (\c is_lte a c) (\c is_gte b c)
 
+
+# tree generator
+Generator = Generator
+  leaf # △ option
+  stem # Generator option
+  fork # (Generator, Generator) option
+
+gen_leaf = Generator (some △) none none
+gen_bool = Generator (some △) (some gen_leaf) none
+gen_list = \gelem fix $ \self \max_len match_list
+  (Generator (some △) none none)
+  (\hd \tl Generator (some △) none (some $ △ gelem $ self $ pred $ △ hd tl))
+  max_len
+gen_byte = gen_list gen_bool 8
+
+match_option = \on \os triage on os _
+precompute_alt = fix $ \self \g \alt \f g $ \leaf \stem \fork
+    triage
+      (match_option alt f leaf)
+      (match_option (\_ alt) (\u self u alt (\u f $ △ u)) stem)
+      (match_option (\_ \_ alt) (match_pair $ \u \v self u (\_ alt) (\u self v alt (\v f $ △ u v))) fork)
+precompute_alt_multi = \alt foldr (\g \acc \f precompute_alt g alt $ \x acc $ f x) (\f f)
+
+
 is_whitespace_char = is_gte ' '
 is_uppercase_char = is_between_incl 'A' 'Z'
 is_digit_char = is_between_incl '0' '9'
@@ -269,10 +293,17 @@ is_alpha_char =
   lazy_and (is_lte 123) $ lazy_not $
             is_lte 128
 is_alphanum_char = lazy_or is_alpha_char is_digit_char
-count_eval_steps is_alpha_char '=' # 85
-count_eval_steps is_alpha_char 'C' # 210
-count_eval_steps is_alpha_char 'c' # 430
-count_eval_steps is_alphanum_char '3' # 274
+
+is_whitespace_char = precompute_alt gen_byte false is_whitespace_char
+is_uppercase_char = precompute_alt gen_byte false is_uppercase_char
+is_digit_char = precompute_alt gen_byte false is_digit_char
+is_alpha_char = precompute_alt gen_byte true is_alpha_char
+is_alphanum_char = precompute_alt gen_byte true is_alphanum_char
+
+count_eval_steps is_alpha_char '=' # 18
+count_eval_steps is_alpha_char 'C' # 18
+count_eval_steps is_alpha_char 'c' # 19
+count_eval_steps is_alphanum_char '3' # 17
 
 # is_alpha_char 'A'
 # is_alpha_char 'x'
@@ -747,17 +778,17 @@ compile_to_dag = \s
     ""
 
 size add # 634
-size compiler_tokenize # 18085
-size compile_to_dag # 227341, was 151k!
+size compiler_tokenize # 78757
+size compile_to_dag # 288013
 
 
 
-count_eval_steps compile_to_dag "x" # 102865
-count_eval_steps compile_to_dag "42" # 113827
-count_eval_steps compile_to_dag "1337" # 125715
-count_eval_steps compile_to_dag "[42]" # 125289
-count_eval_steps compile_to_dag "\x x" # 117539
-count_eval_steps compile_to_dag "x = 42" # 120807
+count_eval_steps compile_to_dag "x" # 102228
+count_eval_steps compile_to_dag "42" # 113375
+count_eval_steps compile_to_dag "1337" # 124949
+count_eval_steps compile_to_dag "[42]" # 123811
+count_eval_steps compile_to_dag "\x x" # 115540
+count_eval_steps compile_to_dag "x = 42" # 119155
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 302827
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
