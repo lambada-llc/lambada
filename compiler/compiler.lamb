@@ -212,16 +212,18 @@ str_to_nat = foldl (\i \c add (mul10 i) (char_to_nat c)) 0
 # (a -> b) -> a -> _ -> b
 stage = \f \x \_ (\_ f) _ x
 
-list_cut_at = \f fix $ \self
+list_cut_at = \f fix $ \self \l
   match_list
-    (mk_pair [] [])
-    (\h \t
+    (\self mk_pair [] [])
+    (\h \t \self
         match_bool
-            (\h \t mk_pair [] (mk_pair h t))
-            (\h \t match_pair (\l \r mk_pair (mk_pair h l) r) $ self t)
+            (\h \t \self mk_pair [] (mk_pair h t))
+            (\h \t \self match_pair (\l \r mk_pair (mk_pair h l) r) $ self t)
             (f h)
-            h t
+            h t self
     )
+    l
+    self
 
 # t Parser = (string => t Parse_result)
 parse_result_fail = △
@@ -787,10 +789,10 @@ count_eval_steps compile_to_dag "1337" # 124514
 count_eval_steps compile_to_dag "[42]" # 123019
 count_eval_steps compile_to_dag "\x x" # 114901
 count_eval_steps compile_to_dag "x = 42" # 118165
-# count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 302827
+# count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 278449
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
-# count_eval_steps compile_to_dag $ concat_list [ ['"'], repeat 100 '1', ['"'] ] # 599286
+# count_eval_steps compile_to_dag $ concat_list [ ['"'], repeat 100 '1', ['"'] ] # 575352
 # count_eval_steps compile_to_dag $ concat_list [ repeat 100 '1' ] # ?
 # count_eval_steps compile_to_dag "\d \a \i i d (\x \x a) a a a a" # ?
 
