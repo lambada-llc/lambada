@@ -731,8 +731,8 @@ compiler_lower = \synts some $ concat_precomp
   (list_bind syntax_to_native synts)
 
 # t generator = () -> t * t generator
-_str2_from_nat = \n \cont foldr (\h \a mk_pair (match_bool 49 48 h) a) cont n
-str2_from_nat_cont = \n match_bool (mk_pair 48) (_str2_from_nat n) (is_zero n)
+_str2_from_nat = \n \cont foldr (\h \a mk_pair (match_bool '1' '0' h) a) cont n
+str2_from_nat_cont = \n match_bool (mk_pair '0') (_str2_from_nat n) (is_zero n)
 str2_from_nat = \n str2_from_nat_cont n △
 str2_from_nat 12345612
 _gen_bin = fix $ \self \i \_ mk_pair (stage str2_from_nat_cont i _) (self $ stage succ i _)
