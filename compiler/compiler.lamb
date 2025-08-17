@@ -724,18 +724,21 @@ syntax_prelude =
   , Syntax_assignment ":b" $ quick_parse_exn "△ (△ (△ △ (△ (△ (△ △ △)) △))) (△ △)"
   , Syntax_assignment ":c" $ quick_parse_exn "△ (△ (△ (△ (△ △ (△ (△ (△ △ △)) △))) (△ (△ (△ △ (△ △))) (△ (△ (△ △ △)) △)))) (△ △ (△ △))"
   ]
+native_prelude = list_bind syntax_to_native syntax_prelude
 
 # Syntax list => Native list option
 compiler_lower = \synts some $ concat_precomp
-  (list_bind syntax_to_native syntax_prelude)
+  native_prelude
   (list_bind syntax_to_native synts)
+
+_compiler_lower = \synts some $ list_bind syntax_to_native synts
 
 # t generator = () -> t * t generator
 _str2_from_nat = \n \cont foldr (\h \a \tl △ (match_bool '1' '0' h) $ a tl) id n cont
-str2_from_nat_cont = \n match_bool (mk_pair '0') (_str2_from_nat n) (is_zero n)
+str2_from_nat_cont = \n match_list (mk_pair '0') (\hd \tl _str2_from_nat $ △ hd tl) n
 str2_from_nat = \n str2_from_nat_cont n △
 str2_from_nat 12345612
-_gen_bin = fix $ \self \i \_ mk_pair (stage str2_from_nat_cont i _) (self $ stage succ i _)
+_gen_bin = fix $ \self \i \pair pair (stage str2_from_nat_cont i pair) (self $ stage succ i pair)
 gen_bin = _gen_bin 0
 # fst (snd (snd (gen_bin _) _) _) ""
 
@@ -746,13 +749,12 @@ _native_expr_to_dag_cont = fix $ \self \n n
          self o1 gen_bin $ \res1 \l1 \gen_bin
          self o2 gen_bin $ \res2 \l2 \gen_bin
          \triple
-            match_pair
+            gen_bin
               (\fresh \gen_bin
                 triple
                   (\tl res1 $ res2 $ fresh$space$l1$space$l2$newline $ tl)
                   fresh
                   gen_bin)
-              (gen_bin _)
     )
     (\emit \gen_bin emit gen_bin)
 native_def_to_dag_cont = \n n
@@ -769,10 +771,11 @@ native_def_to_dag_cont = \n n
 # native_def_to_dag_cont (Native_expr (Native_app (Native_identifier "△") (Native_identifier "△"))) △
 
 compiler_emit_dag = \natives foldr native_def_to_dag_cont "" natives
+_compiler_emit_dag = \natives concat_precomp (compiler_emit_dag native_prelude) (compiler_emit_dag natives)
 compile_to_dag = \s
     (option_get_value
-        $ option_map compiler_emit_dag
-        $ option_bind compiler_lower
+        $ option_map _compiler_emit_dag
+        $ option_bind _compiler_lower
         $ option_bind compiler_parse
         $ compiler_tokenize s)
     ""
@@ -783,9 +786,9 @@ compile_to_dag_bench = \s
   let (count_eval_steps compiler_parse s) $ \n_parse
   let (compiler_parse s) $ match_option _ $ \s
   let (count_eval_steps compiler_lower s) $ \n_lower
-  let (compiler_lower s) $ match_option _ $ \s
+  let (_compiler_lower s) $ match_option _ $ \s
   let (count_eval_steps compiler_emit_dag s) $ \n_emit
-  let (compiler_emit_dag s) $ \s
+  let (_compiler_emit_dag s) $ \s
   concat_list [
     "Tokenize: ", nat_to_str n_tokenize, [10],
     "Parse:    ", nat_to_str n_parse, [10],
@@ -795,7 +798,7 @@ compile_to_dag_bench = \s
 
 size add # 634
 size compiler_tokenize # 77839
-size compile_to_dag # 286773
+size compile_to_dag # 294329
 
 
 
@@ -803,43 +806,43 @@ compile_to_dag_bench "x"
 # Tokenize: 1097
 # Parse:    3908
 # Lower:    558
-# Emit:     80254
+# Emit:     410
 
 compile_to_dag_bench "42"
 # Tokenize: 9464
 # Parse:    3683
 # Lower:    588
-# Emit:     81801
+# Emit:     1908
 
 compile_to_dag_bench "1337"
 # Tokenize: 18991
 # Parse:    3683
 # Lower:    588
-# Emit:     82534
+# Emit:     2641
 
 compile_to_dag_bench "[42]"
 # Tokenize: 12237
 # Parse:    6945
 # Lower:    971
-# Emit:     84497
+# Emit:     4318
 
 compile_to_dag_bench "\x x"
 # Tokenize: 2867
 # Parse:    6366
 # Lower:    8764
-# Emit:     80295
+# Emit:     451
 
 compile_to_dag_bench "x = 42"
 # Tokenize: 11443
 # Parse:    6357
 # Lower:    612
-# Emit:     81935
+# Emit:     2042
 
 compile_to_dag_bench "△ (△ (△ (△ (△ △ (△ (△ (△ △ △)) △))) (△ (△ (△ △ (△ △))) (△ (△ (△ △ △)) △)))) (△ △ (△ △))"
 # Tokenize: 47035
 # Parse:    82133
 # Lower:    17196
-# Emit:     118416
+# Emit:     34680
 
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 278449
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
