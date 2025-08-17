@@ -731,7 +731,7 @@ compiler_lower = \synts some $ concat_precomp
   (list_bind syntax_to_native synts)
 
 # t generator = () -> t * t generator
-_str2_from_nat = \n \cont foldr (\h \a mk_pair (match_bool '1' '0' h) a) cont n
+_str2_from_nat = \n \cont foldr (\h \a \tl △ (match_bool '1' '0' h) $ a tl) id n cont
 str2_from_nat_cont = \n match_bool (mk_pair '0') (_str2_from_nat n) (is_zero n)
 str2_from_nat = \n str2_from_nat_cont n △
 str2_from_nat 12345612
@@ -740,9 +740,9 @@ gen_bin = _gen_bin 0
 # fst (snd (snd (gen_bin _) _) _) ""
 
 # Native => str cont
-_native_expr_to_dag_cont = fix $ \self \n \gen_bin n
-    (\literal \triple triple (\tl tl) (concat literal) gen_bin)
-    (\o1 \o2 
+_native_expr_to_dag_cont = fix $ \self \n n
+    (\literal \gen_bin \triple triple (\tl tl) (concat literal) gen_bin)
+    (\o1 \o2 \gen_bin 
          self o1 gen_bin $ \res1 \l1 \gen_bin
          self o2 gen_bin $ \res2 \l2 \gen_bin
          \triple
@@ -754,7 +754,7 @@ _native_expr_to_dag_cont = fix $ \self \n \gen_bin n
                   gen_bin)
               (gen_bin _)
     )
-    (\emit emit gen_bin)
+    (\emit \gen_bin emit gen_bin)
 native_def_to_dag_cont = \n n
    (\literal \o
      _native_expr_to_dag_cont o gen_bin $ \res \l \_
@@ -794,8 +794,8 @@ compile_to_dag_bench = \s
   ]
 
 size add # 634
-size compiler_tokenize # 77881
-size compile_to_dag # 287137
+size compiler_tokenize # 77839
+size compile_to_dag # 286773
 
 
 
@@ -803,37 +803,43 @@ compile_to_dag_bench "x"
 # Tokenize: 1097
 # Parse:    3908
 # Lower:    558
-# Emit:     96484
+# Emit:     80254
 
 compile_to_dag_bench "42"
 # Tokenize: 9464
 # Parse:    3683
 # Lower:    588
-# Emit:     99195
+# Emit:     81801
 
 compile_to_dag_bench "1337"
 # Tokenize: 18991
 # Parse:    3683
 # Lower:    588
-# Emit:     100978
+# Emit:     82534
 
 compile_to_dag_bench "[42]"
 # Tokenize: 12237
 # Parse:    6945
 # Lower:    971
-# Emit:     102508
+# Emit:     84497
 
 compile_to_dag_bench "\x x"
 # Tokenize: 2867
 # Parse:    6366
 # Lower:    8764
-# Emit:     96525
+# Emit:     80295
 
 compile_to_dag_bench "x = 42"
 # Tokenize: 11443
 # Parse:    6357
 # Lower:    612
-# Emit:     99329
+# Emit:     81935
+
+compile_to_dag_bench "△ (△ (△ (△ (△ △ (△ (△ (△ △ △)) △))) (△ (△ (△ △ (△ △))) (△ (△ (△ △ △)) △)))) (△ △ (△ △))"
+# Tokenize: 47035
+# Parse:    82133
+# Lower:    17196
+# Emit:     118416
 
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 278449
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
