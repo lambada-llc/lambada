@@ -811,10 +811,30 @@ compile_to_dag_bench "42"
 # Lower:    588
 # Emit:     99195
 
-count_eval_steps compile_to_dag "1337" # 124514
-count_eval_steps compile_to_dag "[42]" # 123019
-count_eval_steps compile_to_dag "\x x" # 114901
-count_eval_steps compile_to_dag "x = 42" # 117781
+compile_to_dag_bench "1337"
+# Tokenize: 18991
+# Parse:    3683
+# Lower:    588
+# Emit:     100978
+
+compile_to_dag_bench "[42]"
+# Tokenize: 12237
+# Parse:    6945
+# Lower:    971
+# Emit:     102508
+
+compile_to_dag_bench "\x x"
+# Tokenize: 2867
+# Parse:    6366
+# Lower:    8764
+# Emit:     96525
+
+compile_to_dag_bench "x = 42"
+# Tokenize: 11443
+# Parse:    6357
+# Lower:    612
+# Emit:     99329
+
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1" # 278449
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 | Bar x0 x1 x2 x4" # ?
 # count_eval_steps compile_to_dag "Foo = Foo x x4 x1 x2 x3 x4 x44 x45 x46 | Bar x0 x1 x2 x4 x44 x45 x46 | Baz x1 x2 x3 x4 x44 x45 x46 | Bax x1 x2 x3 x4" # ?
