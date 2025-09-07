@@ -315,9 +315,35 @@ to_source $ triage △ △
 to_source $ triage △ △ △
 to_source $ equal
 
-# 6c appendix 1: Turning partial application of arithmetic function back into code
+# 6c Appendix. The power of tree calculus and its intensionality becomes particularly
+# apparent when applying the above machinery to partially evaluated functions. While
+# many programming languages support some way to query the source code or byte code
+# of a predefined function, the vast majority of them cannot do so for the kind of
+# computations that only arise at runtime -- such as the residual of a partially
+# evaluated function or the result of program optimization.
+# For tree caluclus, this is trivial:
+
+# 1) Partially applied boolean functions
 id = \x x
 const = \x \_ x
+and = match_bool id (\_ false)
+or  = match_bool (\_ true) id
+defs = [ # matched in reverse, so specify in increasing order of complexity
+    △ "false" false,
+    △ "true" true,
+    △ "id" id,
+    △ "const" const,
+    # const and true are both represented by △ △. This following causes (△ △ (△ △)) to render
+    # as the more intuitive "(const true)" rather than "(const const)".
+    △ "(const true)" $ const true,
+  ]
+to_source = _to_source defs
+to_source $ and true
+to_source $ and false
+to_source $ or true
+to_source $ or false
+
+# 2) Partially applied multiplication
 w = \f \x f x x
 not = match_bool false true
 add_3bits =
@@ -334,13 +360,13 @@ mul = \a match_option (\_ 0) id $ foldr
     (match_option (some id) $ \s some $ \b add (smart_compose double s b) b)
     (match_option none $ \s some $ smart_compose double s)) none a
 defs = [ # matched in reverse, so specify in increasing order of complexity
-    △ "0" $ 0,
-    △ "const" $ const,
-    △ "w" $ w,
-    △ "compose" $ compose,
-    △ "id" $ \a a,
-    △ "double" $ double,
-    △ "add" $ add,
+    △ "0" 0,
+    △ "const" const,
+    △ "w" w,
+    △ "compose" compose,
+    △ "id" id,
+    △ "double" double,
+    △ "add" add,
   ]
 to_source = _to_source defs
 to_source $ mul 0
@@ -352,8 +378,7 @@ to_source $ mul 5
 # validation
 (w (compose add (compose double double))) 7
 
-# 6c appendix 2: Turning stream fused function back into code
-# See https://olydis.medium.com/tree-calculus-in-action-fusion-analysis-64ca5c2ffbee
+# 3) Result of fusion optimization, see https://olydis.medium.com/tree-calculus-in-action-fusion-analysis-64ca5c2ffbee
 
 # Helpers
 # - Given ref1, ref2 and x of identical shape except for some minimal subtree, returns the corresponding subtree of x.
@@ -386,10 +411,10 @@ optimize = fix $ \self \f
   triage (compose a b) (triage _ _ $ \fa \fb map (compose fa fb)) _ fs
 
 defs = [ # matched in reverse, so specify in increasing order of complexity
-    △ "△" $ △,
-    △ "compose" $ compose,
-    △ "succ" $ succ,
-    △ "map" $ map,
+    △ "△" △,
+    △ "compose" compose,
+    △ "succ" succ,
+    △ "map" map,
   ]
 to_source = _to_source defs
 to_source $ compose (map succ) (map succ) # reference
