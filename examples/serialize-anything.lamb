@@ -315,7 +315,7 @@ to_source $ triage △ △
 to_source $ triage △ △ △
 to_source $ equal
 
-# 6c appendix: Turning partial application of arithmetic function back into code
+# 6c appendix 1: Turning partial application of arithmetic function back into code
 id = \x x
 const = \x \_ x
 w = \f \x f x x
@@ -351,3 +351,46 @@ to_source $ mul 4
 to_source $ mul 5
 # validation
 (w (compose add (compose double double))) 7
+
+# 6c appendix 2: Turning stream fused function back into code
+# See https://olydis.medium.com/tree-calculus-in-action-fusion-analysis-64ca5c2ffbee
+
+# Helpers
+# - Given ref1, ref2 and x of identical shape except for some minimal subtree, returns the corresponding subtree of x.
+find_mismatch = fix $ \self \ref1 \ref2 \x
+  triage
+  (triage (triage (△ △ △) (\_ △) (\_ \_ △) x) (\_ △ x) (\_ \_ △ x) ref2)
+  (\r1 triage x (\r2 triage △ (\x self r1 r2 x) (\_ \_ △) x) (\_ \_ △ x) ref2)
+  (\r1a \r1b triage x (\_ △ x) (\r2a \r2b triage △ (\_ △) (\xa \xb triage △ △ (\_ \_ self r1b r2b xb) (self r1a r2a xa)) x) ref2)
+  ref1
+# - Computes the inverse of [f] on [res].
+#   Silly, because it only works if [f x] contains [x] entirely untouched, i.e. does not (partially) reduce it.
+#   But that's the case for [map], [filter], etc
+silly_inverse = \f \res find_mismatch (f △) (f $ △ △) res
+# - Detects compositions of shape "△ (△ (△ △ f)) g". Returns a fork "△ f g" on success and a leaf "△" otherwise.
+both = \a \b match_option none (\b match_option none (\a △ $ △ a b) a) b
+is_leaf = triage (some △) (\_ none) (\_ \_ none)
+is_stem = \pred triage none pred (\_ \_ none)
+is_fork = \pred1 \pred2 triage none (\_ none) (\a \b both (pred1 a) (pred2 b))
+is_composition = \x triage △ (triage _ _ (\a \b △ (triage _ _ (\a \b b) a) b)) _ 
+                  $ is_fork (is_stem $ is_fork is_leaf some) some x
+
+# Program analysis: Fuse [map] calls
+optimize = fix $ \self \f
+  let (is_composition f) $ triage f _ $ \a \b
+  let (self a) $ \a
+  let (self b) $ \b
+  let (silly_inverse map a) $ \fa
+  let (silly_inverse map b) $ \fb
+  let (both fa fb) $ \fs
+  triage (compose a b) (triage _ _ $ \fa \fb map (compose fa fb)) _ fs
+
+defs = [ # matched in reverse, so specify in increasing order of complexity
+    △ "△" $ △,
+    △ "compose" $ compose,
+    △ "succ" $ succ,
+    △ "map" $ map,
+  ]
+to_source = _to_source defs
+to_source $ compose (map succ) (map succ)
+to_source $ optimize $ compose (map succ) (map succ)
