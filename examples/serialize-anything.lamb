@@ -392,5 +392,5 @@ defs = [ # matched in reverse, so specify in increasing order of complexity
     △ "map" $ map,
   ]
 to_source = _to_source defs
-to_source $ compose (map succ) (map succ)
-to_source $ optimize $ compose (map succ) (map succ)
+to_source $ compose (map succ) (map succ) # reference
+to_source $ optimize $ compose (map succ) (map succ) # optimized
