@@ -178,7 +178,7 @@ defs = [ # matched in reverse, so specify in increasing order of complexity
     △ "triage" $ triage,
     △ "fix" $ fix,
     △ "map" $ map,
-    △ "succ" $ succ
+    △ "succ" $ succ,
   ]
 
 # Some more generic helpers
@@ -298,11 +298,12 @@ invert = \x \f
   ) $ \iter
   iter []
 
-to_source =
+_to_source = \defs
   let (\name match_list (\r s_ name r) (\x \xs \r s_"(" $ s_ name $ s_" " $ foldl (\s \x \r s $ s_" " $ x $ r) x xs $ s_")" $ r)) $ \format
   let (\q \x match_pair $ \name \def match_option none (\args some $ format name $ map q args) $ invert x def) $ \for_def
   let (\q \x match_option _ (\x x) $ foldr (\def \res match_option (\def for_def q x def) (\res \def some res) res def) none defs) $ \for_defs
   \x fix for_defs x ""
+to_source = _to_source defs
 to_source $ foldr
 to_source $ map (\x x)
 to_source $ map (\n succ $ succ n)
@@ -313,3 +314,40 @@ to_source $ triage △
 to_source $ triage △ △
 to_source $ triage △ △ △
 to_source $ equal
+
+# 6c appendix: Turning partial application of arithmetic function back into code
+id = \x x
+const = \x \_ x
+w = \f \x f x x
+not = match_bool false true
+add_3bits =
+  match_bool
+    (match_bool (\c △ c true) (\c △ (not c) c))
+    (match_bool (\c △ (not c) c) (\c △ c false))
+add = let (fix $ \self match_list (match_bool (△ true △) false) (\hd \tl \c match_pair (\s \c △ s (self tl c)) (match_pair (add_3bits c) hd))) $ \helper
+  \a \b helper (zip a b) false
+double = \a match_list 0 (\_ \_ △ false a) a
+compose = \f \g \x f $ g x
+smart_compose = \f \g match_bool f (compose f g) $ equal id g
+mul = \a match_option (\_ 0) id $ foldr
+  (match_bool 
+    (match_option (some id) $ \s some $ \b add (smart_compose double s b) b)
+    (match_option none $ \s some $ smart_compose double s)) none a
+defs = [ # matched in reverse, so specify in increasing order of complexity
+    △ "0" $ 0,
+    △ "const" $ const,
+    △ "w" $ w,
+    △ "compose" $ compose,
+    △ "id" $ \a a,
+    △ "double" $ double,
+    △ "add" $ add,
+  ]
+to_source = _to_source defs
+to_source $ mul 0
+to_source $ mul 1
+to_source $ mul 2
+to_source $ mul 3
+to_source $ mul 4
+to_source $ mul 5
+# validation
+(w (compose add (compose double double))) 7
