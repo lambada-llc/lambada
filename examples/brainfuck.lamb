@@ -1,0 +1,146 @@
+# Basics
+_ = △
+id = \x x
+wait = \a \b \c △ (△ a) (△ △ c) b
+let = \x \f f x
+fix = let (\x x x) $ \m
+      \f wait m (\x f (wait m x))
+# - Reflection
+triage = \a \b \c △ (△ a b) c
+match_bool = \ot \of triage of (\_ ot) △
+match_list = \oe \oc triage oe △ oc
+match_pair = \op triage △ △ op
+# - Booleans
+false = △
+true = △ △
+and = match_bool id (\_ false)
+# - Natural numbers
+is_zero = match_list true (\_ \_ false)
+succ = fix $ \self match_list 1 (\hd \tl match_bool (\self \tl △ false $ self tl) (\_ △ true) hd self tl)
+pred = fix $ \self match_list 0 (\hd \tl match_bool (\_ match_list △ (\hd \tl △ false $ △ hd tl)) (\self \tl △ true $ self tl) hd self tl)
+# - Lists
+foldl = \f fix $ \self \x match_list x (\hd \tl self (f x hd) tl)
+reverse = foldl (\a \b △ b a) []
+# - Polymorphic helpers
+equal = fix $ \self triage
+    (triage true (\_ false) (\_ \_ false))
+    (\ax triage false (self ax) (\_ \_ false))
+    (\ax \ay triage false (\_ false) (\bx \by and (self ax bx) (self ay by)))
+
+# state := band_left band_head band_right program_at_loop_starts program stdin stdout
+
+# string -> string -> state
+state_init = \program \stdin
+  \on_state on_state [] 0 [] [] program stdin ""
+# string -> string
+find_loop_end = fix $ \self \program
+  let program $ match_list "" $ \c
+  let (equal '[' c) $ match_bool (\program self $ self program) $
+  let (equal ']' c) $ match_bool (\program program) (\program self program)
+# state -> (instruction:char * state) | stdout:string
+state_program_step =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  let program $ match_list (△ $ reverse stdout) $ \instruction \program
+  △
+    instruction
+    (\on_state on_state band_left band_head band_right program_at_loop_starts program stdin stdout)
+# state -> state
+state_inc =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  \on_state on_state band_left (succ band_head) band_right program_at_loop_starts program stdin stdout
+state_dec =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  \on_state on_state band_left (pred band_head) band_right program_at_loop_starts program stdin stdout
+state_right =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  let (△ band_head band_left) $ \band_left
+  let (match_list (△ 0 []) △ band_right) $ match_pair $ \band_head \band_right
+  \on_state on_state band_left band_head band_right program_at_loop_starts program stdin stdout
+state_left =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  let (△ band_head band_right) $ \band_right
+  let (match_list (△ 0 []) △ band_left) $ match_pair $ \band_head \band_left
+  \on_state on_state band_left band_head band_right program_at_loop_starts program stdin stdout
+state_loop_start =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  let program $
+  let (is_zero band_head) $ match_bool
+    (\program \on_state on_state band_left band_head band_right program_at_loop_starts (find_loop_end program) stdin stdout)
+    (\program \on_state on_state band_left band_head band_right (△ program program_at_loop_starts) program stdin stdout)
+state_loop_end =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  let program_at_loop_starts $ match_list _ $ \program_at_loop_start \program_at_loop_starts_pop
+  let (is_zero band_head) $ match_bool
+    (\on_state on_state band_left band_head band_right program_at_loop_starts_pop program stdin stdout)
+    (\on_state on_state band_left band_head band_right program_at_loop_starts program_at_loop_start stdin stdout)
+state_write =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  let (△ band_head stdout) $ \stdout
+  \on_state on_state band_left band_head band_right program_at_loop_starts program stdin stdout
+state_read =
+  \state state $ \band_left \band_head \band_right \program_at_loop_starts \program \stdin \stdout
+  let (match_list [0] △ stdin) $ match_list _ $ \band_head \stdin
+  \on_state on_state band_left band_head band_right program_at_loop_starts program stdin stdout
+
+match = \pairs \alt \x foldl (\acc \pair
+    let pair $ match_pair $ \p \res
+    match_bool res acc (equal x p)
+  ) alt pairs
+# state -> state | △ stdout:string
+state_step = \state
+  let (state_program_step state) $ triage _ △ $ \instruction \state
+  match
+    [ △ '+' state_inc
+    , △ '-' state_dec
+    , △ '>' state_right
+    , △ '<' state_left
+    , △ '[' state_loop_start
+    , △ ']' state_loop_end
+    , △ '.' state_write
+    , △ ',' state_read
+    ]
+    id
+    instruction
+    state
+
+# state -> stdout:string
+state_run = fix $ \self \state triage _ (\stdout stdout) (\u \v self $ △ u v) (state_step state)
+# string -> stdin:string -> stdout:string
+bf_to_fun = \program \stdin state_run $ state_init program stdin
+
+# echo
+bf_to_fun ",[.,]" "some input"
+# reverse
+bf_to_fun ",[>,]<.[<.]" "some input"
+# hello world
+bf_to_fun "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++." "irrelevant input"
+# bf to C translator by Daniel B Cristofani (from https://brainfuck.org/)
+bf_to_fun "+++[>+++++<-]>>+<[>>++++>++>+++++>+++++>+>>+<++[++<]>---]
+  >++++.>>>.+++++.>------.<--.+++++++++.>+.+.<<<<---.[>]<<.<<<.-------.>++++.
+  <+++++.+.>-----.>+.<++++.>>++.>-----.
+  <<<-----.+++++.-------.<--.<<<.>>>.<<+.>------.-..--.+++.-----<++.<--[>+<-]
+  >>>>>--.--.<++++.>>-.<<<.>>>--.>.
+  <<<<-----.>----.++++++++.----<+.+++++++++>>--.+.++<<<<.[>]<.>>
+  ,[>>+++[<+++++++>-]<[<[-[-<]]>>[>]<-]<[<+++++>-[<+++>-[<-->-[<+++>-
+  [<++++[>[->>]<[>>]<<-]>[<+++>-[<--->-[<++++>-[<+++[>[-[-[-[->>]]]]<[>>]<<-]
+  >[<+>-[<->-[<++>-[<[-]>-]]]]]]]]]]]]]
+  <[
+      -[-[>+<-]>]
+      <[<<<<.>+++.+.+++.-------.>---.++.<.>-.++<<<<.[>]>>>>>>>>>]
+      <[[<]>++.--[>]>>>>>>>>]
+      <[<<++..-->>>>>>]
+      <[<<..>>>>>]
+      <[<<..-.+>>>>]
+      <[<<++..---.+>>>]
+      <[<<<.>>.>>>>>]
+      <[<<<<-----.+++++>.----.+++.+>---.<<<-.[>]>]
+      <[<<<<.-----.>++++.<++.+++>----.>---.<<<.-[>]]
+      <[<<<<<----.>>.<<.+++++.>>>+.++>.>>]
+      <.>
+  ]>
+  ,]
+  <<<<<.<+.>++++.<----.>>---.<<<-.>>>+.>.>.[<]>++.[>]<.
+  >[Translates brainfuck to C. Assumes no-change-on-EOF or EOF->0.
+  Generated C does no-change-on-EOF, and uses unistd.h read and write calls.
+  Daniel B Cristofani (cristofdathevanetdotcom)
+  http://www.hevanet.com/cristofd/brainfuck/]" ",[>,]<.[<.]"
