@@ -7,7 +7,9 @@ set -euo pipefail
 compiler="$(dirname "$0")/compiler.dag"
 tc="$(dirname "$0")/tree-calculus.js"
 >&2 echo Downloading latest version of the Tree Calculus runtime...
-curl --silent https://raw.githubusercontent.com/lambada-llc/tree-calculus/refs/heads/main/bin/main.js > "$tc"
+tctmp=$(mktemp)
+(curl --silent https://raw.githubusercontent.com/lambada-llc/tree-calculus/refs/heads/main/bin/main.js > "$tctmp" && mv "$tctmp" "$tc") ||
+  (echo Failed. && test -f "$tc" && echo Found preexisting runtime, using that.) >&2
 
 function compile_chunk {
   >&2 echo -n .
