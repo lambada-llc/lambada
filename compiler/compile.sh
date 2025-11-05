@@ -4,7 +4,7 @@ set -euo pipefail
 
 # Usage: cat definitions.lamb | ./compile.sh expression > whatever.dag
 
-compiler="$(dirname "$0")/compiler.dag"
+compiler="$(dirname "$0")/compile_to_dag.dag"
 tc="$(dirname "$0")/tree-calculus.js"
 >&2 echo Downloading latest version of the Tree Calculus runtime...
 tctmp=$(mktemp)
