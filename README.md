@@ -51,5 +51,8 @@ What is notable is that, being reflective, tree calculus can all by itself conve
 - Natural numbers `123` desugar to lists of booleans representing their binary encoding, with the least significant bit (LSB) as first element of the list.
 - Character constants `'🤡'` desugar like their corresponding unicode code point (as a natural number) would. 
 - String constants `"foo"` desugar like a list of their corresponding unicode code points would.
+- Records `{ k: v, ... }` desugar to `map_set k v ...` where the empty list `{}` desugars to `△`.
+  The `: v` part is optional, `v` is assumed to be `△` in that case. This is useful for defining sets.
+  Note that `k` may be any value. Using string constants results in JSON-like object syntax.
 - Expressions can be assigned to names using `=`, which hides any potential previous meaning of that same name to all code that follows. Those names may not start with an uppercase ASCII character, because those are reserved for:
 - ADTs `List = Nil | Cons hd tl` desugar into [Scott encoded](https://en.wikipedia.org/wiki/Mogensen%E2%80%93Scott_encoding) constructors, e.g. `Nil = \on_nil \on_cons on_nil` and `Cons = \hd \tl \on_nil \on_cons on_cons hd tl` in this case. ADT definitions must use type and constructor names that start with an uppercase ASCII character `A..Z`.
