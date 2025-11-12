@@ -345,11 +345,14 @@ Special_char = Schar_paren_open
              | Schar_paren_close
              | Schar_backslash
              | Schar_equals
-             | Schar_sqbracket_open
-             | Schar_sqbracket_close
              | Schar_comma
              | Schar_pipe
              | Schar_dollar
+             | Schar_colon
+             | Schar_sqbracket_open
+             | Schar_sqbracket_close
+             | Schar_curly_open
+             | Schar_curly_close
 
 schar_eq =
   let (\s s 0 1 2 3 4 5 6 7 8) $ \id
@@ -366,17 +369,22 @@ Token = Token_special_char schar     # schar
 token_identifier = \name match_bool Token_identifier_adt Token_identifier (is_uppercase_char (head name)) name
 
 # :: Parser Token
-parse_special_char = parser_any
+parse_special_char = parser_any $
+      map
+        (match_pair $ \c \sc parser_map (\_ Token_special_char sc) (parse_this c))
         [
-            let (parse_this '(') $ parser_map $ \_ Token_special_char Schar_paren_open, 
-            let (parse_this ')') $ parser_map $ \_ Token_special_char Schar_paren_close,
-            let (parse_this '\') $ parser_map $ \_ Token_special_char Schar_backslash,
-            let (parse_this '=') $ parser_map $ \_ Token_special_char Schar_equals,
-            let (parse_this '[') $ parser_map $ \_ Token_special_char Schar_sqbracket_open, 
-            let (parse_this ']') $ parser_map $ \_ Token_special_char Schar_sqbracket_close, 
-            let (parse_this ',') $ parser_map $ \_ Token_special_char Schar_comma,
-            let (parse_this '|') $ parser_map $ \_ Token_special_char Schar_pipe,
-            let (parse_this '$') $ parser_map $ \_ Token_special_char Schar_dollar,
+            △ '(' Schar_paren_open, 
+            △ ')' Schar_paren_close,
+            △ '\' Schar_backslash,
+            △ '=' Schar_equals,
+            △ ',' Schar_comma,
+            △ '|' Schar_pipe,
+            △ '$' Schar_dollar,
+            △ ':' Schar_colon,
+            △ '[' Schar_sqbracket_open,
+            △ ']' Schar_sqbracket_close,
+            △ '{' Schar_curly_open,
+            △ '}' Schar_curly_close,
         ]
 _is_quot = equal '"'
 parse_str  = parser_map Token_const_str (parser_compose_snd (parse_if _is_quot) (parser_compose_fst (parse_until _is_quot) (parse_if _is_quot)))
@@ -402,9 +410,11 @@ compiler_tokenize = compose parse_result_value_if_consumed $ parse_many parse_to
 
 
 Syntax_tree = Syntax_identifier name                        # string
+            | Syntax_const_null
             | Syntax_const_nat value                        # nat
             | Syntax_const_str value                        # string
             | Syntax_list list                              # Syntax_tree list
+            | Syntax_map kvlist                             # (Syntax_tree * Syntax_tree) list
             | Syntax_abs literal body                       # string Syntax_tree
             | Syntax_app o1 o2                              # Syntax_tree Syntax_tree
             | Syntax_assignment literal o                   # string Syntax_tree
@@ -416,7 +426,9 @@ syntax_contains_name = \name fix $ \self \s s
     (equal name)
     (\v false)
     (\v false)
+    (\v false)
     (any self)
+    (any (match_pair $ \k \v match_bool (\_ true) self (self k) v))
     (\lit \body match_bool (\_ false) self (equal name lit) body)
     (\o1 \o2 match_bool (\_ true) self (self o1) o2)
     (\l \o false)
@@ -455,7 +467,9 @@ parse_identifier_adt = parser_compose_dep
         
 parse_paren_close = parse_schar Schar_paren_close
 parse_sqbracket_close = parse_schar Schar_sqbracket_close
+parse_curly_close = parse_schar Schar_curly_close
 parse_comma = parse_schar Schar_comma
+parse_colon = parse_schar Schar_colon
 parse_equals = parse_schar Schar_equals
 parse_pipe = parse_schar Schar_pipe
 parse_dollar = parse_schar Schar_dollar
@@ -476,6 +490,23 @@ parse_list_tail = \e parser_compose_fst
                         )
                     )
                     (parser_either parse_sqbracket_close (parser_compose_fst parse_comma parse_sqbracket_close))
+
+parse_map_elem = \e parser_compose_dep e (\k parser_either (parser_compose_snd parse_colon (parser_map (△ k) e)) (parse_return $ △ k Syntax_const_null))
+parse_map_tail = \e parser_compose_fst 
+                    (parser_map
+                        (\list [Syntax_map list])
+                        (
+                            parser_either
+                            (
+                                parser_compose
+                                    mk_pair
+                                    (parse_map_elem e)
+                                    (parse_many $ parser_compose_snd parse_comma (parse_map_elem e))
+                            )
+                            (parse_return [])
+                        )
+                    )
+                    (parser_either parse_curly_close (parser_compose_fst parse_comma parse_curly_close))
 
 parse_assign_tail = \literal \e parser_map
                         (\body [Syntax_assignment literal body])
@@ -503,10 +534,13 @@ parse__expr = \e
                 parser_fail
                 (parse_abs_tail e)
                 parser_fail
+                parser_fail
+                parser_fail
+                parser_fail
+                parser_fail
                 (parse_list_tail e)
                 parser_fail
-                parser_fail
-                parser_fail
+                (parse_map_tail e)
                 parser_fail
             )
             (\literal 
@@ -638,9 +672,11 @@ _syntax_to_native_abs = \eq_name fix $ \strip \nbody nbody
 _syntax_to_native = fix $ \this \syntax
     syntax
         Native_identifier
+        nativeT
         quote_nat
         quote_str
         (\list foldr (\item \list Native_app (Native_app nativeT (this item)) list) nativeT list)
+        (\kvlist foldr (\item \map Native_app (match_pair (\k \v Native_app (Native_app (Native_identifier "map_set") (this k)) (this v)) item) map) nativeT kvlist)
         (\literal \body match_bool (_syntax_to_native_abs (equal literal)) (Native_app nativeK) (syntax_contains_name literal body) (this body))
         (\o1 \o2 Native_app (this o1) (this o2))
         (\literal \o Native_assignment fail nativeT)
@@ -694,9 +730,11 @@ _make_top_level_expr = \syntax_expr [Native_expr (_syntax_to_native syntax_expr)
 syntax_to_native = \syntax
     syntax
         (\name       _make_top_level_expr (Syntax_identifier name))
+        (\value      _make_top_level_expr (Syntax_const_null))
         (\value      _make_top_level_expr (Syntax_const_nat value))
         (\value      _make_top_level_expr (Syntax_const_str value))
         (\list       _make_top_level_expr (Syntax_list list))
+        (\kvlist     _make_top_level_expr (Syntax_map kvlist))
         (\name \body _make_top_level_expr (Syntax_abs name body))
         (\o1 \o2     _make_top_level_expr (Syntax_app o1 o2))
         (\name \o    [Native_assignment name (_syntax_to_native o)]) 
@@ -709,7 +747,9 @@ to_internal△ = fix $ \self \syntax syntax
   (\name       Syntax_identifier "__ENV△")
   (\value      syntax_error)
   (\value      syntax_error)
+  (\value      syntax_error)
   (\list       syntax_error)
+  (\kvlist     syntax_error)
   (\name \body syntax_error)
   (\o1 \o2     Syntax_app (self o1) (self o2))
   (\_name \_o  syntax_error) 
@@ -857,14 +897,43 @@ str_split = \c foldr (\hd match_bool (match_pair $ \p \ps △ "" (△ p ps)) (ma
 # - Map
 bitstr_encode = \x (fix $ \self triage (△ true) (\x \rest △ false $ △ true $ self x rest) (\x \y \rest △ false $ △ false $ △ true $ self x $ self y rest)) x △
 bitstr_decode = \str triage △ △ (\x \_ x) $ foldr (triage (triage △ △ (\a triage △ △ (\b △ (a b)))) (\_ △ △) △) [] str
-map_empty = △
-map_set = \k \v \m (fix $ \self \k \m
+pmap_empty = △
+pmap_set = \k \v \m (fix $ \self \k \m
   match_list v (\khd \ktl
     let (self ktl) $ \child_proc
     let (triage (△ △ △) △ △ m) $ match_pair $
     match_bool (\l \r △ l (child_proc r)) (\l \r △ (child_proc l) r) khd
   ) k) (bitstr_encode k) m
-map_get = \k \m foldl (\m \k triage △ △ (\a \b match_bool b a k) m) m (bitstr_encode k)
+pmap_get = \k \m foldl (\m \k triage △ △ (\a \b match_bool b a k) m) m (bitstr_encode k)
+fork_unless_leafy = \u \v
+  let (△ u v) $ \fork
+  triage (triage △ (\_ fork) (\_ \_ fork) v) (\_ fork) (\_ \_ fork) u
+pmap_remove = \k \m (fix $ \self \k \m
+  match_list △ (\khd \ktl
+    let (self ktl) $ \child_proc
+    let (triage (△ △ △) △ △ m) $ match_pair $
+    match_bool (\l \r fork_unless_leafy l (child_proc r)) (\l \r fork_unless_leafy (child_proc l) r) khd
+  ) k) (bitstr_encode k) m
+filter_map = \f foldr (\e \a triage id (\e △ e) △ (f e) a) []
+concat_map = \f \l concat_list $ map f l
+pmap_entries_or_more = fix $ \self triage [] _ (\l \r
+    △ (△ △ r) $
+    concat_map 
+      (match_pair $ \k1 \v map
+      (match_pair $ \k2 \v
+        △ (k1 k2) v
+      ) $ self v) $
+    self l
+  )
+
+map_empty = pmap_empty
+map_set = \k \v pmap_set k (some v)
+map_get = pmap_get
+map_remove = pmap_remove
+map_entries = \m
+  let (pmap_entries_or_more m) $
+  filter_map $ match_pair $ \k
+  match_option none (\v some (△ k v))
 
 dag_to_val = \str let (str_split 10 str) $ \lines
                let (filter is_not_empty lines) $ \lines
@@ -872,20 +941,21 @@ dag_to_val = \str let (str_split 10 str) $ \lines
                  foldl (\map \line
                     let (str_split 32 line) $
                     match_list _ $ \a
-                    match_list (map_get a map) $ \b
-                    match_list (map_set a (map_get b map) map) $ \c \_
-                    map_set a (map_get b map $ map_get c map) map
+                    match_list (pmap_get a map) $ \b
+                    match_list (pmap_set a (pmap_get b map) map) $ \c \_
+                    pmap_set a (pmap_get b map $ pmap_get c map) map
                  )
                  (
-                   map_set "△" △ $
-                   map_set "t" △ $
-                   map_set ":t" △ $
-                   map_set ":k" (\a \b a) $
-                   map_set ":i" (\x x) $
-                   map_set ":s" (\a \b \c a c (b c)) $
-                   map_set ":b" (\a \b \c a (b c)) $
-                   map_set ":c" (\a \b \c a c b) $
-                   map_empty
+                   pmap_set "△" △ $
+                   pmap_set "t" △ $
+                   pmap_set ":t" △ $
+                   pmap_set ":k" (\a \b a) $
+                   pmap_set ":i" (\x x) $
+                   pmap_set ":s" (\a \b \c a c (b c)) $
+                   pmap_set ":b" (\a \b \c a (b c)) $
+                   pmap_set ":c" (\a \b \c a c b) $
+                   pmap_set "map_set" map_set $
+                   pmap_empty
                  )
                ) $ \emit
                match_bool △ (emit lines) (is_empty lines)
@@ -894,6 +964,8 @@ compile = compose dag_to_val compile_to_dag
 
 compile "[65,123,65,]"
 compile "[65,123,65]"
+compile "{△}"
+compile "{△ △ △, △: △}"
 compile "123"
 compile "\x x"
 compile ""
