@@ -1,15 +1,23 @@
-# Helpers
+# Basics
+_ = △
+let = \x \f f x
+fix = let (\a \b \c △ (△ a) (△ △ c) b) $ \wait
+      let (\x x x) $ \m
+      \f wait m (\x f (wait m x))
+triage = \a \b \c △ (△ a b) c
+# - Booleans
 false = △
 true = △ △
-y = (\m \wait \f wait m (\x f (wait m x))) (\x x x) (\a \b \c △ (△ a) (△ △ c) b)
-triage = \a \b \c △ (△ a b) c
-match_bool = \of \ot triage of (\_ ot) △
-foldr = \f \x y $ \self triage x △ (\hd \tl f hd (self tl))
+match_bool = \of \ot triage of (\_ ot) _
+# - Lists
+match_list = \oe \oc triage oe _ oc
+foldr = \f \x fix $ \self match_list x (\hd \tl f hd (self tl))
 map = \f foldr (\e \a △ (f e) a) []
 concat = \a \b foldr △ b a
 concats = foldr concat ""
-join = triage [] △ (\hd \tl triage △ △ (\_ \x x) $ foldr (\e \a concat "," $ concat e a) "" $ △ hd tl)
-equal = y $ \self triage
+join = match_list [] (\hd \tl match_list _ (\_ \tl tl) $ foldr (\e \a △ ',' $ concat e a) "" $ △ hd tl)
+# - Polymorphic helpers
+equal = fix $ \self triage
     (triage true (\_ false) (\_ \_ false))
     (\ax triage false (self ax) (\_ \_ false))
     (\ax \ay triage false (\_ false) (\bx \by triage △ (\_ self ax bx) △ (self ay by)))
@@ -40,7 +48,7 @@ is_ctrl_char = triage (\on_ctrl \on_other on_ctrl false false false false false)
             \_ \_ (\on_ctrl \on_other on_other)
 quote_string = \s concats $ map (\c is_ctrl_char c ctrl_to_escape $ match_bool (match_bool [c] [92,92] (equal 92 c)) [92,34] (equal 34 c)) s
 quote_string = \s concats [[34],quote_string s,[34]]
-to_string = y $ \self \json json
+to_string = fix $ \self \json json
   "null"
   (triage "false" (\_ "true") △)
   quote_string
