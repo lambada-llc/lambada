@@ -13,6 +13,7 @@ match_bool = \ot \of triage of (\_ ot) _
 match_bool_ft = \of \ot triage of (\_ ot) _
 match_list = \oe \oc triage oe _ oc
 match_pair = \op triage _ _ op
+match_option = \on \os triage on os _
 # - Booleans
 false = △
 true = △ △
@@ -88,6 +89,58 @@ count_eval_steps = \a \b match_pair (\_ \cost cost) $ count_eval_steps a b 0
 
 # count_eval_steps succ 123 # 96
 # count_eval_steps succ 124 # 30
+
+# - Map
+bitstr_encode = \x (fix $ \self triage (△ true) (\x \rest △ false $ △ true $ self x rest) (\x \y \rest △ false $ △ false $ △ true $ self x $ self y rest)) x △
+bitstr_decode = \str triage △ △ (\x \_ x) $ foldr (triage (triage △ △ (\a triage △ △ (\b △ (a b)))) (\_ △ △) △) [] str
+pmap_empty = △
+pmap_set = \k \v \m (fix $ \self \k \m
+  match_list v (\khd \ktl
+    let (self ktl) $ \child_proc
+    let (triage (△ △ △) △ △ m) $ match_pair $
+    match_bool (\l \r △ l (child_proc r)) (\l \r △ (child_proc l) r) khd
+  ) k) (bitstr_encode k) m
+pmap_get = \k \m foldl (\m \k triage (\k △) _ (\a \b \k match_bool_ft a b k) m k) m (bitstr_encode k)
+fork_unless_leafy = \u \v
+  let (△ u v) $ \fork
+  triage (triage △ (\_ fork) (\_ \_ fork) v) (\_ fork) (\_ \_ fork) u
+pmap_remove = \k \m (fix $ \self \k \m
+  match_list △ (\khd \ktl
+    let (self ktl) $ \child_proc
+    let (triage (△ △ △) △ △ m) $ match_pair $
+    match_bool (\l \r fork_unless_leafy l (child_proc r)) (\l \r fork_unless_leafy (child_proc l) r) khd
+  ) k) (bitstr_encode k) m
+filter_map = \f foldr (\e \a triage id (\e △ e) △ (f e) a) []
+concat_map = \f \l concat_list $ map f l
+pmap_entries_or_more = fix $ \self triage [] _ (\l \r
+    △ (△ △ r) $
+    concat_map 
+      (match_pair $ \k1 \v map
+      (match_pair $ \k2 \v
+        △ (k1 k2) v
+      ) $ self v) $
+    self l
+  )
+
+map_empty = pmap_empty
+map_set = \k \v pmap_set k (some v)
+map_get = pmap_get
+map_remove = pmap_remove
+map_entries = \m
+  let (pmap_entries_or_more m) $
+  filter_map $ match_pair $ \k
+  match_option none (\v some (△ k v))
+
+map_to_func = fix $ \self \map_image triage
+  (\_ map_image △)
+  _
+  (\l \r
+    triage
+      (map_image r)
+      (triage (\_ map_image △) _ (\ll \lr self map_image lr) l)
+      (triage (\_ \_ map_image △) _ (\ll \lr triage (\_ \_ map_image △) _ (\lll \llr self (self map_image) llr) ll) l)
+  )
+map_to_func = map_to_func id
 
 # Arithmetic on natural numbers
 is_zero = match_list true (\_ \_ false)
@@ -273,7 +326,6 @@ gen_list = \gelem fix $ \self \max_len match_list
   max_len
 gen_byte = gen_list gen_bool 8
 
-match_option = \on \os triage on os _
 precompute_alt = fix $ \self \g \alt \f g $ \leaf \stem \fork
     triage
       (match_option alt f leaf)
@@ -355,7 +407,7 @@ Special_char = Schar_paren_open
              | Schar_curly_close
 
 schar_eq =
-  let (\s s 0 1 2 3 4 5 6 7 8) $ \id
+  let (\s s 0 1 2 3 4 5 6 7 8 9 10 11) $ \id
   \a \b equal (id a) (id b)
 
 # tokens
@@ -368,24 +420,24 @@ Token = Token_special_char schar     # schar
 
 token_identifier = \name match_bool Token_identifier_adt Token_identifier (is_uppercase_char (head name)) name
 
+parse_char_map = \map match_list parse_result_fail $ \head \tail match_option parse_result_fail (\v parse_return v tail) $ map_to_func map head
+
 # :: Parser Token
-parse_special_char = parser_any $
-      map
-        (match_pair $ \c \sc parser_map (\_ Token_special_char sc) (parse_this c))
-        [
-            △ '(' Schar_paren_open, 
-            △ ')' Schar_paren_close,
-            △ '\' Schar_backslash,
-            △ '=' Schar_equals,
-            △ ',' Schar_comma,
-            △ '|' Schar_pipe,
-            △ '$' Schar_dollar,
-            △ ':' Schar_colon,
-            △ '[' Schar_sqbracket_open,
-            △ ']' Schar_sqbracket_close,
-            △ '{' Schar_curly_open,
-            △ '}' Schar_curly_close,
-        ]
+parse_special_char = parse_char_map
+        {
+            '(': Schar_paren_open, 
+            ')': Schar_paren_close,
+            '\': Schar_backslash,
+            '=': Schar_equals,
+            ',': Schar_comma,
+            '|': Schar_pipe,
+            '$': Schar_dollar,
+            ':': Schar_colon,
+            '[': Schar_sqbracket_open,
+            ']': Schar_sqbracket_close,
+            '{': Schar_curly_open,
+            '}': Schar_curly_close,
+        }
 _is_quot = equal '"'
 parse_str  = parser_map Token_const_str (parser_compose_snd (parse_if _is_quot) (parser_compose_fst (parse_until _is_quot) (parse_if _is_quot)))
 _is_quot = equal '''
@@ -397,7 +449,7 @@ parse_comment = parser_map Token_comment (parser_compose_snd (parse_this 35) (pa
 parse_token = parse_with_whitespace $ parser_any 
         [ 
             parser_map token_identifier parse_identifier, 
-            parse_special_char,
+            parser_map Token_special_char parse_special_char,
             parse_str,
             parse_char,
             parse_nat,
@@ -730,7 +782,7 @@ _make_top_level_expr = \syntax_expr [Native_expr (_syntax_to_native syntax_expr)
 syntax_to_native = \syntax
     syntax
         (\name       _make_top_level_expr (Syntax_identifier name))
-        (\value      _make_top_level_expr (Syntax_const_null))
+        (            _make_top_level_expr (Syntax_const_null))
         (\value      _make_top_level_expr (Syntax_const_nat value))
         (\value      _make_top_level_expr (Syntax_const_str value))
         (\list       _make_top_level_expr (Syntax_list list))
@@ -745,7 +797,7 @@ syntax_to_native = \syntax
 syntax_error = Syntax_identifier "ERROR"
 to_internal△ = fix $ \self \syntax syntax
   (\name       Syntax_identifier "__ENV△")
-  (\value      syntax_error)
+  (            syntax_error)
   (\value      syntax_error)
   (\value      syntax_error)
   (\list       syntax_error)
@@ -893,47 +945,6 @@ compile_to_dag_bench "△ (△ (△ (△ (△ △ (△ (△ (△ △ △)) △))
 
 str_split = \c foldr (\hd match_bool (match_pair $ \p \ps △ "" (△ p ps)) (match_pair $ \p \ps △ (△ hd p) ps) $ equal c hd) (△ "" [])
 
-
-# - Map
-bitstr_encode = \x (fix $ \self triage (△ true) (\x \rest △ false $ △ true $ self x rest) (\x \y \rest △ false $ △ false $ △ true $ self x $ self y rest)) x △
-bitstr_decode = \str triage △ △ (\x \_ x) $ foldr (triage (triage △ △ (\a triage △ △ (\b △ (a b)))) (\_ △ △) △) [] str
-pmap_empty = △
-pmap_set = \k \v \m (fix $ \self \k \m
-  match_list v (\khd \ktl
-    let (self ktl) $ \child_proc
-    let (triage (△ △ △) △ △ m) $ match_pair $
-    match_bool (\l \r △ l (child_proc r)) (\l \r △ (child_proc l) r) khd
-  ) k) (bitstr_encode k) m
-pmap_get = \k \m foldl (\m \k triage △ △ (\a \b match_bool b a k) m) m (bitstr_encode k)
-fork_unless_leafy = \u \v
-  let (△ u v) $ \fork
-  triage (triage △ (\_ fork) (\_ \_ fork) v) (\_ fork) (\_ \_ fork) u
-pmap_remove = \k \m (fix $ \self \k \m
-  match_list △ (\khd \ktl
-    let (self ktl) $ \child_proc
-    let (triage (△ △ △) △ △ m) $ match_pair $
-    match_bool (\l \r fork_unless_leafy l (child_proc r)) (\l \r fork_unless_leafy (child_proc l) r) khd
-  ) k) (bitstr_encode k) m
-filter_map = \f foldr (\e \a triage id (\e △ e) △ (f e) a) []
-concat_map = \f \l concat_list $ map f l
-pmap_entries_or_more = fix $ \self triage [] _ (\l \r
-    △ (△ △ r) $
-    concat_map 
-      (match_pair $ \k1 \v map
-      (match_pair $ \k2 \v
-        △ (k1 k2) v
-      ) $ self v) $
-    self l
-  )
-
-map_empty = pmap_empty
-map_set = \k \v pmap_set k (some v)
-map_get = pmap_get
-map_remove = pmap_remove
-map_entries = \m
-  let (pmap_entries_or_more m) $
-  filter_map $ match_pair $ \k
-  match_option none (\v some (△ k v))
 
 dag_to_val = \str let (str_split 10 str) $ \lines
                let (filter is_not_empty lines) $ \lines
