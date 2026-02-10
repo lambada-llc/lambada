@@ -1,4 +1,5 @@
 # Basics
+_ = △
 id = \x x
 id2 = \a \b \c △ (△ a) (△ △ c) b
 compose = \f \g \x f (g x)
@@ -7,9 +8,9 @@ fix = let (\x x x) $ \m
       \f id2 m (\x f (id2 m x))
 # - Reflection
 triage = \a \b \c △ (△ a b) c
-match_bool = \ot \of triage of (\_ ot) △
-match_list = \oe \oc triage oe △ oc
-match_pair = \op triage △ △ op
+match_bool = \ot \of triage of (\_ ot) _
+match_list = \oe \oc triage oe _ oc
+match_pair = \op triage _ _ op
 # - Booleans
 false = △
 true = △ △
