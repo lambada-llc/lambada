@@ -345,12 +345,14 @@ is_alpha_char =
   lazy_and (is_lte 123) $ lazy_not $
             is_lte 128
 is_alphanum_char = lazy_or is_alpha_char is_digit_char
+is_identifier_char = lazy_or is_alphanum_char (equal '.')
 
 is_whitespace_char = precompute_alt gen_byte false is_whitespace_char
 is_uppercase_char = precompute_alt gen_byte false is_uppercase_char
 is_digit_char = precompute_alt gen_byte false is_digit_char
 is_alpha_char = precompute_alt gen_byte true is_alpha_char
 is_alphanum_char = precompute_alt gen_byte true is_alphanum_char
+is_identifier_char = precompute_alt gen_byte true is_identifier_char
 
 count_eval_steps is_alpha_char '=' # 18
 count_eval_steps is_alpha_char 'C' # 18
@@ -364,7 +366,7 @@ count_eval_steps is_alphanum_char '3' # 17
 
 parse_whitespace = parse_while is_whitespace_char
 parse_with_whitespace = \p parser_compose_fst (parser_compose_snd parse_whitespace p) parse_whitespace
-parse_identifier = parser_compose mk_pair (parse_if is_alpha_char) (parse_while is_alphanum_char) 
+parse_identifier = parser_compose mk_pair (parse_if is_alpha_char) (parse_while is_identifier_char) 
 parse_nat = parser_map str_to_nat $ parse_nonempty_str_while is_digit_char
 
 # count_eval_steps parse_identifier "compiler_tokenize" # 11247
@@ -418,7 +420,14 @@ Token = Token_special_char schar     # schar
       | Token_const_nat value        # nat
       | Token_comment value          # string
 
-token_identifier = \name match_bool Token_identifier_adt Token_identifier (is_uppercase_char (head name)) name
+_local_head = \name match_pair (\_ \h h) $
+  foldl (\acc \c match_pair (\saw_dot \result
+    match_bool
+      (△ true result)
+      (match_bool (△ false c) (△ false result) saw_dot)
+      (equal '.' c)
+  ) acc) (△ false (head name)) name
+token_identifier = \name match_bool Token_identifier_adt Token_identifier (is_uppercase_char (_local_head name)) name
 
 parse_char_map = \map match_list parse_result_fail $ \head \tail match_option parse_result_fail (\v parse_return v tail) $ map_to_func map head
 
