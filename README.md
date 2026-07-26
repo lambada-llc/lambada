@@ -26,6 +26,10 @@ in tree calculus, following specific rules for eliminating the abstractions, and
 
 Check out [the tree calculus playground](https://treecalcul.us/live/) and [website](https://treecalcul.us/) for more advanced fully functional examples.
 
+## Building something
+[`compiler/compile.sh`](./compiler/) compiles a single expression against a single file of definitions.
+For anything larger, [`bin/lambada.js`](./bin/) builds a whole directory of sources at once: symbols are namespaced by where they live and dependencies between files are resolved automatically, with no import statements, and every bare top-level expression is an expect test whose result is written back into the source.
+
 ## Disclaimer
 As of today, specifying and developing LambAda with the formal rigor deserving of a programming language has not been a priority! The project's mission is purely pragmatic: To  us write and read programs in calculi, but makes no stability or correctness guarantees. Details and precise feature sets have changed many times and will continue to do so. For instance, we currently use [Scott encoding](https://en.wikipedia.org/wiki/Mogensen%E2%80%93Scott_encoding) to desugar algebraic data type definitions, but would like to support using trees directly in the future.
 
