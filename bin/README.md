@@ -31,6 +31,8 @@ An expression that evaluates to a [file](https://github.com/lambada-llc/tree-cal
 # = hello.txt sha256:169f0107cf1f…
 ```
 
+Results are placed by line, so they are only ever written into the sources the bundle was compiled from: compiling fingerprints each source's code lines into its module, and `expect-test` fails outright on a source that has changed since, rather than commenting it in the wrong places. Comments and blank lines are not part of that fingerprint — writing results back is not a change.
+
 The test signal is the diff, not an exit code: `lambada expect-test` succeeds either way, and a changed source is either a bug to fix or an intentional change to review and commit. An unnoticed diff is a test failure.
 
 ## Usage

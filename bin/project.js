@@ -10,6 +10,7 @@
 // This file holds everything that follows from that arrangement — how a source
 // splits into compilable pieces, and how a path turns into a namespace and back.
 
+const { createHash } = require('crypto');
 const { readdirSync } = require('fs');
 const { relative, resolve } = require('path');
 
@@ -17,6 +18,7 @@ const { relative, resolve } = require('path');
 const EXPECT_DIR = 'expect-test-out';
 
 const TEST_SYMBOL = /^:test\.((?:[^.]+\.)+)(\d+)$/;
+const SOURCE_SYMBOL = /^:source\.((?:[^.]+\.)+)([0-9a-f]{64})$/;
 
 /** Every `.lamb` file under `dir`, in a stable order. */
 function sources(dir) {
@@ -72,6 +74,19 @@ function physical_lines(content) {
   return physical;
 }
 
+/**
+ * What compiling a source depended on, and nothing else: its code lines.
+ *
+ * The build writes its own comments back into the file, so a fingerprint over
+ * the whole text would go stale the moment a result is recorded. Comments and
+ * blank lines are exactly what the compiler never saw — and what the code line
+ * numbering already skips — so leaving them out identifies the source as the
+ * compiler knew it, however the prose around it moves.
+ */
+function fingerprint(content) {
+  return createHash('sha256').update(content.split('\n').filter(is_source_line).join('\n')).digest('hex');
+}
+
 const sanitize = part => part.replace(/[^a-zA-Z0-9.]/g, '_');
 const capitalize = part => part.charAt(0).toUpperCase() + part.slice(1);
 const lower_initial = part => part.charAt(0).toLowerCase() + part.slice(1);
@@ -102,20 +117,45 @@ function test_symbol(root, source_path, code_line) {
   return `:test.${namespace_parts(root, source_path).join('')}${code_line}`;
 }
 
+/** Where the namespace segments of a `:test.…` or `:source.…` symbol came from. */
+function source_of(root, prefix) {
+  const segments = prefix.split('.').filter(Boolean).map(lower_initial);
+  return {
+    source_path: `${root}/${segments.join('/')}.lamb`,
+    file_directory: [root, ...segments.slice(0, -1), EXPECT_DIR].join('/'),
+  };
+}
+
 /** Read a test symbol back: which source made it, and where the result goes. */
 function parse_test_symbol(root, symbol) {
   const match = symbol.match(TEST_SYMBOL);
   if (!match) throw new Error(`not a test symbol: ${symbol}`);
-  const segments = match[1].split('.').filter(Boolean).map(lower_initial);
-  const directory = segments.slice(0, -1);
-  return {
-    source_path: `${root}/${segments.join('/')}.lamb`,
-    file_directory: [root, ...directory, EXPECT_DIR].join('/'),
-    code_line: Number(match[2]),
-  };
+  return { ...source_of(root, match[1]), code_line: Number(match[2]) };
 }
 
 const is_test_symbol = symbol => TEST_SYMBOL.test(symbol);
+
+/**
+ * The name recording which source a module was compiled from, and in what state.
+ *
+ * Results are written back by code line, so a bundle whose modules no longer
+ * match the sources would file every one of them under a line that has moved.
+ * The fingerprint travels in a symbol name for the same reason a test's line
+ * does: the name is the record, so there is nothing else to keep in sync.
+ */
+function source_symbol(root, source_path, content) {
+  return `:source.${namespace_parts(root, source_path).join('')}${fingerprint(content)}`;
+}
+
+/** Read a source symbol back: which source it names, and what it looked like. */
+function parse_source_symbol(root, symbol) {
+  const match = symbol.match(SOURCE_SYMBOL);
+  if (!match) throw new Error(`not a source symbol: ${symbol}`);
+  const { source_path } = source_of(root, match[1]);
+  return { source_path, fingerprint: match[2] };
+}
+
+const is_source_symbol = symbol => SOURCE_SYMBOL.test(symbol);
 
 module.exports = {
   EXPECT_DIR,
@@ -123,8 +163,12 @@ module.exports = {
   chunks,
   is_source_line,
   physical_lines,
+  fingerprint,
   namespace,
   test_symbol,
   parse_test_symbol,
   is_test_symbol,
+  source_symbol,
+  parse_source_symbol,
+  is_source_symbol,
 };

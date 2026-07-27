@@ -9,6 +9,12 @@
 // blank lines, so the result comments written here rename nothing and a rerun
 // costs nothing.
 //
+// That bookkeeping holds only as long as the source still has the lines it was
+// compiled from, so compiling records a fingerprint of each source's code lines
+// in a `:source.…` symbol and this checks it before writing anything. A source
+// edited since — or never recompiled — is refused rather than scattered with
+// comments in the wrong places.
+//
 // The test signal is the diff, not an exit code: a result that changed shows up
 // as a changed source file, to be reviewed and committed or fixed.
 //
@@ -22,7 +28,8 @@ const {
 } = require('fs');
 const { dirname, resolve } = require('path');
 const {
-  EXPECT_DIR, is_source_line, is_test_symbol, parse_test_symbol, physical_lines,
+  EXPECT_DIR, fingerprint, is_source_line, is_source_symbol, is_test_symbol,
+  parse_source_symbol, parse_test_symbol, physical_lines,
 } = require('./project.js');
 
 // Only these lines are ours to rewrite; anything else in the source is the
@@ -42,8 +49,8 @@ function comment_block(result) {
  * counts code lines as it walks — the blocks it rewrites along the way are
  * comments, and so do not shift the count.
  */
-function write_results(path, blocks) {
-  const lines = readFileSync(path, 'utf8').split('\n');
+function write_results(path, content, blocks) {
+  const lines = content.split('\n');
   const out = [];
   let code_line = 0;
   for (let i = 0; i < lines.length;) {
@@ -92,10 +99,17 @@ function tests_by_source(runtime, root, bundle) {
   const { DagModule, is_label } = runtime;
   const defining_line = new Map();
   const by_source = new Map();
+  const compiled_from = new Map();
 
   for (const line of DagModule.parse(bundle).lines) {
     if (line.length === 2 || line.length === 3) defining_line.set(line[0], line);
-    if (line.length !== 2 || !is_label(line[0].symbol) || !is_test_symbol(line[0].symbol)) continue;
+    if (line.length !== 2 || !is_label(line[0].symbol)) continue;
+
+    if (is_source_symbol(line[0].symbol)) {
+      const { source_path, fingerprint } = parse_source_symbol(root, line[0].symbol);
+      compiled_from.set(source_path, fingerprint);
+    }
+    if (!is_test_symbol(line[0].symbol)) continue;
 
     const { source_path, file_directory, code_line } = parse_test_symbol(root, line[0].symbol);
     if (!by_source.has(source_path)) by_source.set(source_path, { file_directory, tests: [] });
@@ -106,7 +120,25 @@ function tests_by_source(runtime, root, bundle) {
     });
   }
 
-  return { defining_line, by_source };
+  return { defining_line, by_source, compiled_from };
+}
+
+/**
+ * Refuse to write into a source the bundle was not compiled from.
+ *
+ * Results are filed by code line, so a source that has moved on since — edited
+ * while the build ran, or never recompiled — would take every one of its
+ * comments somewhere else, quietly and all at once. Compiling recorded what it
+ * saw; if that no longer matches, the bundle is stale and the only fix is to
+ * compile again.
+ */
+function check_compiled_from(source_path, content, recorded) {
+  if (recorded === fingerprint(content)) return;
+  throw new Error(recorded === undefined
+    ? `${source_path}: the bundle records no source fingerprint, so its tests `
+      + 'cannot be placed; compile again with a current lambada'
+    : `${source_path}: changed since it was compiled, so its results would land `
+      + 'on the wrong lines; compile and link again');
 }
 
 function expect_test({ runtime, root, bundle_path }) {
@@ -114,13 +146,15 @@ function expect_test({ runtime, root, bundle_path }) {
 
   const bundle = readFileSync(bundle_path, 'utf8');
   const get = environment(evaluator, bundle, { origin: bundle_path });
-  const { defining_line, by_source } = tests_by_source(runtime, root, bundle);
+  const { defining_line, by_source, compiled_from } = tests_by_source(runtime, root, bundle);
 
   const stale = generated_files(root);
   for (const [source_path, { file_directory, tests }] of by_source) {
     process.stderr.write(`  ${source_path}\n`);
+    const content = readFileSync(source_path, 'utf8');
+    check_compiled_from(source_path, content, compiled_from.get(source_path));
     const blocks = new Map();
-    const physical = physical_lines(readFileSync(source_path, 'utf8'));
+    const physical = physical_lines(content);
 
     for (const { symbol, target, code_line } of tests) {
       // The test node is `_to_string expr`; a file has to be recognized on the
@@ -151,7 +185,7 @@ function expect_test({ runtime, root, bundle_path }) {
       blocks.set(code_line, comment_block(result));
     }
 
-    write_results(source_path, blocks);
+    write_results(source_path, content, blocks);
   }
   remove_stale(stale);
 }

@@ -12,7 +12,7 @@
 
 const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
 const { basename, dirname, relative, resolve } = require('path');
-const { sources, chunks, namespace, test_symbol } = require('./project.js');
+const { sources, chunks, namespace, test_symbol, source_symbol } = require('./project.js');
 
 // The compiler names the leaf `__ENV△` in its output, as a reference to the
 // binding compile.sh puts in front of everything it emits. Nothing downstream
@@ -80,7 +80,7 @@ function clean(root) {
 }
 
 function compile({ runtime, root, compiler, cache_dir, cwd }) {
-  const { DagModule, transformer } = runtime;
+  const { DagModule, LEAF, box, transformer } = runtime;
   const compile_chunk = transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
     cache_dir,
   });
@@ -110,6 +110,13 @@ function compile({ runtime, root, compiler, cache_dir, cwd }) {
     const module = DagModule.parse(normalize_leaf(dag), { absorb_internal_aliases: false });
     name_tests(runtime, module, root, source_path, test_lines);
     module.qualify(namespace(root, source_path));
+
+    // Which source this was, in the state it was in. The name is the whole
+    // point, so what it names can be the leaf; it rides through linking and
+    // canonicalization like any other symbol, and tells the expect test that
+    // the lines it is about to write results under are still the lines the
+    // tests were named after.
+    module.lines.push([box(source_symbol(root, source_path, source)), box(LEAF)]);
 
     const name = basename(source_path, '.lamb');
     writeFileSync(resolve(dirname(source_path), `.${name}.dag`), module.toString());
