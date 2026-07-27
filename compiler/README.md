@@ -1,3 +1,9 @@
+## Source
+
+`compile.dag` and `compile_to_dag.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
+by [arboretum's build](https://github.com/lambada-llc/arboretum/blob/main/build.sh), which extracts them
+from the library it just compiled and writes them here.
+
 ## Examples
 
 ``` bash

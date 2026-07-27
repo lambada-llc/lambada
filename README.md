@@ -4,7 +4,7 @@ LambAda is lightweight syntactic sugar for writing programs using minimal calcul
 [The interactive tree calculus playground](https://treecalcul.us/live/) uses LambAda
 and this repo focuses on writing programs in [tree calculus, specifically _triage calculus_](https://treecalcul.us/specification/).
 
-The program compiling LambAda syntax down to trees is a tree that [is written in LambAda](./compiler).
+The program compiling LambAda syntax down to trees is a tree that [is written in LambAda](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb) and [ships here as a tree](./compiler).
 LambAda goes back over a decade, targeting [different calculi over the years](https://lambada.pages.dev/) before most recently locking in on triage calculus.
 
 ## Example
