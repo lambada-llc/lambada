@@ -101,7 +101,7 @@ function compile({ runtime, root, compiler, cache_dir, cwd }) {
       // does not, which is what tells the two apart.
       for (const line of compiled.split('\n')) {
         const words = line.trim().split(/\s+/).filter(Boolean);
-        if (words.length === 1) test_lines.push(chunk.end_line);
+        if (words.length === 1) test_lines.push(chunk.code_line);
       }
       dag += compiled.endsWith('\n') ? compiled : compiled + '\n';
     }

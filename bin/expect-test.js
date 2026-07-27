@@ -3,9 +3,11 @@
 // Expect tests.
 //
 // Every bare top-level expression in a `.lamb` file is a test. Compiling named
-// each one after the line it ends on, so evaluating the linked program and
+// each one after the code line it ends on, so evaluating the linked program and
 // writing each result back as a `# = …` comment below its expression needs no
-// bookkeeping beyond the symbol names themselves.
+// bookkeeping beyond the symbol names themselves. The count skips comments and
+// blank lines, so the result comments written here rename nothing and a rerun
+// costs nothing.
 //
 // The test signal is the diff, not an exit code: a result that changed shows up
 // as a changed source file, to be reviewed and committed or fixed.
@@ -19,7 +21,9 @@ const {
   mkdirSync, readdirSync, readFileSync, rmdirSync, unlinkSync, writeFileSync,
 } = require('fs');
 const { dirname, resolve } = require('path');
-const { EXPECT_DIR, is_test_symbol, parse_test_symbol } = require('./project.js');
+const {
+  EXPECT_DIR, is_source_line, is_test_symbol, parse_test_symbol, physical_lines,
+} = require('./project.js');
 
 // Only these lines are ours to rewrite; anything else in the source is the
 // author's and is left alone.
@@ -34,19 +38,24 @@ function comment_block(result) {
 /**
  * Replace the machine-owned comment block below each tested line of `path`.
  *
- * Blocks are keyed by the line numbers the test symbols were named after, so
- * this has to run against the same text those numbers came from.
+ * Blocks are keyed by the code lines the test symbols were named after, so this
+ * counts code lines as it walks — the blocks it rewrites along the way are
+ * comments, and so do not shift the count.
  */
 function write_results(path, blocks) {
   const lines = readFileSync(path, 'utf8').split('\n');
   const out = [];
+  let code_line = 0;
   for (let i = 0; i < lines.length;) {
-    out.push(lines[i]);
-    const line_number = ++i;
-    if (i < lines.length && lines[i].startsWith(RESULT_HEAD)) {
+    const line = lines[i];
+    out.push(line);
+    if (is_source_line(line)) code_line++;
+    // A `# = …` block anywhere is ours, so drop it wherever it turns up; only a
+    // code line can claim a replacement.
+    if (++i < lines.length && lines[i].startsWith(RESULT_HEAD)) {
       while (++i < lines.length && lines[i].startsWith(RESULT_TAIL));
     }
-    const block = blocks.get(line_number);
+    const block = is_source_line(line) && blocks.get(code_line);
     if (block) out.push(...block);
   }
   writeFileSync(path, out.join('\n'));
@@ -88,12 +97,12 @@ function tests_by_source(runtime, root, bundle) {
     if (line.length === 2 || line.length === 3) defining_line.set(line[0], line);
     if (line.length !== 2 || !is_label(line[0].symbol) || !is_test_symbol(line[0].symbol)) continue;
 
-    const { source_path, file_directory, line: line_number } = parse_test_symbol(root, line[0].symbol);
+    const { source_path, file_directory, code_line } = parse_test_symbol(root, line[0].symbol);
     if (!by_source.has(source_path)) by_source.set(source_path, { file_directory, tests: [] });
     by_source.get(source_path).tests.push({
       symbol: line[0].symbol,
       target: line[1],
-      line_number,
+      code_line,
     });
   }
 
@@ -111,8 +120,9 @@ function expect_test({ runtime, root, bundle_path }) {
   for (const [source_path, { file_directory, tests }] of by_source) {
     process.stderr.write(`  ${source_path}\n`);
     const blocks = new Map();
+    const physical = physical_lines(readFileSync(source_path, 'utf8'));
 
-    for (const { symbol, target, line_number } of tests) {
+    for (const { symbol, target, code_line } of tests) {
       // The test node is `_to_string expr`; a file has to be recognized on the
       // raw expression, which is its right child.
       const definition = defining_line.get(target);
@@ -135,10 +145,10 @@ function expect_test({ runtime, root, bundle_path }) {
           result = marshal.to_string(get(symbol));
         }
       } catch (error) {
-        throw new Error(`${source_path}:${line_number}: ${error.message}`);
+        throw new Error(`${source_path}:${physical[code_line]}: ${error.message}`);
       }
 
-      blocks.set(line_number, comment_block(result));
+      blocks.set(code_line, comment_block(result));
     }
 
     write_results(source_path, blocks);

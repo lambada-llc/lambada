@@ -31,12 +31,18 @@ function sources(dir) {
   return found.sort();
 }
 
+/** The lines a source is made of, as opposed to the blanks and comments between them. */
+const is_source_line = line => line !== '' && !line.startsWith('#');
+
 /**
  * Split a source into the units the compiler is applied to.
  *
  * A top-level line starts at column 0 and indented lines continue it; comments
- * and blank lines are dropped. `end_line` is the 1-based source line the chunk
- * ends on, which is where an expect test records its result.
+ * and blank lines are dropped. `code_line` is the 1-based *code* line the chunk
+ * ends on, which is where an expect test records its result. Counting code
+ * lines rather than physical ones is what keeps a test's name fixed as the
+ * build writes its own `# = …` comments into the file — and as the prose around
+ * them changes.
  *
  * Chunking matters beyond tidiness: the compiler is a pure function, so
  * compiling a chunk at a time means an edit only costs what it actually changed.
@@ -44,17 +50,26 @@ function sources(dir) {
 function chunks(content) {
   const found = [];
   let current = null;
-  content.split('\n').forEach((line, i) => {
-    if (line === '' || line.startsWith('#')) return;
+  let code_line = 0;
+  for (const line of content.split('\n')) {
+    if (!is_source_line(line)) continue;
+    code_line++;
     if (/^[ \t]/.test(line) && current) {
       current.text += '\n' + line;
-      current.end_line = i + 1;
+      current.code_line = code_line;
     } else {
-      current = { text: line, end_line: i + 1 };
+      current = { text: line, code_line };
       found.push(current);
     }
-  });
+  }
   return found;
+}
+
+/** Physical line number of each code line, indexed 1-based by code line. */
+function physical_lines(content) {
+  const physical = [0];
+  content.split('\n').forEach((line, i) => { if (is_source_line(line)) physical.push(i + 1); });
+  return physical;
 }
 
 const sanitize = part => part.replace(/[^a-zA-Z0-9.]/g, '_');
@@ -78,13 +93,13 @@ function namespace(root, source_path) {
 }
 
 /**
- * The name of the test that a bare top-level expression on `end_line` becomes.
+ * The name of the test that a bare top-level expression on `code_line` becomes.
  *
  * The name encodes everything needed to record the result later — which file,
  * which line — so nothing else has to be written down and kept in sync.
  */
-function test_symbol(root, source_path, end_line) {
-  return `:test.${namespace_parts(root, source_path).join('')}${end_line}`;
+function test_symbol(root, source_path, code_line) {
+  return `:test.${namespace_parts(root, source_path).join('')}${code_line}`;
 }
 
 /** Read a test symbol back: which source made it, and where the result goes. */
@@ -96,7 +111,7 @@ function parse_test_symbol(root, symbol) {
   return {
     source_path: `${root}/${segments.join('/')}.lamb`,
     file_directory: [root, ...directory, EXPECT_DIR].join('/'),
-    line: Number(match[2]),
+    code_line: Number(match[2]),
   };
 }
 
@@ -106,6 +121,8 @@ module.exports = {
   EXPECT_DIR,
   sources,
   chunks,
+  is_source_line,
+  physical_lines,
   namespace,
   test_symbol,
   parse_test_symbol,
