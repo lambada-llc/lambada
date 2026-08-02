@@ -1,6 +1,8 @@
 // A page for looking at the package on its own.
 //
-// Deliberately not the playground: no compiler, no worker, no site around it.
+// Deliberately bare: no compiler, no worker, nothing built around it. What a
+// host does with the package is a host's business.
+//
 // What is on screen is a stock CodeMirror editor plus this package's one
 // extension, `lambada()` — today the grammar and the keys that type `△`.
 //
