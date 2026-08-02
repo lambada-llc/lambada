@@ -2,7 +2,7 @@
 //
 // Deliberately not the playground: no compiler, no worker, no site around it.
 // What is on screen is a stock CodeMirror editor plus this package's one
-// extension, `lambada()` — today that is the grammar and nothing else.
+// extension, `lambada()` — today the grammar and the keys that type `△`.
 //
 // The three things below are meant to stay in step: `config` is what the page
 // asks the package for, `themed` is what it loads next to it, and the snippet
@@ -16,8 +16,14 @@ import { basicLight } from 'cm6-theme-basic-light';
 import { lambada, type LambadaConfig } from '../src/index';
 import { sample } from './sample';
 
-// What the page asks the package for. No options exist yet, so: nothing.
+// What the page asks the package for. Left empty it is every default, which is
+// why unchecking a box below writes an option in rather than removing one: the
+// snippet is what a host would have to type, and defaults are what you do not.
 const config: LambadaConfig = {};
+
+// Try Alt-t, Alt-n, Ctrl-t or Ctrl-n in the editor. The box starts checked
+// because the keys are on by default.
+const nodeKeys = document.querySelector<HTMLInputElement>('#node-keys')!;
 
 // Whether a theme is loaded alongside. Not the package's to provide, but the
 // grammar marks more than CodeMirror's default highlight style paints, so
@@ -35,10 +41,14 @@ const isDark = () =>
 const themeName = () => (isDark() ? 'basicDark' : 'basicLight');
 const themePackage = () => `cm6-theme-basic-${isDark() ? 'dark' : 'light'}`;
 
-// A compartment so toggling reconfigures the editor in place rather than
-// rebuilding it, which would lose the cursor and any edits made to the sample.
+// A compartment each, so that toggling reconfigures the editor in place rather
+// than rebuilding it, which would lose the cursor and any edits made to the
+// sample. The parse tree survives too: a state field present in both the old
+// and the new configuration keeps its value.
 const theme = new Compartment();
 const themeExtension = () => (themed ? (isDark() ? basicDark : basicLight) : []);
+
+const language = new Compartment();
 
 function snippet(): string {
   const options = Object.entries(config).map(
@@ -61,18 +71,34 @@ new EditorView({
 
 const view = new EditorView({
   doc: sample,
-  extensions: [basicSetup, lambada(config), theme.of(themeExtension())],
+  extensions: [
+    basicSetup,
+    language.of(lambada(config)),
+    theme.of(themeExtension()),
+  ],
   parent: document.querySelector('#editor')!,
 });
 
 function render() {
-  view.dispatch({ effects: theme.reconfigure(themeExtension()) });
+  view.dispatch({
+    effects: [
+      language.reconfigure(lambada(config)),
+      theme.reconfigure(themeExtension()),
+    ],
+  });
   document.querySelector('#snippet')!.textContent = snippet();
   const options = Object.keys(config);
   document.querySelector('#status')!.textContent = options.length
     ? `lambada() with ${options.join(', ')}`
-    : 'lambada() with no options — the grammar, and nothing else yet';
+    : 'lambada() with every default — the grammar, and △ on four keys';
 }
+
+nodeKeys.addEventListener('change', () => {
+  // Checked is the default, and a default is what a host would leave unwritten.
+  if (nodeKeys.checked) delete config.nodeKeys;
+  else config.nodeKeys = false;
+  render();
+});
 
 loadTheme.addEventListener('change', () => {
   themed = loadTheme.checked;
