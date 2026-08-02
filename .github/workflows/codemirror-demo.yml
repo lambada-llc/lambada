@@ -1,17 +1,17 @@
-# Publishes code-mirror/demo-dist to GitHub Pages.
+# Publishes codemirror/demo-dist to GitHub Pages.
 #
 # Push to main only. A pull request from a fork runs with a read-only token and
 # no access to the Pages environment, and this workflow gives it nothing extra:
 # there is no `pull_request` trigger, and the write permissions below are on the
 # deploy job rather than the file, so the build job cannot reach them either.
-name: code-mirror demo
+name: codemirror demo
 
 on:
   push:
     branches: [main]
     paths:
-      - 'code-mirror/**'
-      - '.github/workflows/code-mirror-demo.yml'
+      - 'codemirror/**'
+      - '.github/workflows/codemirror-demo.yml'
   workflow_dispatch:
 
 permissions:
@@ -28,15 +28,15 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: code-mirror
+        working-directory: codemirror
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: code-mirror/.nvmrc
+          node-version-file: codemirror/.nvmrc
           cache: npm
-          cache-dependency-path: code-mirror/package-lock.json
+          cache-dependency-path: codemirror/package-lock.json
 
       - run: npm ci
       - run: npm run typecheck
@@ -44,7 +44,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: code-mirror/demo-dist
+          path: codemirror/demo-dist
 
   deploy:
     needs: build

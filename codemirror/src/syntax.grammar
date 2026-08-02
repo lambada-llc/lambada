@@ -1,0 +1,74 @@
+// LambAda, as much of it as colouring code needs to know.
+// Build via `lezer-generator syntax.grammar`.
+//
+// Deliberately an over-approximation: it accepts things the compiler rejects,
+// providing best-effort coloring even when the code is broken.
+
+@top Program { part* }
+
+@skip { space | LineComment }
+
+part {
+  Lambda |
+  Identifier |
+  Operator |
+  String |
+  Char |
+  Natural |
+  Parens { "(" part* ")" } |
+  List { "[" part* "]" } |
+  Record { "{" part* "}" }
+}
+
+// `\x`, and only that much. The compiler reads the rest of the application as
+// the lambda's body, but nothing here paints a body, so nesting one would be
+// structure for its own sake — and structure is what breaks on invalid input.
+// The variable is its own node because it is the one name the theme marks.
+Lambda { Backslash Binder }
+
+Binder { identifier }
+Identifier { identifier }
+
+@tokens {
+  // `is_alpha_char` is deliberately broad: everything from `@` through `Z`, from
+  // `_` through `z`, and every code point at or above 128 — which is what makes
+  // `△` an ordinary identifier rather than a keyword.
+  identifierStart { $[@A-Z_`a-z] | $[\u{80}-\u{10ffff}] }
+  // `is_identifier_char` adds digits and the `.` that qualifies a name, so
+  // `Bool.not` is one identifier rather than three tokens.
+  identifierChar { identifierStart | $[0-9.] }
+
+  identifier { identifierStart identifierChar* }
+
+  // `parse_until _is_quot` — no escape sequences, a `"` always closes.
+  String { '"' !["]* '"' }
+
+  // `parse_any` takes one code point, so `'x'`, `'△'` and `'🤡'` all fit. The
+  // quote is allowed through deliberately: `'''` is how the compiler reads a
+  // literal quote. Not the line break, which would run past the end of the line.
+  Char { "'" ![\n] "'" }
+
+  Natural { $[0-9]+ }
+
+  LineComment { "#" ![\n]* }
+
+  Backslash { "\\" }
+
+  // One token for all of them: `=` introduces a definition, `|` separates the
+  // variants of a type, `$` and `,` and `:` do what they look like — and the
+  // theme paints the whole lot the same, because a program in which every space
+  // is an application has little else to mark. `;` is `parse_special_char`'s
+  // other spelling of `,`, both being `Schar_separator`.
+  Operator { "=" | "$" | "|" | "," | ";" | ":" }
+
+  // `is_whitespace_char` is `is_gte ' '`, i.e. every code point up to and
+  // including the space. Line breaks are in there: a chunk boundary is layout,
+  // and finding one needs to look at the character after the break without
+  // consuming it, which no token rule can do.
+  space { $[\u{0}-\u{20}]+ }
+
+  // Declared so highlighting and bracket matching can see them.
+  "(" ")" "[" "]" "{" "}"
+}
+
+@detectDelim
