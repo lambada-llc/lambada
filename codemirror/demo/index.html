@@ -118,13 +118,58 @@
         border-right: 1px solid ButtonBorder;
       }
 
-      /* Where the controls will go, above the snippet they explain. */
+      /* The controls, above the snippet they explain. */
       aside {
         display: grid;
-        grid-template-rows: 1fr auto;
+        grid-template-rows: auto 1fr auto;
         min-height: 0;
         border-left: 1px solid ButtonBorder;
         background: ButtonFace;
+      }
+      #controls {
+        display: flex;
+        align-items: start;
+        gap: 0.4rem;
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid ButtonBorder;
+      }
+      #controls label {
+        display: flex;
+        align-items: start;
+        gap: 0.4rem;
+        flex: 1;
+        min-width: 0;
+        cursor: pointer;
+      }
+      #controls input {
+        margin: 0.15em 0 0;
+      }
+
+      /* Why the control is there, one hover away, so the control itself stays
+         a single line of text. Outside the label, so clicking it does not
+         toggle the box. */
+      .info {
+        position: relative;
+        color: GrayText;
+        cursor: help;
+      }
+      .info > .tip {
+        display: none;
+        position: absolute;
+        top: 1.5em;
+        right: 0;
+        z-index: 1;
+        width: 17rem;
+        padding: 0.5rem 0.6rem;
+        border: 1px solid ButtonBorder;
+        border-radius: 6px;
+        background: Canvas;
+        color: CanvasText;
+        cursor: auto;
+      }
+      .info:hover > .tip,
+      .info:focus-visible > .tip {
+        display: block;
       }
       #snippet {
         margin: 0;
@@ -165,6 +210,25 @@
     <main>
       <div id="editor"></div>
       <aside>
+        <div id="controls">
+          <!-- The link sits inside the label deliberately: a click on
+               interactive content does not trigger the label, so it navigates
+               rather than toggling the box. -->
+          <label>
+            <input id="load-theme" type="checkbox" checked />
+            Use <a href="https://github.com/craftzdog/cm6-themes">cm6-themes</a>
+            by Takuya Matsuyama (MIT)
+          </label>
+          <span class="info" tabindex="0">
+            ⓘ
+            <span class="tip">
+              Not part of this package: CodeMirror's default highlight style
+              leaves several of the grammar's tags unpainted — operators,
+              brackets and lambda binders among them — and a theme is how a
+              host fills them in. Switch it off to see the difference.
+            </span>
+          </span>
+        </div>
         <pre id="snippet"></pre>
         <div id="status"></div>
       </aside>
