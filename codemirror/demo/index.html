@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
@@ -127,6 +127,7 @@
         background: ButtonFace;
       }
       #controls {
+        position: relative;
         display: flex;
         align-items: start;
         gap: 0.4rem;
@@ -145,26 +146,51 @@
         margin: 0.15em 0 0;
       }
 
-      /* Why the control is there, one hover away, so the control itself stays
-         a single line of text. Outside the label, so clicking it does not
-         toggle the box. */
+      /* Why the control is there, one hover away, so the control itself stays a
+         single line of text. It sits at the end of the label's text and moves
+         with it — a badge parked at the far edge of the row reads as belonging
+         to the row rather than to the sentence. A button because clicking
+         interactive content does not trigger the label, which is what keeps it
+         from toggling the box, and because it is focusable without being told
+         to be. The circle is drawn rather than borrowed from `ⓘ`, whose hairline
+         all but disappears at this size. */
       .info {
-        position: relative;
-        color: GrayText;
+        display: inline-grid;
+        place-items: center;
+        width: 1.3em;
+        height: 1.3em;
+        margin-left: 0.3em;
+        padding: 0;
+        vertical-align: -0.2em;
+        border: 1px solid currentColor;
+        border-radius: 50%;
+        background: none;
+        color: color-mix(in srgb, CanvasText 60%, Canvas 40%);
+        font: 600 0.85em/1 inherit;
+        font-family: inherit;
         cursor: help;
       }
-      .info > .tip {
+      .info:hover,
+      .info:focus-visible {
+        color: CanvasText;
+      }
+      /* Positioned against #controls rather than the badge: the badge lands
+         wherever the text leaves it, and a 17rem tip hung off it would sooner or
+         later hang off the side of the page. */
+      .tip {
         display: none;
         position: absolute;
-        top: 1.5em;
-        right: 0;
+        top: 100%;
+        left: 1rem;
+        right: 1rem;
         z-index: 1;
-        width: 17rem;
         padding: 0.5rem 0.6rem;
         border: 1px solid ButtonBorder;
         border-radius: 6px;
         background: Canvas;
         color: CanvasText;
+        font-weight: 400;
+        text-align: left;
         cursor: auto;
       }
       .info:hover > .tip,
@@ -217,17 +243,20 @@
           <label>
             <input id="load-theme" type="checkbox" checked />
             Use <a href="https://github.com/craftzdog/cm6-themes">cm6-themes</a>
-            by Takuya Matsuyama (MIT)
+            by Takuya Matsuyama (MIT)<button
+              class="info"
+              type="button"
+              aria-label="Why this option is here"
+            >
+              i
+              <span class="tip">
+                Not part of this package: CodeMirror's default highlight style
+                leaves some of the grammar's tags unpainted — operators and
+                brackets — and a theme is how a host fills them in. Switch it off
+                to see the difference.
+              </span>
+            </button>
           </label>
-          <span class="info" tabindex="0">
-            ⓘ
-            <span class="tip">
-              Not part of this package: CodeMirror's default highlight style
-              leaves several of the grammar's tags unpainted — operators,
-              brackets and lambda binders among them — and a theme is how a
-              host fills them in. Switch it off to see the difference.
-            </span>
-          </span>
         </div>
         <pre id="snippet"></pre>
         <div id="status"></div>

@@ -15,7 +15,7 @@ export const lambadaLanguage = LRLanguage.define({
         // `\x` reads as one thing, so the backslash takes the binder's colour.
         // [Identifier] stays unpainted on purpose: in a language where nearly
         // every token is a name, marking names marks the whole document.
-        'Backslash Binder': t.variableName,
+        'Backslash Binder': t.definition(t.variableName),
         Operator: t.operator,
       }),
     ],
