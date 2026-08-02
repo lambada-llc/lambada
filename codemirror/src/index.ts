@@ -2,8 +2,10 @@ import { LanguageSupport } from '@codemirror/language';
 
 import { lambadaLanguage } from './language';
 import { defaultNodeKeys, nodeKeymap } from './node-keys';
+import { lambadaStatements } from './statements';
 
-export { lambadaLanguage };
+export { lambadaLanguage, lambadaStatements };
+export type { Statement } from './statements';
 
 export interface LambadaConfig {
   /**
@@ -18,5 +20,10 @@ export function lambada({
   nodeKeys = true,
 }: LambadaConfig = {}): LanguageSupport {
   const keys = nodeKeys === true ? defaultNodeKeys : nodeKeys || [];
-  return new LanguageSupport(lambadaLanguage, nodeKeymap(keys));
+  // Statements are not optional: read-only they cost a pass over a document
+  // that never changes, and editable there is little to be done without them.
+  return new LanguageSupport(lambadaLanguage, [
+    nodeKeymap(keys),
+    lambadaStatements,
+  ]);
 }
