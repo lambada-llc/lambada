@@ -32,11 +32,9 @@ const nodeKeys = document.querySelector<HTMLInputElement>('#node-keys')!;
 const loadTheme = document.querySelector<HTMLInputElement>('#load-theme')!;
 let themed = loadTheme.checked;
 
-const prefersDark = matchMedia('(prefers-color-scheme: dark)');
-// The header's switch owns the page's theme; the editor follows it.
-const isDark = () =>
-  (document.documentElement.dataset.theme ||
-    (prefersDark.matches ? 'dark' : 'light')) === 'dark';
+// The header's switch owns the page's theme, and writes it to the attribute the
+// markup starts out carrying; the editor follows it.
+const isDark = () => document.documentElement.dataset.theme === 'dark';
 
 const themeName = () => (isDark() ? 'basicDark' : 'basicLight');
 const themePackage = () => `cm6-theme-basic-${isDark() ? 'dark' : 'light'}`;
@@ -87,10 +85,6 @@ function render() {
     ],
   });
   document.querySelector('#snippet')!.textContent = snippet();
-  const options = Object.keys(config);
-  document.querySelector('#status')!.textContent = options.length
-    ? `lambada() with ${options.join(', ')}`
-    : 'lambada() with every default — the grammar, and △ on four keys';
 }
 
 nodeKeys.addEventListener('change', () => {
@@ -105,11 +99,10 @@ loadTheme.addEventListener('change', () => {
   render();
 });
 
-// Both ways the page's theme can change: the header's switch writes the
-// attribute, and the system setting moves when the switch has not been used.
+// The one way the page's theme can change: the header's switch writes the
+// attribute.
 new MutationObserver(render).observe(document.documentElement, {
   attributeFilter: ['data-theme'],
 });
-prefersDark.addEventListener('change', render);
 
 render();

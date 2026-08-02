@@ -1,19 +1,18 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<!-- Light unless the switch says otherwise, rather than following the system:
+     the page exists to show the colours, and they read better on white. On the
+     markup so there is no flash of the other theme before the script runs. -->
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@lambada-llc/codemirror-lang-lambada</title>
     <!--
       Deliberately plain. The point of the page is to show what the package looks
       like, and a page with a look of its own is a second opinion about the same
-      colours. So: system fonts, one border colour, and nothing that could be
-      mistaken for the editor.
+      colours. So: system fonts, system colours, one border.
     -->
     <style>
-      :root {
-        color-scheme: light dark;
-      }
       :root[data-theme='light'] {
         color-scheme: light;
       }
@@ -34,45 +33,26 @@
         font: 13px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
       }
 
-      /* min-width so the header may be narrower than its contents rather than
-         widening the page; the caption below is what gets narrowed. */
       header {
         display: flex;
-        align-items: baseline;
+        align-items: center;
         gap: 0.75rem;
-        flex-wrap: wrap;
-        min-width: 0;
         padding: 0.7rem 1rem;
         border-bottom: 1px solid ButtonBorder;
       }
-      header h1 {
+      h1 {
         margin: 0;
-        font-size: 0.95rem;
-        font-weight: 600;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      }
-      /* Takes what is left of the line and is clipped to it, so a caption too
-         long to fit no longer pushes the switch onto a line of its own. */
-      header p {
-        margin: 0;
-        color: GrayText;
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        font: 600 0.95rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
       }
       #theme-toggle {
         margin-left: auto;
+        padding: 0.35rem 0.7rem;
         border: 1px solid ButtonBorder;
+        border-radius: 999px;
         background: ButtonFace;
         color: ButtonText;
-        padding: 0.35rem 0.7rem;
-        border-radius: 999px;
         font: inherit;
         cursor: pointer;
-      }
-      #theme-toggle:hover {
-        background: color-mix(in srgb, ButtonFace 82%, Canvas 18%);
       }
 
       main {
@@ -80,48 +60,18 @@
         grid-template-columns: 1fr 22rem;
         min-height: 0;
       }
-
       #editor {
         overflow: auto;
         min-width: 0;
-        min-height: 0;
       }
-      #editor .cm-editor {
+      .cm-editor {
         height: 100%;
-        color: CanvasText;
-        background: Canvas;
-      }
-      #editor .cm-content {
-        caret-color: CanvasText;
-      }
-      #editor .cm-cursor,
-      #editor .cm-dropCursor {
-        border-left-color: CanvasText;
-      }
-      #editor .cm-selectionLayer {
-        display: none;
-      }
-      #editor .cm-content::selection,
-      #editor .cm-content ::selection,
-      #editor .cm-line::selection,
-      #editor .cm-line ::selection {
-        background: Highlight !important;
-        color: HighlightText !important;
-      }
-      #editor .cm-activeLine,
-      #editor .cm-activeLineGutter {
-        background: color-mix(in srgb, CanvasText 8%, Canvas 92%);
-      }
-      #editor .cm-gutters {
-        background: ButtonFace;
-        color: GrayText;
-        border-right: 1px solid ButtonBorder;
       }
 
-      /* The controls, above the snippet they explain. */
+      /* The controls, above the snippet they change. */
       aside {
         display: grid;
-        grid-template-rows: auto 1fr auto;
+        grid-template-rows: auto 1fr;
         min-height: 0;
         border-left: 1px solid ButtonBorder;
         background: ButtonFace;
@@ -129,68 +79,59 @@
       /* A grid, so a second control is a second row. Each control is one label
          — the badge explaining it sits inside, at the end of the text. */
       #controls {
-        position: relative;
         display: grid;
         gap: 0.5rem;
         padding: 0.8rem 1rem;
         border-bottom: 1px solid ButtonBorder;
       }
-      #controls label {
-        display: flex;
-        align-items: start;
-        gap: 0.4rem;
-        flex: 1;
-        min-width: 0;
+      /* Block, not flex: a flex container makes an item of every element child,
+         and the link and the badge belong to the sentence rather than beside
+         it. Positioned because the tip below hangs off it. */
+      label {
+        position: relative;
+        display: block;
         cursor: pointer;
       }
-      #controls input {
-        margin: 0.15em 0 0;
+      /* A line may break either side of an inline box, so the badge needs tying
+         to the words it belongs to or it ends up alone on a line of its own. */
+      .keep-together {
+        white-space: nowrap;
       }
-
-      /* Why the control is there, one hover away, so the control itself stays a
-         single line of text. It sits at the end of the label's text and moves
-         with it — a badge parked at the far edge of the row reads as belonging
-         to the row rather than to the sentence. A button because clicking
-         interactive content does not trigger the label, which is what keeps it
-         from toggling the box, and because it is focusable without being told
-         to be. The circle is drawn rather than borrowed from `ⓘ`, whose hairline
-         all but disappears at this size. */
+      /* A button, so that clicking it does not toggle the box — a label ignores
+         clicks on interactive content — and so it is focusable without being
+         told to be. Not GrayText, which is what made it near-invisible against
+         a dark background; this stays a step off the text either way. */
       .info {
-        display: inline-grid;
-        place-items: center;
-        width: 1.3em;
-        height: 1.3em;
-        margin-left: 0.3em;
+        margin-left: 0.15em;
         padding: 0;
-        vertical-align: -0.2em;
-        border: 1px solid currentColor;
-        border-radius: 50%;
+        border: 0;
         background: none;
         color: color-mix(in srgb, CanvasText 60%, Canvas 40%);
-        font: 600 0.85em/1 inherit;
-        font-family: inherit;
+        font: inherit;
         cursor: help;
       }
       .info:hover,
       .info:focus-visible {
         color: CanvasText;
       }
-      /* Positioned against #controls rather than the badge: the badge lands
-         wherever the text leaves it, and a 17rem tip hung off it would sooner or
-         later hang off the side of the page. */
+      /* The explanation, one hover away. Positioned against the label, which is
+         the full width of the panel — the badge is a glyph somewhere in the
+         middle of a sentence, and a box hung off it would sooner or later hang
+         off the side of the page. */
       .tip {
         display: none;
         position: absolute;
         top: 100%;
-        left: 1rem;
-        right: 1rem;
+        left: 0;
+        right: 0;
         z-index: 1;
         padding: 0.5rem 0.6rem;
         border: 1px solid ButtonBorder;
         border-radius: 6px;
         background: Canvas;
         color: CanvasText;
-        font-weight: 400;
+        white-space: normal;
+        /* Both off the button it lives in, which centres its text. */
         text-align: left;
         cursor: auto;
       }
@@ -202,17 +143,8 @@
         margin: 0;
         padding: 0.8rem 1rem;
         overflow: auto;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 0.75rem;
+        font: 0.75rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
         white-space: pre;
-        tab-size: 2;
-      }
-      #status {
-        padding: 0.35rem 1rem;
-        border-top: 1px solid ButtonBorder;
-        color: GrayText;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 0.75rem;
       }
 
       @media (max-width: 46rem) {
@@ -231,85 +163,65 @@
   <body>
     <header>
       <h1>@lambada-llc/codemirror-lang-lambada</h1>
-      <p>Stock CodeMirror plus <code>lambada()</code>, the package's one extension — so far the grammar and the keys that type <code>△</code>. Nothing compiles anything.</p>
       <button id="theme-toggle" type="button" aria-live="polite"></button>
     </header>
     <main>
       <div id="editor"></div>
       <aside>
+        <!-- The link and the badges sit inside their labels deliberately: a
+             click on interactive content does not trigger the label, so they
+             navigate and open rather than toggling the box. -->
         <div id="controls">
-          <!-- The character is left out of the label deliberately: the label is
-               a flex row, so each element in it becomes an item of its own and
-               the sentence stops wrapping as a sentence. -->
           <label>
             <input id="node-keys" type="checkbox" checked />
-            Type △ with Alt-t, Alt-n, Ctrl-t or Ctrl-n<button
+            Type △ with Alt-t, Alt-n, Ctrl-t or
+            <span class="keep-together">Ctrl-n <button
               class="info"
               type="button"
               aria-label="Why this option is here"
-            >
-              i
-              <span class="tip">
+            >ⓘ<span class="tip">
                 Part of this package. Four bindings for one character, because
                 which of them reaches the page depends on the OS and the
                 browser. A host that knows what it is running on can name keys
                 of its own instead — <code>nodeKeys: ['Mod-t']</code> — or
                 <code>false</code> for none.
-              </span>
-            </button>
+              </span></button></span>
           </label>
-          <!-- The link sits inside the label deliberately: a click on
-               interactive content does not trigger the label, so it navigates
-               rather than toggling the box. -->
           <label>
             <input id="load-theme" type="checkbox" checked />
-            Use <a href="https://github.com/craftzdog/cm6-themes">cm6-themes</a>
-            by Takuya Matsuyama (MIT)<button
+            Use <a href="https://github.com/craftzdog/cm6-themes">cm6-themes</a> by
+            Takuya <span class="keep-together">Matsuyama (MIT) <button
               class="info"
               type="button"
               aria-label="Why this option is here"
-            >
-              i
-              <span class="tip">
+            >ⓘ<span class="tip">
                 Not part of this package: CodeMirror's default highlight style
                 leaves some of the grammar's tags unpainted — operators and
                 brackets — and a theme is how a host fills them in. Switch it off
                 to see the difference.
-              </span>
-            </button>
+              </span></button></span>
           </label>
         </div>
         <pre id="snippet"></pre>
-        <div id="status"></div>
       </aside>
     </main>
     <script>
+      // The switch is the only thing that decides the theme — the page starts
+      // light whatever the system says — so: the attribute, and a label saying
+      // what pressing it would do.
       (() => {
         const root = document.documentElement;
         const toggle = document.querySelector('#theme-toggle');
-        const media =
-          typeof matchMedia == 'function'
-            ? matchMedia('(prefers-color-scheme: dark)')
-            : null;
-        const systemTheme = () => (media && media.matches ? 'dark' : 'light');
-        const effectiveTheme = () => root.dataset.theme || systemTheme();
-        const updateToggle = () => {
-          const theme = effectiveTheme();
-          const nextTheme = theme === 'dark' ? 'light' : 'dark';
-          toggle.textContent = `Switch to ${nextTheme}`;
-          toggle.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
+        const update = () => {
+          const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+          toggle.textContent = `Switch to ${next}`;
+          toggle.setAttribute('aria-label', `Switch to ${next} theme`);
         };
-
         toggle.addEventListener('click', () => {
-          root.dataset.theme = effectiveTheme() === 'dark' ? 'light' : 'dark';
-          updateToggle();
+          root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+          update();
         });
-
-        media && media.addEventListener('change', () => {
-          if (!root.dataset.theme) updateToggle();
-        });
-
-        updateToggle();
+        update();
       })();
     </script>
     <script type="module" src="./demo.ts"></script>
