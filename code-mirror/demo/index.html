@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@lambada-llc/code-mirror</title>
+    <!--
+      Deliberately plain. The point of the page is to show what the package looks
+      like, and a page with a look of its own is a second opinion about the same
+      colours. So: system fonts, one border colour, and nothing that could be
+      mistaken for the editor.
+    -->
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      :root[data-theme='light'] {
+        color-scheme: light;
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        background: Canvas;
+        color: CanvasText;
+        font: 13px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+
+      header {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.7rem 1rem;
+        border-bottom: 1px solid ButtonBorder;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      header p {
+        margin: 0;
+        color: GrayText;
+      }
+      #theme-toggle {
+        margin-left: auto;
+        border: 1px solid ButtonBorder;
+        background: ButtonFace;
+        color: ButtonText;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        font: inherit;
+        cursor: pointer;
+      }
+      #theme-toggle:hover {
+        background: color-mix(in srgb, ButtonFace 82%, Canvas 18%);
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: 1fr 22rem;
+        min-height: 0;
+      }
+
+      #editor {
+        overflow: auto;
+        min-width: 0;
+        min-height: 0;
+      }
+      #editor .cm-editor {
+        height: 100%;
+        color: CanvasText;
+        background: Canvas;
+      }
+      #editor .cm-content {
+        caret-color: CanvasText;
+      }
+      #editor .cm-cursor,
+      #editor .cm-dropCursor {
+        border-left-color: CanvasText;
+      }
+      #editor .cm-selectionLayer {
+        display: none;
+      }
+      #editor .cm-content::selection,
+      #editor .cm-content ::selection,
+      #editor .cm-line::selection,
+      #editor .cm-line ::selection {
+        background: Highlight !important;
+        color: HighlightText !important;
+      }
+      #editor .cm-activeLine,
+      #editor .cm-activeLineGutter {
+        background: color-mix(in srgb, CanvasText 8%, Canvas 92%);
+      }
+      #editor .cm-gutters {
+        background: ButtonFace;
+        color: GrayText;
+        border-right: 1px solid ButtonBorder;
+      }
+
+      /* Where the controls will go, above the snippet they explain. */
+      aside {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        min-height: 0;
+        border-left: 1px solid ButtonBorder;
+        background: ButtonFace;
+      }
+      #snippet {
+        margin: 0;
+        padding: 0.8rem 1rem;
+        overflow: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.75rem;
+        white-space: pre;
+        tab-size: 2;
+      }
+      #status {
+        padding: 0.35rem 1rem;
+        border-top: 1px solid ButtonBorder;
+        color: GrayText;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.75rem;
+      }
+
+      @media (max-width: 46rem) {
+        main {
+          grid-template-columns: 1fr;
+          grid-template-rows: 1fr auto;
+        }
+        aside {
+          border-left: none;
+          border-top: 1px solid ButtonBorder;
+          max-height: 45vh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>@lambada-llc/code-mirror</h1>
+      <p>Stock CodeMirror, no LambAda support loaded. Nothing compiles anything.</p>
+      <button id="theme-toggle" type="button" aria-live="polite"></button>
+    </header>
+    <main>
+      <div id="editor"></div>
+      <aside>
+        <pre id="snippet"></pre>
+        <div id="status"></div>
+      </aside>
+    </main>
+    <script>
+      (() => {
+        const root = document.documentElement;
+        const toggle = document.querySelector('#theme-toggle');
+        const media =
+          typeof matchMedia == 'function'
+            ? matchMedia('(prefers-color-scheme: dark)')
+            : null;
+        const systemTheme = () => (media && media.matches ? 'dark' : 'light');
+        const effectiveTheme = () => root.dataset.theme || systemTheme();
+        const updateToggle = () => {
+          const theme = effectiveTheme();
+          const nextTheme = theme === 'dark' ? 'light' : 'dark';
+          toggle.textContent = `Switch to ${nextTheme}`;
+          toggle.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
+        };
+
+        toggle.addEventListener('click', () => {
+          root.dataset.theme = effectiveTheme() === 'dark' ? 'light' : 'dark';
+          updateToggle();
+        });
+
+        media && media.addEventListener('change', () => {
+          if (!root.dataset.theme) updateToggle();
+        });
+
+        updateToggle();
+      })();
+    </script>
+    <script type="module" src="./demo.ts"></script>
+  </body>
+</html>
