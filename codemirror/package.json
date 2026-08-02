@@ -4,12 +4,25 @@
   "description": "CodeMirror 6 editing support for LambAda",
   "license": "MIT",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "engines": {
     "node": ">=20.19"
   },
   "scripts": {
-    "build": "vite build",
+    "build": "npm run build:lib && npm run build:demo",
+    "build:demo": "vite build",
+    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
     "dev": "vite",
     "typecheck": "tsc --noEmit"
   },

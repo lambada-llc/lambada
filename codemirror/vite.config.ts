@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 import { lezer } from '@lezer/generator/rollup';
 
-// Only the demo page is built for now. When there is a package to publish, a
-// library build gets added next to this one rather than replacing it.
+// The demo page. The library it demonstrates is built by `vite.lib.config.ts`
+// beside this one; `npm run build` runs both.
 export default defineConfig({
   root: 'demo',
   // `src/syntax.grammar` is compiled to a parser at build time, so the

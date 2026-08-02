@@ -23,8 +23,10 @@ you compare stock CodeMirror to what `lambada()` (from [`src/index.ts`](./src/in
 
 ``` bash
 npm install
-npm run dev     # the demo, served
-npm run build   # the same page, written to demo-dist/
+npm run dev         # the demo, served
+npm run build       # both of the below
+npm run build:lib   # the library, written to dist/
+npm run build:demo  # the demo page, written to demo-dist/
 ```
 
 Vite wants Node 20.19+, hence the [`.nvmrc`](./.nvmrc).

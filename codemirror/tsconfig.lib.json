@@ -1,0 +1,13 @@
+// Declarations for the library build. Vite emits the JavaScript and nothing
+// else, so the types come from a second pass over `src` alone — the demo is not
+// part of what a host consumes.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}
