@@ -34,11 +34,14 @@
         font: 13px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
       }
 
+      /* min-width so the header may be narrower than its contents rather than
+         widening the page; the caption below is what gets narrowed. */
       header {
         display: flex;
         align-items: baseline;
         gap: 0.75rem;
         flex-wrap: wrap;
+        min-width: 0;
         padding: 0.7rem 1rem;
         border-bottom: 1px solid ButtonBorder;
       }
@@ -48,9 +51,15 @@
         font-weight: 600;
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       }
+      /* Takes what is left of the line and is clipped to it, so a caption too
+         long to fit no longer pushes the switch onto a line of its own. */
       header p {
         margin: 0;
         color: GrayText;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       #theme-toggle {
         margin-left: auto;
