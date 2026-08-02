@@ -9,7 +9,9 @@
 // beside them is the code a host would write to get the same editor.
 
 import { EditorView, basicSetup } from 'codemirror';
+import { indentWithTab } from '@codemirror/commands';
 import { Compartment } from '@codemirror/state';
+import { keymap } from '@codemirror/view';
 import { basicDark } from 'cm6-theme-basic-dark';
 import { basicLight } from 'cm6-theme-basic-light';
 
@@ -54,12 +56,15 @@ function snippet(): string {
   );
   const argument = options.length ? `{\n${options.join('\n')}\n    }` : '';
   return `import { EditorView, basicSetup } from 'codemirror';
+import { indentWithTab } from '@codemirror/commands';
+import { keymap } from '@codemirror/view';
 import { lambada } from '@lambada-llc/codemirror-lang-lambada';
 ${themed ? `import { ${themeName()} } from '${themePackage()}';\n` : ''}
 new EditorView({
   doc,
   extensions: [
     basicSetup,
+    keymap.of([indentWithTab]),
     lambada(${argument}),${themed ? `\n    ${themeName()},` : ''}
   ],
   parent: document.querySelector('#editor'),
@@ -71,6 +76,7 @@ const view = new EditorView({
   doc: sample,
   extensions: [
     basicSetup,
+    keymap.of([indentWithTab]),
     language.of(lambada(config)),
     theme.of(themeExtension()),
   ],
