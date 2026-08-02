@@ -1,10 +1,11 @@
 // A page for looking at the package on its own.
 //
-// Deliberately bare: no compiler, no worker, nothing built around it. What a
-// host does with the package is a host's business.
+// Deliberately bare: nothing built around the editor, and no site to speak of.
 //
 // What is on screen is a stock CodeMirror editor plus this package's one
-// extension, `lambada()` — today the grammar and the keys that type `△`.
+// extension, `lambada()` — the grammar, the keys that type `△`, and a compiler
+// running on a worker the package starts itself, which is what marks each
+// statement down the left edge.
 //
 // The three things below are meant to stay in step: `config` is what the page
 // asks the package for, `themed` is what it loads next to it, and the snippet

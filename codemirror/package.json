@@ -24,6 +24,11 @@
     "build:demo": "vite build",
     "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
     "dev": "vite",
+    "generate": "node scripts/generate.mjs",
+    "prebuild:demo": "npm run generate",
+    "prebuild:lib": "npm run generate",
+    "predev": "npm run generate",
+    "pretypecheck": "npm run generate",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
