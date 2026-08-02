@@ -126,11 +126,12 @@
         border-left: 1px solid ButtonBorder;
         background: ButtonFace;
       }
+      /* A grid, so a second control is a second row. Each control is one label
+         — the badge explaining it sits inside, at the end of the text. */
       #controls {
         position: relative;
-        display: flex;
-        align-items: start;
-        gap: 0.4rem;
+        display: grid;
+        gap: 0.5rem;
         padding: 0.8rem 1rem;
         border-bottom: 1px solid ButtonBorder;
       }
@@ -230,13 +231,33 @@
   <body>
     <header>
       <h1>@lambada-llc/codemirror-lang-lambada</h1>
-      <p>Stock CodeMirror plus <code>lambada()</code>, the package's one extension — the grammar so far. Nothing compiles anything.</p>
+      <p>Stock CodeMirror plus <code>lambada()</code>, the package's one extension — so far the grammar and the keys that type <code>△</code>. Nothing compiles anything.</p>
       <button id="theme-toggle" type="button" aria-live="polite"></button>
     </header>
     <main>
       <div id="editor"></div>
       <aside>
         <div id="controls">
+          <!-- The character is left out of the label deliberately: the label is
+               a flex row, so each element in it becomes an item of its own and
+               the sentence stops wrapping as a sentence. -->
+          <label>
+            <input id="node-keys" type="checkbox" checked />
+            Type △ with Alt-t, Alt-n, Ctrl-t or Ctrl-n<button
+              class="info"
+              type="button"
+              aria-label="Why this option is here"
+            >
+              i
+              <span class="tip">
+                Part of this package. Four bindings for one character, because
+                which of them reaches the page depends on the OS and the
+                browser. A host that knows what it is running on can name keys
+                of its own instead — <code>nodeKeys: ['Mod-t']</code> — or
+                <code>false</code> for none.
+              </span>
+            </button>
+          </label>
           <!-- The link sits inside the label deliberately: a click on
                interactive content does not trigger the label, so it navigates
                rather than toggling the box. -->

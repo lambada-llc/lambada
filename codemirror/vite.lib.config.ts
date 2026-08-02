@@ -23,7 +23,13 @@ export default defineConfig({
       // that already has CodeMirror must not end up with a second copy of it
       // inside this file. The generated parser is not a dependency — it is this
       // package's own build output — so it goes in.
-      external: ['@codemirror/language', '@lezer/highlight', '@lezer/lr'],
+      external: [
+        '@codemirror/language',
+        '@codemirror/state',
+        '@codemirror/view',
+        '@lezer/highlight',
+        '@lezer/lr',
+      ],
     },
   },
 });
