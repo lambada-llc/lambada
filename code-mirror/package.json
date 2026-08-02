@@ -1,5 +1,5 @@
 {
-  "name": "@lambada-llc/code-mirror",
+  "name": "@lambada-llc/codemirror-lang-lambada",
   "version": "0.0.0",
   "description": "CodeMirror 6 editing support for LambAda",
   "license": "MIT",
@@ -13,8 +13,11 @@
     "dev": "vite",
     "typecheck": "tsc --noEmit"
   },
-  "//": "Nothing here is a dependency of the package yet, because the package exports nothing yet. `codemirror` is the demo page's: it is the editor the page puts on screen, with none of this package in it.",
+  "peerDependencies": {
+    "@codemirror/language": "^6.0.0"
+  },
   "devDependencies": {
+    "@codemirror/language": "^6.0.0",
     "codemirror": "^6.0.2",
     "typescript": "^5.7.0",
     "vite": "^7.0.0"

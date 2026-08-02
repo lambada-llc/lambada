@@ -1,34 +1,36 @@
 // A page for looking at the package on its own.
 //
 // Deliberately not the playground: no compiler, no worker, no site around it.
-// What is on screen is a stock CodeMirror editor plus whatever this package
-// puts into it — which today is nothing, so the editor is the baseline against
-// which everything added later can be seen.
+// What is on screen is a stock CodeMirror editor plus this package's one
+// extension, `lambada()` — today that is the grammar and nothing else, so the
+// colours are CodeMirror's own default highlight style rather than ours.
 //
-// The two things below are meant to stay in step: `loaded` is what the package
-// contributes to the editor, and the snippet under it is that same list written
-// out as the code a host would have to write to get it. When there are controls,
-// they will change `loaded`, and both the editor and the snippet will follow.
+// The two things below are meant to stay in step: `config` is what the page
+// asks the package for, and the snippet beside it is the code a host would
+// write to ask for the same. When there are controls, they will edit `config`,
+// and both the editor and the snippet will follow.
 
 import { EditorView, basicSetup } from 'codemirror';
 
+import { lambada, type LambadaConfig } from '../src/index';
 import { sample } from './sample';
 
-// What this package contributes to the editor. Empty until there is something
-// to contribute.
-const loaded: readonly string[] = [];
+// What the page asks the package for. No options exist yet, so: nothing.
+const config: LambadaConfig = {};
 
-function snippet(extensions: readonly string[]): string {
-  const ours = extensions.length
-    ? `import { ${extensions.map((e) => e.replace(/\(.*$/, '')).join(', ')} } from '@lambada-llc/code-mirror';\n`
-    : '';
-  const lines = ['basicSetup', ...extensions].map((e) => `    ${e},`).join('\n');
+function snippet(config: LambadaConfig): string {
+  const options = Object.entries(config).map(
+    ([key, value]) => `      ${key}: ${JSON.stringify(value)},`,
+  );
+  const argument = options.length ? `{\n${options.join('\n')}\n    }` : '';
   return `import { EditorView, basicSetup } from 'codemirror';
-${ours}
+import { lambada } from '@lambada-llc/codemirror-lang-lambada';
+
 new EditorView({
   doc,
   extensions: [
-${lines}
+    basicSetup,
+    lambada(${argument}),
   ],
   parent: document.querySelector('#editor'),
 });
@@ -37,11 +39,12 @@ ${lines}
 
 new EditorView({
   doc: sample,
-  extensions: [basicSetup],
+  extensions: [basicSetup, lambada(config)],
   parent: document.querySelector('#editor')!,
 });
 
-document.querySelector('#snippet')!.textContent = snippet(loaded);
-document.querySelector('#status')!.textContent = loaded.length
-  ? `${loaded.length} extension(s) from the package`
-  : 'nothing from the package is loaded';
+const options = Object.keys(config);
+document.querySelector('#snippet')!.textContent = snippet(config);
+document.querySelector('#status')!.textContent = options.length
+  ? `lambada() with ${options.join(', ')}`
+  : 'lambada() with no options — the grammar, and nothing else yet';
