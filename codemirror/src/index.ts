@@ -3,6 +3,7 @@ import { LanguageSupport } from '@codemirror/language';
 import { compilation, lambadaCompilations, type CompileConfig } from './compilation';
 import { completions } from './completions';
 import { diagnostics } from './diagnostics';
+import { previews } from './previews';
 import { lambadaLanguage } from './language';
 import { defaultNodeKeys, nodeKeymap } from './node-keys';
 import { lambadaStatements } from './statements';
@@ -49,6 +50,9 @@ export function lambada({
           compilation(compileConfig),
           compileConfig.showStatus === false ? [] : statementStatus(environment),
           compileConfig.showDiagnostics === false ? [] : diagnostics(environment),
+          compileConfig.showPreviews === false
+            ? []
+            : previews(environment, compileConfig),
           compileConfig.showCompletions === false ? [] : completions(environment),
         ]
       : [],

@@ -23,6 +23,7 @@ const compile = document.querySelector<HTMLInputElement>('#compile')!;
 // boxes write an option in when unchecked rather than out.
 const diagnostics = document.querySelector<HTMLInputElement>('#diagnostics')!;
 const completions = document.querySelector<HTMLInputElement>('#completions')!;
+const previews = document.querySelector<HTMLInputElement>('#previews')!;
 
 // Whether a theme is loaded alongside. Not the package's to provide, but the
 // grammar marks more than CodeMirror's default highlight style paints, so
@@ -45,6 +46,7 @@ function currentConfig(): LambadaConfig {
   const compileOptions: Exclude<LambadaConfig['compile'], boolean | undefined> = {};
   if (!diagnostics.checked) compileOptions.showDiagnostics = false;
   if (!completions.checked) compileOptions.showCompletions = false;
+  if (!previews.checked) compileOptions.showPreviews = false;
   if (Object.keys(compileOptions).length) config.compile = compileOptions;
   return config;
 }
@@ -114,11 +116,12 @@ function render() {
       theme.reconfigure(themeExtension()),
     ],
   });
-  for (const box of [diagnostics, completions]) box.disabled = !compile.checked;
+  for (const box of [diagnostics, completions, previews])
+    box.disabled = !compile.checked;
   document.querySelector('#snippet')!.textContent = snippet(config);
 }
 
-for (const box of [nodeKeys, compile, diagnostics, completions, loadTheme])
+for (const box of [nodeKeys, compile, diagnostics, completions, previews, loadTheme])
   box.addEventListener('change', render);
 
 // The one way the page's theme can change: the header's switch writes the

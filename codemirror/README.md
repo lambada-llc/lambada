@@ -26,19 +26,27 @@ when it did not. The compiler ships with the package, so this needs no setting
 up.
 
 It also reports names a statement uses that nothing has defined, under the word
-itself, and offers the names that *are* in scope as completions.
+itself, offers the names that *are* in scope as completions, and evaluates the
+statements that are expressions rather than definitions — showing what each
+comes to at the end of its line.
 
 ``` ts
 lambada({ compile: false })                       // the editing support alone
 lambada({ compile: { showStatus: false } })       // compile, but do not mark
 lambada({ compile: { showDiagnostics: false } })  // mark, but do not report names
 lambada({ compile: { showCompletions: false } })  // do not offer names
+lambada({ compile: { showPreviews: false } })     // do not evaluate anything
 lambada({ compile: { compiler, timeout } })       // a compiler of your own
 lambada({ compile: { environment } })             // what is in scope to begin with
 ```
 
 Completions arrive as language data, so a host with more to offer — a standard
 library, snippets — adds a source of its own and both appear.
+
+Evaluating happens on a second worker. A compilation takes single-digit
+milliseconds and an evaluation need never finish, so sharing one would let a
+program that loops hold up the marks, the reported names and the completions
+for everything else.
 
 `environment` is a [DAG module](https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules):
 whatever it defines is in scope before the document starts. The default defines

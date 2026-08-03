@@ -167,10 +167,20 @@ function makeMarshal(e) {
     return of_list(l);
   };
   return {
+    to_bool,
+    to_nat,
     to_string: (t) =>
       to_list(t)
         .map(to_nat)
-        .map((x) => String.fromCodePoint(Number(x)))
+        .map((x) => {
+          const code = Number(x);
+          // Only what is a character at all. Control characters stay in: what
+          // the compiler hands back is itself a string, and its lines are
+          // separated by one.
+          if (code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff))
+            throw new Error('not a character');
+          return String.fromCodePoint(code);
+        })
         .join(''),
     of_string: (s) => of_list(Array.from(s).map((c) => of_nat(BigInt(c.codePointAt(0))))),
   };
@@ -186,6 +196,8 @@ function makeMachine() {
     toDag: (tree) => dagTo(evaluator, tree),
     ofString: (s) => m.of_string(s),
     toString: (tree) => m.to_string(tree),
+    toNat: (tree) => m.to_nat(tree),
+    toBool: (tree) => m.to_bool(tree),
     apply: (f, x) => evaluator.apply(f, x),
     steps,
   };

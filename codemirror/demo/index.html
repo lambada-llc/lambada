@@ -226,6 +226,21 @@
               </span></button></span>
           </label>
           <label class="nested">
+            <input id="previews" type="checkbox" checked />
+            Show what an expression comes
+            <span class="keep-together">to <button
+              class="info"
+              type="button"
+              aria-label="Why this option is here"
+            >ⓘ<span class="tip">
+                A statement that is an expression rather than a definition gets
+                evaluated, against everything defined above it, and the value
+                appears at the end of the line. On a second worker: evaluating
+                does not have to finish, and must not hold up the compiling
+                that marks the document.
+              </span></button></span>
+          </label>
+          <label class="nested">
             <input id="completions" type="checkbox" checked />
             Offer the names that are in
             <span class="keep-together">scope <button
