@@ -34,7 +34,21 @@ export interface CompileConfig {
    * a compiler to show it from.
    */
   showStatus?: boolean;
+  /**
+   * Report names a statement uses that nothing has defined. Default: true.
+   */
+  showDiagnostics?: boolean;
+  /**
+   * What is in scope before the document starts, as DAG lines. Each line's
+   * first name is brought into scope. Defaults to the one this package ships,
+   * which is what makes `t` a name rather than an unknown.
+   */
+  environment?: string;
 }
+
+// `△ __ENV△` names the leaf the way the compiler names it; `t △` is the alias
+// that lets a program be written without the character at all.
+export const defaultEnvironment = '△ __ENV△\nt △';
 
 export function compilation({
   compiler = defaultCompiler,

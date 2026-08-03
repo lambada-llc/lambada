@@ -25,11 +25,21 @@ you compare stock CodeMirror to what `lambada()` (from [`src/index.ts`](./src/in
 when it did not. The compiler ships with the package, so this needs no setting
 up.
 
+It also reports names a statement uses that nothing has defined, under the word
+itself.
+
 ``` ts
-lambada({ compile: false })                  // the editing support alone
-lambada({ compile: { showStatus: false } })  // compile, but do not mark
-lambada({ compile: { compiler, timeout } })  // a compiler of your own
+lambada({ compile: false })                       // the editing support alone
+lambada({ compile: { showStatus: false } })       // compile, but do not mark
+lambada({ compile: { showDiagnostics: false } })  // mark, but do not report names
+lambada({ compile: { compiler, timeout } })       // a compiler of your own
+lambada({ compile: { environment } })             // what is in scope to begin with
 ```
+
+`environment` is DAG lines, and each line's first name is in scope before the
+document starts. The default defines `t`, which is why that reads as a name
+rather than an unknown one. A host with a standard library passes it here: a
+record literal, for one, needs a `Map.set` that nothing defines otherwise.
 
 Everything that reads a compilation is configured inside `compile` rather than
 beside it, because none of it means anything without one — the marks today,
