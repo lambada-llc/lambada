@@ -39,6 +39,12 @@ export interface CompileConfig {
    */
   showDiagnostics?: boolean;
   /**
+   * Offer the names in scope as completions. Default: true. Which names those
+   * are depends on what the statements above compiled to, which is why this
+   * lives here.
+   */
+  showCompletions?: boolean;
+  /**
    * What is in scope before the document starts, as a DAG module — see
    * https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules
    *

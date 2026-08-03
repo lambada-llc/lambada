@@ -24,6 +24,7 @@ export default defineConfig({
       // inside this file. The generated parser is not a dependency — it is this
       // package's own build output — so it goes in.
       external: [
+        '@codemirror/autocomplete',
         '@codemirror/language',
         '@codemirror/lint',
         '@codemirror/state',

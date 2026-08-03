@@ -25,9 +25,12 @@ export interface Analysis {
   problems: readonly Problem[];
 }
 
-// The DAG format binds `△` to the leaf, and the compiler calls that same leaf
-// `__ENV△` in what it emits. Both are in scope before any environment is read.
-const builtIn = ['△', '__ENV△'];
+// The DAG format binds `△` to the leaf. It is a name a program writes.
+const leaf = '△';
+// The compiler calls that same leaf `__ENV△` in what it emits, and references
+// it in every compilation — so it has to be in scope, but nobody writes it.
+const compilersLeaf = '__ENV△';
+const builtIn = [leaf, compilersLeaf];
 
 /**
  * The names a DAG module defines, which for an environment is what it brings
@@ -40,6 +43,48 @@ export function definedBy(environment: string): string[] {
     if (name && value) names.push(name);
   }
   return names;
+}
+
+/**
+ * Every name that could be written at `pos`, and the statement that gave it —
+ * the environment's, plus whatever the statements above define.
+ *
+ * A statement that has not compiled is stepped over rather than stopping the
+ * walk. Its own names are unknown, but the ones below it are not, and a list
+ * that empties itself while a line is still being typed is worse than one
+ * that is briefly short.
+ */
+export function scopeAt(
+  state: EditorState,
+  environment: string,
+  pos: number,
+): ReadonlyMap<string, string | null> {
+  const compilations = state.field(lambadaCompilations);
+  const scope = new Map<string, string | null>();
+  for (const name of [...builtIn, ...definedBy(environment)]) scope.set(name, null);
+
+  for (const statement of state.field(lambadaStatements)) {
+    if (pos <= statement.to) break;
+    const known = compilations.get(statement.text);
+    if (known?.status !== 'ok') continue;
+    for (const line of known.dagLines) {
+      const [name, value, applied] = line.split(' ');
+      // `name value` is a definition; `name value applied` is one of the
+      // applications the compiler makes on the way, which nothing wrote.
+      if (value && !applied) scope.set(name, statement.text);
+    }
+  }
+  return scope;
+}
+
+/**
+ * Whether a name is one anybody would write, as opposed to one the compiler
+ * made up on the way. `:ct` and `0` are not identifiers at all — the rule is
+ * the grammar's — and `__ENV△` is an identifier that only the compiler uses.
+ */
+export function isOfferable(name: string): boolean {
+  if (name === compilersLeaf) return false;
+  return /^[@A-Z_`a-z\u{80}-\u{10ffff}][@A-Z_`a-z\u{80}-\u{10ffff}0-9.]*$/u.test(name);
 }
 
 /**
