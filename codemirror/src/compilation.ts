@@ -28,6 +28,12 @@ export interface CompileConfig {
   compiler?: string;
   /** How long one statement may take before its worker is killed. */
   timeout?: number;
+  /**
+   * Mark each statement with how its compilation went. Default: true. Lives
+   * here rather than beside `compile` because there is nothing to show without
+   * a compiler to show it from.
+   */
+  showStatus?: boolean;
 }
 
 export function compilation({

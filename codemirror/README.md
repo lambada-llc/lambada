@@ -23,8 +23,17 @@ you compare stock CodeMirror to what `lambada()` (from [`src/index.ts`](./src/in
 
 `lambada()` compiles each statement and marks it — green when it compiled, red
 when it did not. The compiler ships with the package, so this needs no setting
-up; pass `compile: false` for the editing support alone, or `compile: {…}` to
-supply a compiler of your own.
+up.
+
+``` ts
+lambada({ compile: false })                  // the editing support alone
+lambada({ compile: { showStatus: false } })  // compile, but do not mark
+lambada({ compile: { compiler, timeout } })  // a compiler of your own
+```
+
+Everything that reads a compilation is configured inside `compile` rather than
+beside it, because none of it means anything without one — the marks today,
+and later what a completion can know about the lines above it.
 
 It runs on a worker started from a `blob:` URL. That is what lets the same
 build work whether you bundle this package or serve it as files — the worker

@@ -30,6 +30,10 @@ const config: LambadaConfig = {};
 // because the keys are on by default.
 const nodeKeys = document.querySelector<HTMLInputElement>('#node-keys')!;
 
+// Off writes `compile: false`, which takes the marks with it — the point of
+// nesting them under `compile` is that they cannot be had separately.
+const compile = document.querySelector<HTMLInputElement>('#compile')!;
+
 // Whether a theme is loaded alongside. Not the package's to provide, but the
 // grammar marks more than CodeMirror's default highlight style paints, so
 // without one the editor understates what `lambada()` already knows — hence on
@@ -100,6 +104,12 @@ nodeKeys.addEventListener('change', () => {
   // Checked is the default, and a default is what a host would leave unwritten.
   if (nodeKeys.checked) delete config.nodeKeys;
   else config.nodeKeys = false;
+  render();
+});
+
+compile.addEventListener('change', () => {
+  if (compile.checked) delete config.compile;
+  else config.compile = false;
   render();
 });
 

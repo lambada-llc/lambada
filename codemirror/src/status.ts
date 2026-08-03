@@ -11,20 +11,24 @@ import { lambadaStatements } from './statements';
 
 // A border rather than a gutter marker: a statement is a run of lines, and one
 // border down its left edge reads as one thing where a marker per line does
-// not. Colours are derived from the editor's own so that they hold up against
-// whatever theme a host loads, and are stated in `oklch` so the three stay at
-// the same lightness as each other.
+// not. `oklch` so the three colours sit at the same lightness as each other.
+//
+// Every line carries the border, transparent until there is something to say.
+// Putting it on the marked lines alone would mean a line gained two pixels the
+// moment it was first compiled, and the text under the cursor would jump.
 const theme = EditorView.baseTheme({
-  '.cm-statement': { borderLeft: '2px solid transparent' },
-  '.cm-statement-pending': { borderLeftColor: 'color-mix(in srgb, currentColor 25%, transparent)' },
+  '.cm-line': { borderLeft: '2px solid transparent' },
+  '.cm-statement-pending': {
+    borderLeftColor: 'color-mix(in srgb, currentColor 25%, transparent)',
+  },
   '.cm-statement-ok': { borderLeftColor: 'oklch(70% 0.16 145)' },
   '.cm-statement-error': { borderLeftColor: 'oklch(65% 0.20 25)' },
 });
 
 const marks = {
-  pending: Decoration.line({ class: 'cm-statement cm-statement-pending' }),
-  ok: Decoration.line({ class: 'cm-statement cm-statement-ok' }),
-  error: Decoration.line({ class: 'cm-statement cm-statement-error' }),
+  pending: Decoration.line({ class: 'cm-statement-pending' }),
+  ok: Decoration.line({ class: 'cm-statement-ok' }),
+  error: Decoration.line({ class: 'cm-statement-error' }),
 };
 
 const statusDecorations = StateField.define<DecorationSet>({

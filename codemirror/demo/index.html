@@ -188,6 +188,21 @@
               </span></button></span>
           </label>
           <label>
+            <input id="compile" type="checkbox" checked />
+            Compile each statement and mark
+            <span class="keep-together">it <button
+              class="info"
+              type="button"
+              aria-label="Why this option is here"
+            >ⓘ<span class="tip">
+                Part of this package, and on by default: the compiler ships
+                with it and runs on a worker started from a blob, so a host
+                supplies nothing. Green compiled, red did not. Anything that
+                reads a compilation is configured in here — there is nothing
+                for it to read otherwise.
+              </span></button></span>
+          </label>
+          <label>
             <input id="load-theme" type="checkbox" checked />
             Use <a href="https://github.com/craftzdog/cm6-themes">cm6-themes</a> by
             Takuya <span class="keep-together">Matsuyama (MIT) <button
