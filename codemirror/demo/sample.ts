@@ -25,4 +25,8 @@ area $ Rect 4 7
 # Lists, records, and a character constant.
 [ area (Circle 1), 0, 'x' ]
 { "kind": Circle, "arity": 1 }
+
+# Error handling
+line with unresolved symbols
+line with invalid syntax :(
 `;
