@@ -92,6 +92,15 @@
         display: block;
         cursor: pointer;
       }
+      /* Indented and dimmed while they apply, greyed out when they do not:
+         both read a compilation, and there is none to read with compiling off. */
+      label.nested {
+        padding-left: 1.3rem;
+      }
+      label:has(input:disabled) {
+        color: GrayText;
+        cursor: default;
+      }
       /* A line may break either side of an inline box, so the badge needs tying
          to the words it belongs to or it ends up alone on a line of its own. */
       .keep-together {
@@ -200,6 +209,34 @@
                 supplies nothing. Green compiled, red did not. Anything that
                 reads a compilation is configured in here — there is nothing
                 for it to read otherwise.
+              </span></button></span>
+          </label>
+          <label class="nested">
+            <input id="diagnostics" type="checkbox" checked />
+            Report names nothing has
+            <span class="keep-together">defined <button
+              class="info"
+              type="button"
+              aria-label="Why this option is here"
+            >ⓘ<span class="tip">
+                Under the word itself. The compiler names what it could not
+                resolve but not where it was, so the syntax tree is what turns
+                the name back into a range — a name that was never written,
+                because desugaring made it up, marks the statement instead.
+              </span></button></span>
+          </label>
+          <label class="nested">
+            <input id="completions" type="checkbox" checked />
+            Offer the names that are in
+            <span class="keep-together">scope <button
+              class="info"
+              type="button"
+              aria-label="Why this option is here"
+            >ⓘ<span class="tip">
+                Press Ctrl-Space in the editor. What is offered is whatever the
+                statements above compiled to, so it grows as you define things
+                — and only names anybody could have written, not the ones the
+                compiler makes up on the way.
               </span></button></span>
           </label>
           <label>
