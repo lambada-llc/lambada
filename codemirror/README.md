@@ -36,10 +36,11 @@ lambada({ compile: { compiler, timeout } })       // a compiler of your own
 lambada({ compile: { environment } })             // what is in scope to begin with
 ```
 
-`environment` is DAG lines, and each line's first name is in scope before the
-document starts. The default defines `t`, which is why that reads as a name
-rather than an unknown one. A host with a standard library passes it here: a
-record literal, for one, needs a `Map.set` that nothing defines otherwise.
+`environment` is a [DAG module](https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules):
+whatever it defines is in scope before the document starts. The default defines
+`t`, which is why that reads as a name rather than an unknown one. A host with a
+standard library passes it here — a record literal, for one, needs a `Map.set`
+that nothing defines otherwise.
 
 Everything that reads a compilation is configured inside `compile` rather than
 beside it, because none of it means anything without one — the marks today,

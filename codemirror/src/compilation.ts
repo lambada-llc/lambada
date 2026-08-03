@@ -39,9 +39,11 @@ export interface CompileConfig {
    */
   showDiagnostics?: boolean;
   /**
-   * What is in scope before the document starts, as DAG lines. Each line's
-   * first name is brought into scope. Defaults to the one this package ships,
-   * which is what makes `t` a name rather than an unknown.
+   * What is in scope before the document starts, as a DAG module — see
+   * https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules
+   *
+   * Defaults to the one this package ships, which is what makes `t` a name
+   * rather than an unknown.
    */
   environment?: string;
 }

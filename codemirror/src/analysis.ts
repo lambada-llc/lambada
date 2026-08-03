@@ -30,8 +30,8 @@ export interface Analysis {
 const builtIn = ['△', '__ENV△'];
 
 /**
- * The names an environment brings into scope: the left-hand side of each of
- * its lines.
+ * The names a DAG module defines, which for an environment is what it brings
+ * into scope. See https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules
  */
 export function definedBy(environment: string): string[] {
   const names: string[] = [];
