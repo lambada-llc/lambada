@@ -48,9 +48,16 @@ export interface CompileConfig {
   environment?: string;
 }
 
-// `△ __ENV△` names the leaf the way the compiler names it; `t △` is the alias
-// that lets a program be written without the character at all.
-export const defaultEnvironment = '△ __ENV△\nt △';
+// One line, because one name needs saying. The compiler does not resolve `t`
+// itself — it emits it as a reference and expects an environment to have it —
+// so without this, the alias that exists for people who cannot type `△` reads
+// as an unknown name.
+//
+// It goes here rather than alongside `△` and `__ENV△` because those two are
+// not overridable: one is what the DAG format binds, the other is what the
+// compiler emits. `t` is an ordinary binding, and a host replacing this with a
+// standard library is replacing exactly the layer it belongs to.
+export const defaultEnvironment = 't △';
 
 export function compilation({
   compiler = defaultCompiler,
