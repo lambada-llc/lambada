@@ -1,8 +1,4 @@
 // The document the editor opens with.
-//
-// Nothing here runs — there is no compiler on this page. It is here to have
-// LambAda on screen, so that whatever the package eventually does to it is
-// visible. It uses each of the token kinds the grammar distinguishes.
 
 export const sample = `# Booleans, and branching on one.
 false = △

@@ -34,7 +34,30 @@ export interface CompileConfig {
    * a compiler to show it from.
    */
   showStatus?: boolean;
+  /**
+   * Report names a statement uses that nothing has defined. Default: true.
+   */
+  showDiagnostics?: boolean;
+  /**
+   * What is in scope before the document starts, as a DAG module — see
+   * https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules
+   *
+   * Defaults to the one this package ships, which is what makes `t` a name
+   * rather than an unknown.
+   */
+  environment?: string;
 }
+
+// One line, because one name needs saying. The compiler does not resolve `t`
+// itself — it emits it as a reference and expects an environment to have it —
+// so without this, the alias that exists for people who cannot type `△` reads
+// as an unknown name.
+//
+// It goes here rather than alongside `△` and `__ENV△` because those two are
+// not overridable: one is what the DAG format binds, the other is what the
+// compiler emits. `t` is an ordinary binding, and a host replacing this with a
+// standard library is replacing exactly the layer it belongs to.
+export const defaultEnvironment = 't △';
 
 export function compilation({
   compiler = defaultCompiler,

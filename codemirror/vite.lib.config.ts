@@ -25,6 +25,7 @@ export default defineConfig({
       // package's own build output — so it goes in.
       external: [
         '@codemirror/language',
+        '@codemirror/lint',
         '@codemirror/state',
         '@codemirror/view',
         '@lezer/highlight',
