@@ -1,15 +1,5 @@
 // A page for looking at the package on its own.
-//
-// Deliberately bare: nothing built around the editor, and no site to speak of.
-//
-// What is on screen is a stock CodeMirror editor plus this package's one
-// extension, `lambada()` — the grammar, the keys that type `△`, and a compiler
-// running on a worker the package starts itself, which is what marks each
-// statement down the left edge.
-//
-// The three things below are meant to stay in step: `config` is what the page
-// asks the package for, `themed` is what it loads next to it, and the snippet
-// beside them is the code a host would write to get the same editor.
+// Deliberately bare, just the editor and a code snippet that generates it.
 
 import { EditorView, basicSetup } from 'codemirror';
 import { indentWithTab } from '@codemirror/commands';
@@ -20,11 +10,6 @@ import { basicLight } from 'cm6-theme-basic-light';
 
 import { lambada, type LambadaConfig } from '../src/index';
 import { sample } from './sample';
-
-// What the page asks the package for. Left empty it is every default, which is
-// why unchecking a box below writes an option in rather than removing one: the
-// snippet is what a host would have to type, and defaults are what you do not.
-const config: LambadaConfig = {};
 
 // Try Alt-t, Alt-n, Ctrl-t or Ctrl-n in the editor. The box starts checked
 // because the keys are on by default.
@@ -39,7 +24,17 @@ const compile = document.querySelector<HTMLInputElement>('#compile')!;
 // without one the editor understates what `lambada()` already knows — hence on
 // by default. The checkbox holds that default, so it is stated in one place.
 const loadTheme = document.querySelector<HTMLInputElement>('#load-theme')!;
-let themed = loadTheme.checked;
+
+// What the page asks the package for, read off the boxes every time rather than
+// kept alongside them. Empty is every default, which is why unchecking a box
+// writes an option in rather than removing one: the snippet is what a host would
+// have to type, and defaults are what you do not.
+function currentConfig(): LambadaConfig {
+  const config: LambadaConfig = {};
+  if (!nodeKeys.checked) config.nodeKeys = false;
+  if (!compile.checked) config.compile = false;
+  return config;
+}
 
 // The header's switch owns the page's theme, and writes it to the attribute the
 // markup starts out carrying; the editor follows it.
@@ -53,11 +48,13 @@ const themePackage = () => `cm6-theme-basic-${isDark() ? 'dark' : 'light'}`;
 // sample. The parse tree survives too: a state field present in both the old
 // and the new configuration keeps its value.
 const theme = new Compartment();
-const themeExtension = () => (themed ? (isDark() ? basicDark : basicLight) : []);
+const themeExtension = () =>
+  loadTheme.checked ? (isDark() ? basicDark : basicLight) : [];
 
 const language = new Compartment();
 
-function snippet(): string {
+function snippet(config: LambadaConfig): string {
+  const themed = loadTheme.checked;
   const options = Object.entries(config).map(
     ([key, value]) => `      ${key}: ${JSON.stringify(value)},`,
   );
@@ -84,39 +81,25 @@ const view = new EditorView({
   extensions: [
     basicSetup,
     keymap.of([indentWithTab]),
-    language.of(lambada(config)),
+    language.of(lambada(currentConfig())),
     theme.of(themeExtension()),
   ],
   parent: document.querySelector('#editor')!,
 });
 
 function render() {
+  const config = currentConfig();
   view.dispatch({
     effects: [
       language.reconfigure(lambada(config)),
       theme.reconfigure(themeExtension()),
     ],
   });
-  document.querySelector('#snippet')!.textContent = snippet();
+  document.querySelector('#snippet')!.textContent = snippet(config);
 }
 
-nodeKeys.addEventListener('change', () => {
-  // Checked is the default, and a default is what a host would leave unwritten.
-  if (nodeKeys.checked) delete config.nodeKeys;
-  else config.nodeKeys = false;
-  render();
-});
-
-compile.addEventListener('change', () => {
-  if (compile.checked) delete config.compile;
-  else config.compile = false;
-  render();
-});
-
-loadTheme.addEventListener('change', () => {
-  themed = loadTheme.checked;
-  render();
-});
+for (const box of [nodeKeys, compile, loadTheme])
+  box.addEventListener('change', render);
 
 // The one way the page's theme can change: the header's switch writes the
 // attribute.
