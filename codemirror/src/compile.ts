@@ -105,7 +105,7 @@ export class Compiler {
     else if (isEmpty(result.dagLines))
       // The compiler reports a source it cannot read by producing nothing at
       // all, rather than by failing.
-      this.#settle(current.text, { status: 'error', message: 'could not be compiled' });
+      this.#settle(current.text, { status: 'error', message: 'syntax error' });
     else
       this.#settle(current.text, {
         status: 'ok',
