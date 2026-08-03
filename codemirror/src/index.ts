@@ -1,6 +1,7 @@
 import { LanguageSupport } from '@codemirror/language';
 
 import { compilation, lambadaCompilations, type CompileConfig } from './compilation';
+import { completions } from './completions';
 import { diagnostics } from './diagnostics';
 import { lambadaLanguage } from './language';
 import { defaultNodeKeys, nodeKeymap } from './node-keys';
@@ -48,6 +49,7 @@ export function lambada({
           compilation(compileConfig),
           compileConfig.showStatus === false ? [] : statementStatus(environment),
           compileConfig.showDiagnostics === false ? [] : diagnostics(environment),
+          compileConfig.showCompletions === false ? [] : completions(environment),
         ]
       : [],
   ]);

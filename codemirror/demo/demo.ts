@@ -19,6 +19,11 @@ const nodeKeys = document.querySelector<HTMLInputElement>('#node-keys')!;
 // nesting them under `compile` is that they cannot be had separately.
 const compile = document.querySelector<HTMLInputElement>('#compile')!;
 
+// The two things a compilation is read for. Both are on by default, so both
+// boxes write an option in when unchecked rather than out.
+const diagnostics = document.querySelector<HTMLInputElement>('#diagnostics')!;
+const completions = document.querySelector<HTMLInputElement>('#completions')!;
+
 // Whether a theme is loaded alongside. Not the package's to provide, but the
 // grammar marks more than CodeMirror's default highlight style paints, so
 // without one the editor understates what `lambada()` already knows — hence on
@@ -32,7 +37,15 @@ const loadTheme = document.querySelector<HTMLInputElement>('#load-theme')!;
 function currentConfig(): LambadaConfig {
   const config: LambadaConfig = {};
   if (!nodeKeys.checked) config.nodeKeys = false;
-  if (!compile.checked) config.compile = false;
+  if (!compile.checked) {
+    config.compile = false;
+    return config;
+  }
+  // Only worth writing when there is a compilation for them to read.
+  const compileOptions: Exclude<LambadaConfig['compile'], boolean | undefined> = {};
+  if (!diagnostics.checked) compileOptions.showDiagnostics = false;
+  if (!completions.checked) compileOptions.showCompletions = false;
+  if (Object.keys(compileOptions).length) config.compile = compileOptions;
   return config;
 }
 
@@ -55,8 +68,14 @@ const language = new Compartment();
 
 function snippet(config: LambadaConfig): string {
   const themed = loadTheme.checked;
+  const renderValue = (value: unknown, indent: string): string =>
+    typeof value === 'object' && value !== null
+      ? `{\n${Object.entries(value)
+          .map(([k, v]) => `${indent}  ${k}: ${renderValue(v, `${indent}  `)},`)
+          .join('\n')}\n${indent}}`
+      : JSON.stringify(value);
   const options = Object.entries(config).map(
-    ([key, value]) => `      ${key}: ${JSON.stringify(value)},`,
+    ([key, value]) => `      ${key}: ${renderValue(value, '      ')},`,
   );
   const argument = options.length ? `{\n${options.join('\n')}\n    }` : '';
   return `import { EditorView, basicSetup } from 'codemirror';
@@ -95,10 +114,11 @@ function render() {
       theme.reconfigure(themeExtension()),
     ],
   });
+  for (const box of [diagnostics, completions]) box.disabled = !compile.checked;
   document.querySelector('#snippet')!.textContent = snippet(config);
 }
 
-for (const box of [nodeKeys, compile, loadTheme])
+for (const box of [nodeKeys, compile, diagnostics, completions, loadTheme])
   box.addEventListener('change', render);
 
 // The one way the page's theme can change: the header's switch writes the
