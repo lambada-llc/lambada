@@ -17,12 +17,17 @@ import { lambadaLanguage } from './language';
 // `.cm-tooltip` outranks a base theme's for the same element, so a background
 // stated there would never show. The list is a child, and painting a child
 // covers what is behind it.
+// The panel beside the list, saying what defined the name, needs the same
+// colours and cannot be reached the same way: it holds one text node, so there
+// is no child to paint. Naming both of its classes is what wins instead — two
+// classes outrank the single `.cm-tooltip` a theme states, and specificity is
+// settled before the order the rules were added in.
 const theme = EditorView.baseTheme({
-  '&light .cm-tooltip-autocomplete > ul': {
+  '&light .cm-tooltip-autocomplete > ul, &light .cm-tooltip.cm-completionInfo': {
     backgroundColor: '#f5f5f5',
     color: '#1c1c1c',
   },
-  '&dark .cm-tooltip-autocomplete > ul': {
+  '&dark .cm-tooltip-autocomplete > ul, &dark .cm-tooltip.cm-completionInfo': {
     backgroundColor: '#2b2b2b',
     color: '#eeeeee',
   },
