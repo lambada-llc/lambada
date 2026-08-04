@@ -44,8 +44,8 @@
         margin: 0;
         font: 600 0.95rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
       }
+      #insert-node,
       #theme-toggle {
-        margin-left: auto;
         padding: 0.35rem 0.7rem;
         border: 1px solid ButtonBorder;
         border-radius: 999px;
@@ -53,6 +53,11 @@
         color: ButtonText;
         font: inherit;
         cursor: pointer;
+      }
+      #insert-node {
+        margin-left: auto;
+        font-size: 1.1rem;
+        line-height: 1;
       }
 
       main {
@@ -172,6 +177,11 @@
   <body>
     <header>
       <h1>@lambada-llc/codemirror-lang-lambada</h1>
+      <!-- The keys that insert △ all need a modifier, and a touch keyboard has
+           none to hold, so on a phone this button is the only way to type one. -->
+      <button id="insert-node" type="button" aria-label="Insert △" title="Insert △">
+        △
+      </button>
       <button id="theme-toggle" type="button" aria-live="polite"></button>
     </header>
     <main>
@@ -213,8 +223,8 @@
           </label>
           <label class="nested">
             <input id="diagnostics" type="checkbox" checked />
-            Report names nothing has
-            <span class="keep-together">defined <button
+            Report undefined
+            <span class="keep-together">references <button
               class="info"
               type="button"
               aria-label="Why this option is here"
@@ -227,8 +237,8 @@
           </label>
           <label class="nested">
             <input id="completions" type="checkbox" checked />
-            Offer the names that are in
-            <span class="keep-together">scope <button
+            Auto-complete
+            <span class="keep-together">names <button
               class="info"
               type="button"
               aria-label="Why this option is here"

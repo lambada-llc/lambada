@@ -4,11 +4,11 @@ import { compilation, lambadaCompilations, type CompileConfig } from './compilat
 import { completions } from './completions';
 import { diagnostics } from './diagnostics';
 import { lambadaLanguage } from './language';
-import { defaultNodeKeys, nodeKeymap } from './node-keys';
+import { defaultNodeKeys, insertNode, nodeKeymap } from './node-keys';
 import { lambadaStatements } from './statements';
 import { statementStatus } from './status';
 
-export { lambadaLanguage, lambadaStatements, lambadaCompilations };
+export { lambadaLanguage, lambadaStatements, lambadaCompilations, insertNode };
 export type { Statement } from './statements';
 export type { Compilation } from './compilation';
 

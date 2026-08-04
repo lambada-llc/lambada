@@ -11,7 +11,14 @@ const node = '△';
 // knows what it is running on can name one key instead — `Mod-t`, say.
 export const defaultNodeKeys = ['Alt-t', 'Alt-n', 'Ctrl-t', 'Ctrl-n'];
 
-const insertNode: Command = ({ state, dispatch }) => {
+/**
+ * Insert `△` at the cursor.
+ *
+ * Exported as well as bound, because a key is not the only way to ask for one:
+ * a touch keyboard has no `Alt` to hold, so a page meant to be used on a phone
+ * needs a button, and a button needs the same insertion the keys make.
+ */
+export const insertNode: Command = ({ state, dispatch }) => {
   if (state.readOnly) return false;
   dispatch(
     state.update(state.replaceSelection(node), {

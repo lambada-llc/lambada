@@ -8,7 +8,7 @@ import { keymap } from '@codemirror/view';
 import { basicDark } from 'cm6-theme-basic-dark';
 import { basicLight } from 'cm6-theme-basic-light';
 
-import { lambada, type LambadaConfig } from '../src/index';
+import { insertNode, lambada, type LambadaConfig } from '../src/index';
 import { sample } from './sample';
 
 // Try Alt-t, Alt-n, Ctrl-t or Ctrl-n in the editor. The box starts checked
@@ -120,6 +120,16 @@ function render() {
 
 for (const box of [nodeKeys, compile, diagnostics, completions, loadTheme])
   box.addEventListener('change', render);
+
+// Pressing a button would otherwise take the focus, and on a phone that closes
+// the keyboard the button exists to make up for. Refused here, the editor never
+// loses it, so the insertion lands where the cursor already was.
+const nodeButton = document.querySelector<HTMLButtonElement>('#insert-node')!;
+nodeButton.addEventListener('mousedown', (event) => event.preventDefault());
+nodeButton.addEventListener('click', () => {
+  insertNode(view);
+  view.focus();
+});
 
 // The one way the page's theme can change: the header's switch writes the
 // attribute.
