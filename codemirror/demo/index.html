@@ -30,11 +30,14 @@
       html {
         touch-action: pan-x pan-y;
       }
+      /* Header, panes, options — top to bottom. The middle row takes whatever
+         the other two leave, so the options stay put at the bottom edge and
+         the editors scroll inside themselves. */
       body {
         margin: 0;
         height: 100vh;
         display: grid;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto minmax(0, 1fr) auto;
         background: Canvas;
         color: CanvasText;
         font: 13px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -69,36 +72,65 @@
 
       main {
         display: grid;
-        grid-template-columns: 1fr 22rem;
-        min-height: 0;
+        grid-template-rows: auto minmax(0, 1fr);
       }
-      #editor {
+      /* The same two buttons twice over: captions when both panes are visible,
+         tabs when the panes take turns. The columns match the panes below, so
+         each caption sits over what it names. */
+      #tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-bottom: 1px solid ButtonBorder;
+        background: ButtonFace;
+      }
+      #tabs button {
+        padding: 0.45rem 1rem;
+        border: 0;
+        background: none;
+        color: ButtonText;
+        font: inherit;
+        text-align: left;
+        cursor: default;
+      }
+      #tabs button + button {
+        border-left: 1px solid ButtonBorder;
+      }
+      #panes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: minmax(0, 1fr);
+      }
+      #editor,
+      #snippet {
         overflow: auto;
         min-width: 0;
+      }
+      #snippet {
+        border-left: 1px solid ButtonBorder;
       }
       .cm-editor {
         height: 100%;
       }
 
-      /* The controls, above the snippet they change. */
-      aside {
-        display: grid;
-        grid-template-rows: auto 1fr;
-        min-height: 0;
-        border-left: 1px solid ButtonBorder;
+      /* The options, in a bar pinned under everything they change. Groups
+         rather than one long list, so a wide screen lays them out beside each
+         other and a narrow one stacks them back into a column. */
+      #controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 0.5rem 2.5rem;
+        padding: 0.8rem 1rem;
+        border-top: 1px solid ButtonBorder;
         background: ButtonFace;
       }
-      /* A grid, so a second control is a second row. Each control is one label
-         — the badge explaining it sits inside, at the end of the text. */
-      #controls {
+      .group {
         display: grid;
         gap: 0.5rem;
-        padding: 0.8rem 1rem;
-        border-bottom: 1px solid ButtonBorder;
       }
       /* Block, not flex: a flex container makes an item of every element child,
          and the link and the badge belong to the sentence rather than beside
-         it. Positioned because the tip below hangs off it. */
+         it. Positioned because the tip above hangs off it. */
       label {
         position: relative;
         display: block;
@@ -136,13 +168,14 @@
         color: CanvasText;
       }
       /* The explanation, one hover away. Positioned against the label, which is
-         the full width of the panel — the badge is a glyph somewhere in the
+         the full width of its group — the badge is a glyph somewhere in the
          middle of a sentence, and a box hung off it would sooner or later hang
-         off the side of the page. */
+         off the side of the page. Opens upward, over the editors: the bar sits
+         on the bottom edge, so below it there is no page to open into. */
       .tip {
         display: none;
         position: absolute;
-        top: 100%;
+        bottom: 100%;
         left: 0;
         right: 0;
         z-index: 1;
@@ -160,23 +193,27 @@
       .info:focus-visible > .tip {
         display: block;
       }
-      #snippet {
-        margin: 0;
-        padding: 0.8rem 1rem;
-        overflow: auto;
-        font: 0.75rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
-        white-space: pre;
-      }
 
       @media (max-width: 46rem) {
-        main {
-          grid-template-columns: 1fr;
-          grid-template-rows: 1fr auto;
+        /* One pane at a time, and the buttons above turn from captions into
+           the tabs that pick it. Canvas on the chosen one, so it reads as one
+           piece with the pane it opens. */
+        #tabs button {
+          cursor: pointer;
         }
-        aside {
+        #tabs button[aria-pressed='true'] {
+          background: Canvas;
+          font-weight: 600;
+        }
+        #panes {
+          grid-template-columns: 1fr;
+        }
+        #panes[data-active='editor'] > #snippet,
+        #panes[data-active='snippet'] > #editor {
+          display: none;
+        }
+        #snippet {
           border-left: none;
-          border-top: 1px solid ButtonBorder;
-          max-height: 45vh;
         }
       }
     </style>
@@ -192,103 +229,117 @@
       <button id="theme-toggle" type="button" aria-live="polite"></button>
     </header>
     <main>
-      <div id="editor"></div>
-      <aside>
-        <!-- The link and the badges sit inside their labels deliberately: a
-             click on interactive content does not trigger the label, so they
-             navigate and open rather than toggling the box. -->
-        <div id="controls">
-          <label>
-            <input id="node-keys" type="checkbox" checked />
-            Type △ with Alt-t, Alt-n, Ctrl-t or
-            <span class="keep-together">Ctrl-n <button
-              class="info"
-              type="button"
-              aria-label="Why this option is here"
-            >ⓘ<span class="tip">
-                Part of this package. Four bindings for one character, because
-                which of them reaches the page depends on the OS and the
-                browser. A host that knows what it is running on can name keys
-                of its own instead — <code>nodeKeys: ['Mod-t']</code> — or
-                <code>false</code> for none.
-              </span></button></span>
-          </label>
-          <label>
-            <input id="compile" type="checkbox" checked />
-            Compile each statement and mark
-            <span class="keep-together">it <button
-              class="info"
-              type="button"
-              aria-label="Why this option is here"
-            >ⓘ<span class="tip">
-                Part of this package, and on by default: the compiler ships
-                with it and runs on a worker started from a blob, so a host
-                supplies nothing. Green compiled, red did not. Anything that
-                reads a compilation is configured in here — there is nothing
-                for it to read otherwise.
-              </span></button></span>
-          </label>
-          <label class="nested">
-            <input id="diagnostics" type="checkbox" checked />
-            Report undefined
-            <span class="keep-together">references <button
-              class="info"
-              type="button"
-              aria-label="Why this option is here"
-            >ⓘ<span class="tip">
-                Under the word itself. The compiler names what it could not
-                resolve but not where it was, so the syntax tree is what turns
-                the name back into a range — a name that was never written,
-                because desugaring made it up, marks the statement instead.
-              </span></button></span>
-          </label>
-          <label class="nested">
-            <input id="previews" type="checkbox" checked />
-            Show what an expression comes
-            <span class="keep-together">to <button
-              class="info"
-              type="button"
-              aria-label="Why this option is here"
-            >ⓘ<span class="tip">
-                A statement that is an expression rather than a definition gets
-                evaluated, against everything defined above it, and the value
-                appears at the end of the line. On a second worker: evaluating
-                does not have to finish, and must not hold up the compiling
-                that marks the document.
-              </span></button></span>
-          </label>
-          <label class="nested">
-            <input id="completions" type="checkbox" checked />
-            Auto-complete
-            <span class="keep-together">names <button
-              class="info"
-              type="button"
-              aria-label="Why this option is here"
-            >ⓘ<span class="tip">
-                Press Ctrl-Space in the editor. What is offered is whatever the
-                statements above compiled to, so it grows as you define things
-                — and only names anybody could have written, not the ones the
-                compiler makes up on the way.
-              </span></button></span>
-          </label>
-          <label>
-            <input id="load-theme" type="checkbox" checked />
-            Use <a href="https://github.com/craftzdog/cm6-themes">cm6-themes</a> by
-            Takuya <span class="keep-together">Matsuyama (MIT) <button
-              class="info"
-              type="button"
-              aria-label="Why this option is here"
-            >ⓘ<span class="tip">
-                Not part of this package: CodeMirror's default highlight style
-                leaves some of the grammar's tags unpainted — operators and
-                brackets — and a theme is how a host fills them in. Switch it off
-                to see the difference.
-              </span></button></span>
-          </label>
-        </div>
-        <pre id="snippet"></pre>
-      </aside>
+      <nav id="tabs">
+        <button type="button" data-pane="editor" aria-pressed="true">
+          Editor
+        </button>
+        <button type="button" data-pane="snippet" aria-pressed="false">
+          The code that produces it
+        </button>
+      </nav>
+      <div id="panes" data-active="editor">
+        <div id="editor"></div>
+        <div id="snippet"></div>
+      </div>
     </main>
+    <!-- The link and the badges sit inside their labels deliberately: a
+         click on interactive content does not trigger the label, so they
+         navigate and open rather than toggling the box. -->
+    <footer id="controls">
+      <div class="group">
+        <label>
+          <input id="node-keys" type="checkbox" checked />
+          Type △ with Alt-t, Alt-n, Ctrl-t or
+          <span class="keep-together">Ctrl-n <button
+            class="info"
+            type="button"
+            aria-label="Why this option is here"
+          >ⓘ<span class="tip">
+              Part of this package. Four bindings for one character, because
+              which of them reaches the page depends on the OS and the
+              browser. A host that knows what it is running on can name keys
+              of its own instead — <code>nodeKeys: ['Mod-t']</code> — or
+              <code>false</code> for none.
+            </span></button></span>
+        </label>
+      </div>
+      <div class="group">
+        <label>
+          <input id="compile" type="checkbox" checked />
+          Compile each statement and mark
+          <span class="keep-together">it <button
+            class="info"
+            type="button"
+            aria-label="Why this option is here"
+          >ⓘ<span class="tip">
+              Part of this package, and on by default: the compiler ships
+              with it and runs on a worker started from a blob, so a host
+              supplies nothing. Green compiled, red did not. Anything that
+              reads a compilation is configured in here — there is nothing
+              for it to read otherwise.
+            </span></button></span>
+        </label>
+        <label class="nested">
+          <input id="diagnostics" type="checkbox" checked />
+          Report undefined
+          <span class="keep-together">references <button
+            class="info"
+            type="button"
+            aria-label="Why this option is here"
+          >ⓘ<span class="tip">
+              Under the word itself. The compiler names what it could not
+              resolve but not where it was, so the syntax tree is what turns
+              the name back into a range — a name that was never written,
+              because desugaring made it up, marks the statement instead.
+            </span></button></span>
+        </label>
+        <label class="nested">
+          <input id="previews" type="checkbox" checked />
+          Show what an expression comes
+          <span class="keep-together">to <button
+            class="info"
+            type="button"
+            aria-label="Why this option is here"
+          >ⓘ<span class="tip">
+              A statement that is an expression rather than a definition gets
+              evaluated, against everything defined above it, and the value
+              appears at the end of the line. On a second worker: evaluating
+              does not have to finish, and must not hold up the compiling
+              that marks the document.
+            </span></button></span>
+        </label>
+        <label class="nested">
+          <input id="completions" type="checkbox" checked />
+          Auto-complete
+          <span class="keep-together">names <button
+            class="info"
+            type="button"
+            aria-label="Why this option is here"
+          >ⓘ<span class="tip">
+              Press Ctrl-Space in the editor. What is offered is whatever the
+              statements above compiled to, so it grows as you define things
+              — and only names anybody could have written, not the ones the
+              compiler makes up on the way.
+            </span></button></span>
+        </label>
+      </div>
+      <div class="group">
+        <label>
+          <input id="load-theme" type="checkbox" checked />
+          Use <a href="https://github.com/craftzdog/cm6-themes">cm6-themes</a> by
+          Takuya <span class="keep-together">Matsuyama (MIT) <button
+            class="info"
+            type="button"
+            aria-label="Why this option is here"
+          >ⓘ<span class="tip">
+              Not part of this package: CodeMirror's default highlight style
+              leaves some of the grammar's tags unpainted — operators and
+              brackets — and a theme is how a host fills them in. Switch it off
+              to see the difference.
+            </span></button></span>
+        </label>
+      </div>
+    </footer>
     <script>
       // The switch is the only thing that decides the theme — the page starts
       // light whatever the system says — so: the attribute, and a label saying
@@ -306,6 +357,21 @@
           update();
         });
         update();
+      })();
+
+      // On a narrow screen the panes share one space and these buttons choose
+      // which of them has it; on a wide one both panes are visible and the
+      // buttons are merely their captions. The choice is kept either way, so
+      // narrowing the window shows whichever pane was picked last.
+      (() => {
+        const panes = document.querySelector('#panes');
+        const tabs = [...document.querySelectorAll('#tabs button')];
+        for (const tab of tabs)
+          tab.addEventListener('click', () => {
+            panes.dataset.active = tab.dataset.pane;
+            for (const other of tabs)
+              other.setAttribute('aria-pressed', String(other === tab));
+          });
       })();
     </script>
     <script>
