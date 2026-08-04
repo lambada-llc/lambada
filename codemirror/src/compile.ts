@@ -1,9 +1,27 @@
 import { workerSource } from './generated/worker-source';
 
-export type Compilation =
+/** Asked for, then either what came back or why nothing did. */
+export type Outcome<T> =
   | { status: 'pending' }
-  | { status: 'ok'; dagLines: readonly string[]; steps: number }
+  | ({ status: 'ok' } & T)
   | { status: 'error'; message: string };
+
+/** What the compiler produced for one statement. */
+export type Compilation = Outcome<{
+  dagLines: readonly string[];
+  steps: number;
+}>;
+
+/** What a value read out as, for each reading that fits it. */
+export interface Value {
+  dagLines: readonly string[];
+  steps: number;
+  text?: string;
+  nat?: string;
+  bool?: boolean;
+}
+
+export type Evaluation = Outcome<Value>;
 
 /**
  * A compiler running on a worker of its own.
@@ -17,21 +35,28 @@ export type Compilation =
  * Killing the worker is the only way to stop a compilation: evaluating a tree
  * is one synchronous loop, so nothing in the page can interrupt it.
  */
-export class Compiler {
+export class Compiler<T extends { dagLines: readonly string[] }> {
   #worker: Worker | null = null;
   #url: string;
   #dag: string;
+  #action: 'compile' | 'run';
   #timeoutMs: number;
   #onChange: () => void;
 
-  #results = new Map<string, Compilation>();
+  #results = new Map<string, Outcome<T>>();
   #queue: string[] = [];
   #inFlight: { text: string; timer: ReturnType<typeof setTimeout> } | null = null;
   #loaded = false;
   #destroyed = false;
 
-  constructor(dag: string, timeoutMs: number, onChange: () => void) {
+  constructor(
+    dag: string,
+    timeoutMs: number,
+    onChange: () => void,
+    action: 'compile' | 'run' = 'compile',
+  ) {
     this.#dag = dag;
+    this.#action = action;
     this.#timeoutMs = timeoutMs;
     this.#onChange = onChange;
     this.#url = URL.createObjectURL(
@@ -40,8 +65,8 @@ export class Compiler {
     this.#spawn();
   }
 
-  /** What is known about this source, if anything. */
-  get(text: string): Compilation | undefined {
+  /** What is known about this input, if anything. */
+  get(text: string): Outcome<T> | undefined {
     return this.#results.get(text);
   }
 
@@ -85,7 +110,7 @@ export class Compiler {
     this.#inFlight = null;
   }
 
-  #settle(text: string, value: Compilation): void {
+  #settle(text: string, value: Outcome<T>): void {
     // Only record what is still wanted; a document may have moved on.
     if (this.#results.has(text)) this.#results.set(text, value);
     this.#onChange();
@@ -102,16 +127,11 @@ export class Compiler {
     if (!current) return;
     this.#clearTimer();
     if (!ok) this.#settle(current.text, { status: 'error', message: String(error) });
-    else if (isEmpty(result.dagLines))
+    else if (this.#action === 'compile' && isEmpty(result.dagLines))
       // The compiler reports a source it cannot read by producing nothing at
       // all, rather than by failing.
       this.#settle(current.text, { status: 'error', message: 'syntax error' });
-    else
-      this.#settle(current.text, {
-        status: 'ok',
-        dagLines: result.dagLines,
-        steps: result.steps,
-      });
+    else this.#settle(current.text, { status: 'ok', ...result });
     this.#pump();
   };
 
@@ -144,7 +164,7 @@ export class Compiler {
     }
     const timer = setTimeout(() => this.#timeOut(), this.#timeoutMs);
     this.#inFlight = { text, timer };
-    this.#worker!.postMessage({ id: 'compile', type: 'compile', payload: text });
+    this.#worker!.postMessage({ id: this.#action, type: this.#action, payload: text });
   }
 
   #timeOut(): void {

@@ -39,6 +39,13 @@ export interface CompileConfig {
    */
   showDiagnostics?: boolean;
   /**
+   * Evaluate each statement that is an expression rather than a definition,
+   * and show what it comes to. Default: true. It runs on a worker of its own,
+   * because evaluating is unbounded and must not hold up the compiling that
+   * marks the document.
+   */
+  showPreviews?: boolean;
+  /**
    * Offer the names in scope as completions. Default: true. Which names those
    * are depends on what the statements above compiled to, which is why this
    * lives here.
@@ -59,12 +66,16 @@ export function compilation({
 }: CompileConfig = {}): Extension {
   const plugin = ViewPlugin.fromClass(
     class {
-      compiler: Compiler;
+      compiler: Compiler<{ dagLines: readonly string[]; steps: number }>;
       queued = false;
       dead = false;
 
       constructor(readonly view: EditorView) {
-        this.compiler = new Compiler(compiler, timeout, () => this.schedule());
+        this.compiler = new Compiler<{ dagLines: readonly string[]; steps: number }>(
+          compiler,
+          timeout,
+          () => this.schedule(),
+        );
         this.sync();
       }
 
