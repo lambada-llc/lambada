@@ -5,10 +5,6 @@
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
-    <!-- Fixed scale. Android takes this at its word; iOS ignores the
-         user-scalable part for pinches — the gesture listeners at the bottom
-         deal with those — but does respect maximum-scale, which also keeps it
-         from zooming onto the editor's small text when it takes focus. -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
@@ -30,9 +26,7 @@
       * {
         box-sizing: border-box;
       }
-      /* Panning is the only touch gesture the page has a use for — the editor
-         and the panels scroll, nothing zooms. Ruling out the rest here also
-         retires double-tap zoom, which the viewport meta alone does not. */
+      /* Pan only — also rules out double-tap zoom. */
       html {
         touch-action: pan-x pan-y;
       }
@@ -315,10 +309,7 @@
       })();
     </script>
     <script>
-      // iOS Safari reads user-scalable=no as a suggestion and lets a pinch
-      // zoom anyway. The WebKit-only gesture events are the one hook it
-      // leaves: cancelling them cancels the zoom. Other browsers never fire
-      // them, and are already held by the viewport meta and touch-action.
+      // iOS ignores user-scalable=no for pinches; cancelling these stops them.
       for (const type of ['gesturestart', 'gesturechange', 'gestureend'])
         document.addEventListener(type, (event) => event.preventDefault());
     </script>
