@@ -21,8 +21,8 @@ const nodeKeys = document.querySelector<HTMLInputElement>('#node-keys')!;
 // nesting them under `compile` is that they cannot be had separately.
 const compile = document.querySelector<HTMLInputElement>('#compile')!;
 
-// The two things a compilation is read for. Both are on by default, so both
-// boxes write an option in when unchecked rather than out.
+// The three things a compilation is read for. All are on by default, so each
+// box writes an option in when unchecked rather than out.
 const diagnostics = document.querySelector<HTMLInputElement>('#diagnostics')!;
 const completions = document.querySelector<HTMLInputElement>('#completions')!;
 const previews = document.querySelector<HTMLInputElement>('#previews')!;
@@ -48,7 +48,7 @@ function currentConfig(): LambadaConfig {
   const compileOptions: Exclude<LambadaConfig['compile'], boolean | undefined> = {};
   if (!diagnostics.checked) compileOptions.showDiagnostics = false;
   if (!completions.checked) compileOptions.showCompletions = false;
-  if (!previews.checked) compileOptions.showPreviews = false;
+  if (!previews.checked) compileOptions.previewResults = false;
   if (Object.keys(compileOptions).length) config.compile = compileOptions;
   return config;
 }
@@ -72,14 +72,14 @@ const language = new Compartment();
 
 function snippet(config: LambadaConfig): string {
   const themed = loadTheme.checked;
-  const renderValue = (value: unknown, indent: string): string =>
+  const asSource = (value: unknown, indent: string): string =>
     typeof value === 'object' && value !== null
       ? `{\n${Object.entries(value)
-          .map(([k, v]) => `${indent}  ${k}: ${renderValue(v, `${indent}  `)},`)
+          .map(([k, v]) => `${indent}  ${k}: ${asSource(v, `${indent}  `)},`)
           .join('\n')}\n${indent}}`
       : JSON.stringify(value);
   const options = Object.entries(config).map(
-    ([key, value]) => `      ${key}: ${renderValue(value, '      ')},`,
+    ([key, value]) => `      ${key}: ${asSource(value, '      ')},`,
   );
   const argument = options.length ? `{\n${options.join('\n')}\n    }` : '';
   return `import { EditorView, basicSetup } from 'codemirror';

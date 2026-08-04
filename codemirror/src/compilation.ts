@@ -1,11 +1,12 @@
 import { StateEffect, StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { Compiler, type Compilation } from './compile';
+import { Compiler, type Compilation, type Tree } from './compile';
 import { defaultCompiler } from './generated/compiler';
+import type { Preview } from './previews';
 import { lambadaStatements } from './statements';
 
-export type { Compilation };
+export type { Compilation, Tree, Preview };
 
 /** Carries results from the worker into the state, keyed by statement text. */
 const setCompilations = StateEffect.define<ReadonlyMap<string, Compilation>>();
@@ -39,12 +40,14 @@ export interface CompileConfig {
    */
   showDiagnostics?: boolean;
   /**
-   * Evaluate each statement that is an expression rather than a definition,
-   * and show what it comes to. Default: true. It runs on a worker of its own,
-   * because evaluating is unbounded and must not hold up the compiling that
-   * marks the document.
+   * Evaluate each statement that is an expression rather than a definition and
+   * preview what it came out as. Default: true, which writes the tree itself —
+   * e.g. `△ (△ △) △`.
+   *
+   * On a worker of its own: evaluating is unbounded and must not hold up the
+   * compiling that marks the document.
    */
-  showPreviews?: boolean;
+  previewResults?: boolean | ((value: Tree) => Preview);
   /**
    * Offer the names in scope as completions. Default: true. Which names those
    * are depends on what the statements above compiled to, which is why this

@@ -100,35 +100,34 @@ function dagOf(e, s) {
   return raise('dag representation was unexpectedly not terminated by a value');
 }
 
-function dagTo(e, x) {
-  const res = [];
-  let i = 0;
-  const app_keys = {};
-  const apply_keys = (a, b) => {
-    const app_key = `${a} ${b}`;
-    const alloc = () => {
-      const k = `${i++}`;
-      res.push(`${k} ${app_key}`);
-      return k;
-    };
-    return app_keys[app_key] ?? (app_keys[app_key] = alloc());
-  };
-  const keys = new Map();
-  const todo = [{ node: x, enter: true }];
+// --- a value as a plain tree ----------------------------------------------
+// One array per node, holding its children. A shared subtree stays one array,
+// which structured clone preserves on the way out of the worker.
+
+function treeOf(e, x) {
+  const built = new Map();
+  // An explicit stack. A list of n elements nests n deep, and a string is a
+  // list of lists, so recursion would run out of it on a value of no size.
+  const todo = [x];
   while (todo.length) {
-    const { node, enter } = todo.pop();
-    if (keys.has(node)) continue;
-    if (enter) {
-      todo.push({ node, enter: false });
-      for (const c of children(e, node)) todo.push({ node: c, enter: true });
-    } else {
-      let current = '△';
-      for (const c of children(e, node)) current = apply_keys(current, keys.get(c));
-      keys.set(node, current);
+    const node = todo[todo.length - 1];
+    if (built.has(node)) {
+      todo.pop();
+      continue;
     }
+    const cs = children(e, node);
+    const missing = cs.filter((c) => !built.has(c));
+    if (missing.length) {
+      todo.push(...missing);
+      continue;
+    }
+    built.set(
+      node,
+      cs.map((c) => built.get(c)),
+    );
+    todo.pop();
   }
-  res.push(keys.get(x));
-  return res.join('\n');
+  return built.get(x);
 }
 
 // --- trees to and from JavaScript ------------------------------------------
@@ -167,8 +166,6 @@ function makeMarshal(e) {
     return of_list(l);
   };
   return {
-    to_bool,
-    to_nat,
     to_string: (t) =>
       to_list(t)
         .map(to_nat)
@@ -187,17 +184,17 @@ function makeMarshal(e) {
 }
 
 // --- what the rest of the package uses -------------------------------------
-// Deliberately five verbs at DAG level. Nothing above ever triages a tree.
+// Deliberately few, and none of them a triage: forcing a tree is what can fail
+// to finish, and it happens here rather than anywhere that could be holding a
+// document open.
 
 function makeMachine() {
   const m = makeMarshal(evaluator);
   return {
     ofDag: (text) => dagOf(evaluator, text.trimEnd()),
-    toDag: (tree) => dagTo(evaluator, tree),
+    toTree: (tree) => treeOf(evaluator, tree),
     ofString: (s) => m.of_string(s),
     toString: (tree) => m.to_string(tree),
-    toNat: (tree) => m.to_nat(tree),
-    toBool: (tree) => m.to_bool(tree),
     apply: (f, x) => evaluator.apply(f, x),
     steps,
   };

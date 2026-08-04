@@ -27,15 +27,16 @@ up.
 
 It also reports names a statement uses that nothing has defined, under the word
 itself, offers the names that *are* in scope as completions, and evaluates the
-statements that are expressions rather than definitions — showing what each
-comes to at the end of its line.
+statements that are expressions rather than definitions, previewing what each
+came out as.
 
 ``` ts
 lambada({ compile: false })                       // the editing support alone
 lambada({ compile: { showStatus: false } })       // compile, but do not mark
 lambada({ compile: { showDiagnostics: false } })  // mark, but do not report names
 lambada({ compile: { showCompletions: false } })  // do not offer names
-lambada({ compile: { showPreviews: false } })     // do not evaluate anything
+lambada({ compile: { previewResults: false } })   // do not evaluate anything
+lambada({ compile: { previewResults: show } })    // what to show for a value
 lambada({ compile: { compiler, timeout } })       // a compiler of your own
 lambada({ compile: { environment } })             // what is in scope to begin with
 ```
@@ -49,14 +50,14 @@ program that loops hold up the marks, the reported names and the completions
 for everything else.
 
 `environment` is a [DAG module](https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules):
-whatever it defines is in scope before the document starts. The default defines
-`t`, which is why that reads as a name rather than an unknown one. A host with a
-standard library passes it here — a record literal, for one, needs a `Map.set`
-that nothing defines otherwise.
+whatever it defines is in scope before the document starts. It is empty by
+default, leaving `△` as the only bound symbol. A host with a standard library
+passes it here — a record literal, for one, needs a `Map.set` that nothing
+defines otherwise.
 
 Everything that reads a compilation is configured inside `compile` rather than
-beside it, because none of it means anything without one — the marks today,
-and later what a completion can know about the lines above it.
+beside it, because none of it means anything without one — the marks, the names
+reported and offered, and the values.
 
 It runs on a worker started from a `blob:` URL. That is what lets the same
 build work whether you bundle this package or serve it as files — the worker

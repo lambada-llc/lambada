@@ -311,17 +311,20 @@
         </label>
         <label class="nested">
           <input id="previews" type="checkbox" checked />
-          Show what an expression comes
-          <span class="keep-together">to <button
+          Evaluate expressions and preview the
+          <span class="keep-together">result <button
             class="info"
             type="button"
             aria-label="Why this option is here"
           >ⓘ<span class="tip">
               A statement that is an expression rather than a definition gets
               evaluated, against everything defined above it, and the value
-              appears at the end of the line. On a second worker: evaluating
-              does not have to finish, and must not hold up the compiling
-              that marks the document.
+              lands at the end of the line, written as the tree it is. What a
+              tree stands for is the host's to say: a function in place of
+              <code>true</code> is handed the tree and answers with text or
+              an element. On a second worker: evaluating does not have to
+              finish, and must not hold up the compiling that marks the
+              document.
             </span></button></span>
         </label>
         <label class="nested">

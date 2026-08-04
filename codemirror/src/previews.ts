@@ -15,7 +15,7 @@ import {
 } from '@codemirror/view';
 
 import { analyze } from './analysis';
-import { Compiler, type Evaluation, type Value } from './compile';
+import { Compiler, type Evaluation, type Tree, type Value } from './compile';
 import { lambadaCompilations, type CompileConfig } from './compilation';
 import { defaultCompiler } from './generated/compiler';
 
@@ -42,10 +42,7 @@ const isBare = (line: string) => line.trim().split(' ').length === 1;
  * are told apart. Carrying an expression forward means dropping that bare name
  * again, since it would end the document before the statements below it.
  */
-export function expressionsIn(
-  state: EditorState,
-  environment: string,
-): readonly Expression[] {
+function expressionsIn(state: EditorState, environment: string): readonly Expression[] {
   const context: string[] = [leafBinding];
   if (environment.trim()) context.push(environment.trim());
   const found: Expression[] = [];
@@ -73,17 +70,53 @@ export function expressionsIn(
 }
 
 /**
- * How a value is worth showing. A value can read as several of these at once —
- * the leaf is the empty string, zero and false together — so the order is what
- * decides, and the most particular reading wins.
+ * What to show for a value. A block says how tall it is because the editor
+ * places what follows before it has drawn it.
  */
-export function describe(value: Value): string {
-  if (value.text) return JSON.stringify(value.text);
-  // The leaf is the empty string, zero and false at once. `false` is the
-  // reading a program most often meant, and the one worth leading with.
-  if (value.bool !== undefined) return String(value.bool);
-  if (value.nat !== undefined) return value.nat;
-  return `${value.dagLines.filter((l) => l.trim()).length} nodes`;
+export type Preview =
+  | { type: 'inline'; formatted: string }
+  | { type: 'block'; element: HTMLElement; height_px: number };
+
+/** How much tree fits at the end of a line of code. */
+const width = 40;
+
+/**
+ * The default: the tree itself, `△ (△ △) △`, application to the left and cut
+ * short past [width]. Nothing is read into it — that is the host's to know.
+ */
+const asTree = (tree: Tree): Preview => ({ type: 'inline', formatted: written(tree) });
+
+function written(tree: Tree): string {
+  const parts: string[] = [];
+  let length = 0;
+  // Thrown to end the walk once there is more tree than there is room for.
+  // What comes after cannot change what has already been written.
+  const enough = {};
+  const put = (text: string) => {
+    parts.push(text);
+    length += text.length;
+    if (length > width) throw enough;
+  };
+
+  // Depth costs a character before it recurses, so [width] bounds the stack.
+  const write = (node: Tree, nested: boolean): void => {
+    if (node.length === 0) return put('△');
+    if (nested) put('(');
+    put('△');
+    for (const child of node) {
+      put(' ');
+      write(child, true);
+    }
+    if (nested) put(')');
+  };
+
+  try {
+    write(tree, false);
+  } catch (error) {
+    if (error !== enough) throw error;
+    return `${parts.join('').slice(0, width)}…`;
+  }
+  return parts.join('');
 }
 
 const setEvaluations = StateEffect.define<ReadonlyMap<string, Evaluation>>();
@@ -96,12 +129,12 @@ const evaluations = StateField.define<ReadonlyMap<string, Evaluation>>({
   },
 });
 
-class PreviewWidget extends WidgetType {
+class InlinePreview extends WidgetType {
   constructor(readonly text: string) {
     super();
   }
 
-  eq(other: PreviewWidget): boolean {
+  eq(other: InlinePreview): boolean {
     return other.text === this.text;
   }
 
@@ -114,53 +147,109 @@ class PreviewWidget extends WidgetType {
     wrap.textContent = this.text;
     return wrap;
   }
+}
 
-  ignoreEvent(): boolean {
-    return true;
+class BlockPreview extends WidgetType {
+  constructor(
+    readonly element: HTMLElement,
+    readonly height: number,
+  ) {
+    super();
+  }
+
+  eq(other: BlockPreview): boolean {
+    return other.element === this.element && other.height === this.height;
+  }
+
+  /** What the editor lays the rest of the document out against. */
+  get estimatedHeight(): number {
+    return this.height;
+  }
+
+  toDOM(): HTMLElement {
+    // Wrapped rather than sized directly: the element belongs to the host.
+    const wrap = document.createElement('div');
+    wrap.className = 'cm-preview-block';
+    wrap.style.height = `${this.height}px`;
+    wrap.appendChild(this.element);
+    return wrap;
   }
 }
 
 const theme = EditorView.baseTheme({
   '.cm-preview': {
-    paddingLeft: '2ch',
+    paddingLeft: '1ch',
     opacity: '0.6',
     fontStyle: 'italic',
     // It is not part of the document, so it must not look selectable or
     // land in a copy of the text.
     userSelect: 'none',
+    // The end of a line is where a click most often means to land, and this
+    // sits exactly there. An event inside a widget is one the editor drops,
+    // cursor and all, so the click has to reach the line instead.
+    pointerEvents: 'none',
   },
 });
 
-const previewDecorations = (environment: string) =>
-  StateField.define<DecorationSet>({
-    create: (state) => build(state, environment),
+/**
+ * The decorations, and the previews they were built from — kept so a host's
+ * element is not rebuilt on every keystroke, and kept here rather than beside
+ * the extension so each editor has its own: an element can only be in one
+ * document at a time.
+ */
+interface Previews {
+  shown: Map<string, Preview>;
+  decorations: DecorationSet;
+}
+
+const previewDecorations = (environment: string, preview: (value: Tree) => Preview) =>
+  StateField.define<Previews>({
+    create: (state) => build(state, environment, preview, new Map()),
     update: (value, tr) =>
-      tr.docChanged || tr.effects.length ? build(tr.state, environment) : value,
-    provide: (field) => EditorView.decorations.from(field),
+      tr.docChanged || tr.effects.length
+        ? build(tr.state, environment, preview, value.shown)
+        : value,
+    provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
 
-function build(state: EditorState, environment: string): DecorationSet {
+function build(
+  state: EditorState,
+  environment: string,
+  preview: (value: Tree) => Preview,
+  shown: Map<string, Preview>,
+): Previews {
   const builder = new RangeSetBuilder<Decoration>();
   const known = state.field(evaluations);
+  const live = new Set<string>();
   for (const expression of expressionsIn(state, environment)) {
     const evaluation = known.get(expression.dag);
     if (evaluation?.status !== 'ok') continue;
+    live.add(expression.dag);
+    let value = shown.get(expression.dag);
+    if (!value) shown.set(expression.dag, (value = preview(evaluation.tree)));
     builder.add(
       expression.to,
       expression.to,
-      Decoration.widget({
-        side: 1,
-        widget: new PreviewWidget(`= ${describe(evaluation)}`),
-      }),
+      value.type === 'inline'
+        ? // An `=` so the value does not read as more of the program.
+          Decoration.widget({ side: 1, widget: new InlinePreview(`= ${value.formatted}`) })
+        : Decoration.widget({
+            side: 1,
+            block: true,
+            widget: new BlockPreview(value.element, value.height_px),
+          }),
     );
   }
-  return builder.finish();
+  for (const dag of shown.keys()) if (!live.has(dag)) shown.delete(dag);
+  return { shown, decorations: builder.finish() };
 }
 
 export function previews(
   environment: string,
-  { compiler = defaultCompiler, timeout = 10000 }: CompileConfig,
+  { compiler = defaultCompiler, timeout = 10000, previewResults = true }: CompileConfig,
 ): Extension {
+  const preview = typeof previewResults === 'function' ? previewResults : asTree;
+
   const plugin = ViewPlugin.fromClass(
     class {
       runner: Compiler<Value>;
@@ -216,7 +305,7 @@ export function previews(
     },
   );
 
-  return [theme, evaluations, previewDecorations(environment), plugin];
+  return [theme, evaluations, previewDecorations(environment, preview), plugin];
 }
 
 function same(

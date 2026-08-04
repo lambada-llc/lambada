@@ -12,13 +12,18 @@ export type Compilation = Outcome<{
   steps: number;
 }>;
 
-/** What a value read out as, for each reading that fits it. */
+/**
+ * A value: the leaf, a stem or a fork, as an array of that node's children.
+ * A shared subtree is one array, structured clone included, so a value stands
+ * for far more nodes than it holds — walking one without remembering what it
+ * has seen does not come back.
+ */
+export type Tree = readonly [] | readonly [Tree] | readonly [Tree, Tree];
+
+/** What an expression evaluated to, and what reaching it cost. */
 export interface Value {
-  dagLines: readonly string[];
+  tree: Tree;
   steps: number;
-  text?: string;
-  nat?: string;
-  bool?: boolean;
 }
 
 export type Evaluation = Outcome<Value>;
@@ -35,7 +40,7 @@ export type Evaluation = Outcome<Value>;
  * Killing the worker is the only way to stop a compilation: evaluating a tree
  * is one synchronous loop, so nothing in the page can interrupt it.
  */
-export class Compiler<T extends { dagLines: readonly string[] }> {
+export class Compiler<T> {
   #worker: Worker | null = null;
   #url: string;
   #dag: string;

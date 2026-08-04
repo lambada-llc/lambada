@@ -11,7 +11,7 @@ import { statementStatus } from './status';
 
 export { lambadaLanguage, lambadaStatements, lambadaCompilations, insertNode };
 export type { Statement } from './statements';
-export type { Compilation } from './compilation';
+export type { Compilation, Tree, Preview } from './compilation';
 
 export interface LambadaConfig {
   /**
@@ -26,9 +26,8 @@ export interface LambadaConfig {
    * support on its own.
    *
    * Everything that reads a compilation is configured in here rather than
-   * beside it, because none of it means anything without one: today the status
-   * marks, later what a completion knows about the lines above it and what a
-   * result looks like on screen.
+   * beside it, because none of it means anything without one: the marks, the
+   * names reported and offered, and the values written at the end of a line.
    */
   compile?: boolean | CompileConfig;
 }
@@ -50,7 +49,7 @@ export function lambada({
           compilation(compileConfig),
           compileConfig.showStatus === false ? [] : statementStatus(environment),
           compileConfig.showDiagnostics === false ? [] : diagnostics(environment),
-          compileConfig.showPreviews === false
+          compileConfig.previewResults === false
             ? []
             : previews(environment, compileConfig),
           compileConfig.showCompletions === false ? [] : completions(environment),
