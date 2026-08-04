@@ -1,9 +1,11 @@
 // A page for looking at the package on its own.
-// Deliberately bare, just the editor and a code snippet that generates it.
+// Deliberately bare, just the editor and, in a second editor, the code that
+// generates it.
 
 import { EditorView, basicSetup } from 'codemirror';
 import { indentWithTab } from '@codemirror/commands';
-import { Compartment } from '@codemirror/state';
+import { javascript } from '@codemirror/lang-javascript';
+import { Compartment, EditorState } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { basicDark } from 'cm6-theme-basic-dark';
 import { basicLight } from 'cm6-theme-basic-light';
@@ -108,6 +110,24 @@ const view = new EditorView({
   parent: document.querySelector('#editor')!,
 });
 
+// The snippet, in an editor rather than a <pre>: highlighted JavaScript, and
+// under the same theme, so toggling it restyles both panes at once. Read-only
+// twice over — `editable` keeps the caret out, `readOnly` stops the commands
+// that would write — while the transactions below still get through, which is
+// how the text follows the boxes. The compartment is shared with the editor
+// above: a compartment is a key, and each state keeps its own value under it.
+const snippetView = new EditorView({
+  doc: snippet(currentConfig()),
+  extensions: [
+    basicSetup,
+    javascript(),
+    EditorState.readOnly.of(true),
+    EditorView.editable.of(false),
+    theme.of(themeExtension()),
+  ],
+  parent: document.querySelector('#snippet')!,
+});
+
 function render() {
   const config = currentConfig();
   view.dispatch({
@@ -116,9 +136,18 @@ function render() {
       theme.reconfigure(themeExtension()),
     ],
   });
+  const code = snippet(config);
+  snippetView.dispatch({
+    // Replaced only when it changed: this also runs for a theme flip, which
+    // should not touch the text or where it is scrolled to.
+    changes:
+      code === snippetView.state.doc.toString()
+        ? undefined
+        : { from: 0, to: snippetView.state.doc.length, insert: code },
+    effects: theme.reconfigure(themeExtension()),
+  });
   for (const box of [diagnostics, completions, previews])
     box.disabled = !compile.checked;
-  document.querySelector('#snippet')!.textContent = snippet(config);
 }
 
 for (const box of [nodeKeys, compile, diagnostics, completions, previews, loadTheme])
