@@ -100,34 +100,36 @@ function dagOf(e, s) {
   return raise('dag representation was unexpectedly not terminated by a value');
 }
 
-// --- a value as a plain tree ----------------------------------------------
-// One array per node, holding its children. A shared subtree stays one array,
-// which structured clone preserves on the way out of the worker.
+// --- a value as a flat DAG -------------------------------------------------
+// Two slots per node holding the indices of its children, -1 where it has
+// none, and children before parents. Flat because the structured clone that
+// carries a message out of a worker recurses over what it copies: a value
+// nests as deep as a string is long, and a couple of thousand characters is
+// enough to overflow the stack a worker gets. Sharing survives too — a subtree
+// reached twice is one index either way.
 
-function treeOf(e, x) {
-  const built = new Map();
-  // An explicit stack. A list of n elements nests n deep, and a string is a
-  // list of lists, so recursion would run out of it on a value of no size.
+function nodesOf(e, x) {
+  const index = new Map();
+  const nodes = [];
+  // An explicit stack, for the same reason the format is flat.
   const todo = [x];
   while (todo.length) {
     const node = todo[todo.length - 1];
-    if (built.has(node)) {
+    if (index.has(node)) {
       todo.pop();
       continue;
     }
     const cs = children(e, node);
-    const missing = cs.filter((c) => !built.has(c));
+    const missing = cs.filter((c) => !index.has(c));
     if (missing.length) {
       todo.push(...missing);
       continue;
     }
-    built.set(
-      node,
-      cs.map((c) => built.get(c)),
-    );
+    index.set(node, nodes.length / 2);
+    nodes.push(cs.length > 0 ? index.get(cs[0]) : -1, cs.length > 1 ? index.get(cs[1]) : -1);
     todo.pop();
   }
-  return built.get(x);
+  return { nodes, root: index.get(x) };
 }
 
 // --- trees to and from JavaScript ------------------------------------------
@@ -192,7 +194,7 @@ function makeMachine() {
   const m = makeMarshal(evaluator);
   return {
     ofDag: (text) => dagOf(evaluator, text.trimEnd()),
-    toTree: (tree) => treeOf(evaluator, tree),
+    toNodes: (tree) => nodesOf(evaluator, tree),
     ofString: (s) => m.of_string(s),
     toString: (tree) => m.to_string(tree),
     apply: (f, x) => evaluator.apply(f, x),

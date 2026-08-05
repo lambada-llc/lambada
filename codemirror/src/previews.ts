@@ -15,7 +15,7 @@ import {
 } from '@codemirror/view';
 
 import { analyze } from './analysis';
-import { Compiler, type Evaluation, type Tree, type Value } from './compile';
+import { Compiler, treeOf, type Evaluation, type Tree, type Value } from './compile';
 import { lambadaCompilations, type CompileConfig } from './compilation';
 import { defaultCompiler } from './generated/compiler';
 
@@ -64,14 +64,17 @@ function expressionsIn(state: EditorState, environment: string): readonly Expres
         to: statement.to,
         dag: context.concat(lines).join('\n'),
       });
-    context.push(...lines.filter((line) => !isBare(line)));
+    // One at a time: a statement can compile to a hundred thousand lines, and
+    // spreading that many arguments into `push` overflows the stack.
+    for (const line of lines) if (!isBare(line)) context.push(line);
   }
   return found;
 }
 
 /**
- * What to show for a value. A block says how tall it is because the editor
- * places what follows before it has drawn it.
+ * What to show for a value. A block says how much room to keep for it, since
+ * the editor places what follows before the element has drawn anything; an
+ * element that ends up taller pushes the rest of the document down.
  */
 export type Preview =
   | { type: 'inline'; formatted: string }
@@ -168,9 +171,11 @@ class BlockPreview extends WidgetType {
 
   toDOM(): HTMLElement {
     // Wrapped rather than sized directly: the element belongs to the host.
+    // A floor rather than a height, so an element that grows — one that has
+    // loaded, or been expanded — moves the code below rather than covering it.
     const wrap = document.createElement('div');
     wrap.className = 'cm-preview-block';
-    wrap.style.height = `${this.height}px`;
+    wrap.style.minHeight = `${this.height}px`;
     wrap.appendChild(this.element);
     return wrap;
   }
@@ -226,7 +231,7 @@ function build(
     if (evaluation?.status !== 'ok') continue;
     live.add(expression.dag);
     let value = shown.get(expression.dag);
-    if (!value) shown.set(expression.dag, (value = preview(evaluation.tree)));
+    if (!value) shown.set(expression.dag, (value = preview(treeOf(evaluation))));
     builder.add(
       expression.to,
       expression.to,

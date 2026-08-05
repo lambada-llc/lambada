@@ -15,12 +15,14 @@ function compile(source) {
 }
 
 // A tree and nothing else: what a value stands for is the caller's to decide,
-// and this end of it never guesses. The cost is all in `toTree`, since `apply`
-// only conses and nothing reduces until something forces it.
+// and this end of it never guesses. It goes back flat, as indices, because a
+// message out of a worker is copied by a recursive walk and a value is deeper
+// than that walk can go. The cost is all in `toNodes`, since `apply` only
+// conses and nothing reduces until something forces it.
 function run(dag) {
   machine.steps.count = 0;
-  const tree = machine.toTree(machine.ofDag(dag));
-  return { tree, steps: machine.steps.count };
+  const { nodes, root } = machine.toNodes(machine.ofDag(dag));
+  return { nodes, root, steps: machine.steps.count };
 }
 
 self.addEventListener('message', (e) => {
