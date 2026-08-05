@@ -30,12 +30,18 @@
       html {
         touch-action: pan-x pan-y;
       }
-      /* Header, panes, options — top to bottom. The middle row takes whatever
-         the other two leave, so the options stay put at the bottom edge and
-         the editors scroll inside themselves. */
+      /* Header, panes, options — top to bottom. Pinned to the viewport rather
+         than sized by 100vh, which on iOS Safari is the height with the URL
+         bar hidden — the page overflowed and scrolled while the bar was shown.
+         Fixed like this the body always matches the visible viewport: header
+         and footer sit on its edges, the middle row takes whatever they leave,
+         and the editors scroll inside themselves while the page itself
+         cannot. */
       body {
         margin: 0;
-        height: 100vh;
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
         display: grid;
         grid-template-rows: auto minmax(0, 1fr) auto;
         background: Canvas;
