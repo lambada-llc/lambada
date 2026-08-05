@@ -22,6 +22,16 @@
       :root[data-theme='dark'] {
         color-scheme: dark;
       }
+      /* Canvas and CanvasText are the only system colours every engine
+         re-resolves when the page forces its scheme: WebKit keeps ButtonFace
+         silver and ButtonBorder white whichever scheme is asked for, while
+         ButtonText does follow it — which left the tabs white on near-white
+         in the dark theme. So the surfaces and borders are mixed from the
+         pair that adapts, and Button* appears nowhere below. */
+      :root {
+        --surface: color-mix(in srgb, CanvasText 8%, Canvas);
+        --border: color-mix(in srgb, CanvasText 25%, Canvas);
+      }
 
       * {
         box-sizing: border-box;
@@ -54,7 +64,7 @@
         align-items: center;
         gap: 0.75rem;
         padding: 0.7rem 1rem;
-        border-bottom: 1px solid ButtonBorder;
+        border-bottom: 1px solid var(--border);
       }
       h1 {
         margin: 0;
@@ -63,10 +73,10 @@
       #insert-node,
       #theme-toggle {
         padding: 0.35rem 0.7rem;
-        border: 1px solid ButtonBorder;
+        border: 1px solid var(--border);
         border-radius: 999px;
-        background: ButtonFace;
-        color: ButtonText;
+        background: var(--surface);
+        color: CanvasText;
         font: inherit;
         cursor: pointer;
       }
@@ -86,20 +96,20 @@
       #tabs {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        border-bottom: 1px solid ButtonBorder;
-        background: ButtonFace;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
       }
       #tabs button {
         padding: 0.45rem 1rem;
         border: 0;
         background: none;
-        color: ButtonText;
+        color: CanvasText;
         font: inherit;
         text-align: left;
         cursor: default;
       }
       #tabs button + button {
-        border-left: 1px solid ButtonBorder;
+        border-left: 1px solid var(--border);
       }
       #panes {
         display: grid;
@@ -112,7 +122,7 @@
         min-width: 0;
       }
       #snippet {
-        border-left: 1px solid ButtonBorder;
+        border-left: 1px solid var(--border);
       }
       .cm-editor {
         height: 100%;
@@ -127,8 +137,8 @@
         align-items: flex-start;
         gap: 0.5rem 2.5rem;
         padding: 0.8rem 1rem;
-        border-top: 1px solid ButtonBorder;
-        background: ButtonFace;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
       }
       .group {
         display: grid;
@@ -186,7 +196,7 @@
         right: 0;
         z-index: 1;
         padding: 0.5rem 0.6rem;
-        border: 1px solid ButtonBorder;
+        border: 1px solid var(--border);
         border-radius: 6px;
         background: Canvas;
         color: CanvasText;
