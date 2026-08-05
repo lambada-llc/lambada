@@ -39,6 +39,12 @@
       /* Pan only — also rules out double-tap zoom. */
       html {
         touch-action: pan-x pan-y;
+        /* iOS Safari inflates text it deems too small — except inside
+           contenteditable, which is how the read-only snippet ended up in a
+           much larger font than the editable editor beside it. Pinned, so
+           both panes show the size they were given. */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
       }
       /* Header, panes, options — top to bottom. Pinned to the viewport rather
          than sized by 100vh, which on iOS Safari is the height with the URL
@@ -68,22 +74,30 @@
       }
       h1 {
         margin: 0;
-        font: 600 0.95rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+        font: 600 0.95rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
       }
+      /* Two buttons, one glyph each, one size: fixed circles rather than
+         pills padded around their text, which made them a mismatched pair
+         and left the title to wrap in what little room remained. */
       #insert-node,
       #theme-toggle {
-        padding: 0.35rem 0.7rem;
+        flex: none;
+        inline-size: 2.1rem;
+        block-size: 2.1rem;
+        display: grid;
+        place-items: center;
+        padding: 0;
         border: 1px solid var(--border);
-        border-radius: 999px;
+        border-radius: 50%;
         background: var(--surface);
         color: CanvasText;
         font: inherit;
+        font-size: 1.1rem;
+        line-height: 1;
         cursor: pointer;
       }
       #insert-node {
         margin-left: auto;
-        font-size: 1.1rem;
-        line-height: 1;
       }
 
       main {
@@ -211,6 +225,12 @@
       }
 
       @media (max-width: 46rem) {
+        /* The row is already as short as its buttons; what a phone can still
+           spare is the space around them. */
+        header {
+          padding: 0.45rem 0.75rem;
+          gap: 0.5rem;
+        }
         /* One pane at a time, and the buttons above turn from captions into
            the tabs that pick it. Canvas on the chosen one, so it reads as one
            piece with the pane it opens. */
@@ -242,7 +262,7 @@
       <button id="insert-node" type="button" aria-label="Insert △" title="Insert △">
         △
       </button>
-      <button id="theme-toggle" type="button" aria-live="polite"></button>
+      <button id="theme-toggle" type="button"></button>
     </header>
     <main>
       <nav id="tabs">
@@ -361,15 +381,19 @@
     </footer>
     <script>
       // The switch is the only thing that decides the theme — the page starts
-      // light whatever the system says — so: the attribute, and a label saying
-      // what pressing it would do.
+      // light whatever the system says — so: the attribute, and on the button
+      // the theme pressing it would bring. A glyph rather than a sentence,
+      // which on a phone was a two-line pill; the words live in the label and
+      // the tooltip instead.
       (() => {
         const root = document.documentElement;
         const toggle = document.querySelector('#theme-toggle');
         const update = () => {
           const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-          toggle.textContent = `Switch to ${next}`;
-          toggle.setAttribute('aria-label', `Switch to ${next} theme`);
+          toggle.textContent = next === 'light' ? '☀️' : '🌙';
+          const label = `Switch to ${next} theme`;
+          toggle.setAttribute('aria-label', label);
+          toggle.setAttribute('title', label);
         };
         toggle.addEventListener('click', () => {
           root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
