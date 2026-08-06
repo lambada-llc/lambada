@@ -1,7 +1,7 @@
 import { StateEffect, StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { Compiler, type Compilation } from './compile';
+import { Compiler, type Compilation, type Compiled } from './compile';
 import { defaultCompiler } from './generated/compiler';
 import type { Preview } from './previews';
 import { lambadaStatements } from './statements';
@@ -70,16 +70,12 @@ export function compilation({
 }: CompileConfig = {}): Extension {
   const plugin = ViewPlugin.fromClass(
     class {
-      compiler: Compiler<{ dagLines: readonly string[]; steps: number }>;
+      compiler: Compiler<Compiled>;
       queued = false;
       dead = false;
 
       constructor(readonly view: EditorView) {
-        this.compiler = new Compiler<{ dagLines: readonly string[]; steps: number }>(
-          compiler,
-          timeout,
-          () => this.schedule(),
-        );
+        this.compiler = new Compiler<Compiled>(compiler, timeout, () => this.schedule());
         this.sync();
       }
 
