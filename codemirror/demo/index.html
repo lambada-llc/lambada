@@ -75,6 +75,7 @@
       h1 {
         margin: 0;
         font: 600 0.95rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+        white-space: nowrap;
       }
       /* Two buttons, one glyph each, one size: fixed circles rather than
          pills padded around their text, which made them a mismatched pair
@@ -230,6 +231,10 @@
         header {
           padding: 0.45rem 0.75rem;
           gap: 0.5rem;
+        }
+        h1 {
+          font-size: clamp(0.72rem, 3.2vw, 0.82rem);
+          line-height: 1.2;
         }
         /* One pane at a time, and the buttons above turn from captions into
            the tabs that pick it. Canvas on the chosen one, so it reads as one
