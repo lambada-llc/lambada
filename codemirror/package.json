@@ -25,6 +25,8 @@
     "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
     "dev": "vite",
     "generate": "node scripts/generate.mjs",
+    "pretest": "npm run generate",
+    "test": "vitest run",
     "prebuild:demo": "npm run generate",
     "prebuild:lib": "npm run generate",
     "predev": "npm run generate",
@@ -51,10 +53,14 @@
     "@lezer/generator": "^1.8.0",
     "@lezer/highlight": "^1.2.3",
     "@lezer/lr": "^1.4.10",
+    "@vitest/browser": "^4.1.10",
+    "@vitest/browser-playwright": "^4.1.10",
     "cm6-theme-basic-dark": "^0.2.0",
     "cm6-theme-basic-light": "^0.2.0",
     "codemirror": "^6.0.2",
+    "playwright": "^1.62.1",
     "typescript": "^5.7.0",
-    "vite": "^7.0.0"
+    "vite": "^7.0.0",
+    "vitest": "^4.1.10"
   }
 }

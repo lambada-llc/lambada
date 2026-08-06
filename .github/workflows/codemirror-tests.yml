@@ -1,0 +1,46 @@
+# Runs the codemirror package's tests.
+#
+# On pull requests as well as main, unlike the workflow that publishes the demo:
+# that one deploys, so it stays away from anything a fork can trigger. This one
+# only reads, and a test that first runs after merging is a test that finds
+# things too late.
+name: codemirror tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'codemirror/**'
+      - '.github/workflows/codemirror-tests.yml'
+  pull_request:
+    paths:
+      - 'codemirror/**'
+      - '.github/workflows/codemirror-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: codemirror
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: codemirror/.nvmrc
+          cache: npm
+          cache-dependency-path: codemirror/package-lock.json
+
+      - run: npm ci
+      - run: npm run typecheck
+
+      # Half of what the package does only exists once something is on screen,
+      # and the worker it compiles on only starts in a browser.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm test
