@@ -44,6 +44,14 @@ lambada({ compile: { environment } })             // what is in scope to begin w
 Completions arrive as language data, so a host with more to offer — a standard
 library, snippets — adds a source of its own and both appear.
 
+`previewResults` is handed the value as a `Tree` and returns what to show for
+it: a string, or an element and how much room to keep for it. Nothing is read
+into a tree by default — it is written out as itself, `△ (△ △) △`, since what a
+value means is the host's to know. `dagOf(tree)` is how one leaves the page:
+a `Tree` is live objects, and a
+[DAG](https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-directed-acyclic-graph)
+is text, so it can go into a link, a file, or a frame that renders it.
+
 Evaluating happens on a second worker. A compilation takes single-digit
 milliseconds and an evaluation need never finish, so sharing one would let a
 program that loops hold up the marks, the reported names and the completions
