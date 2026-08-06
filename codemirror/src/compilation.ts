@@ -1,12 +1,13 @@
 import { StateEffect, StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { Compiler, type Compilation, type Tree } from './compile';
+import { Compiler, type Compilation } from './compile';
 import { defaultCompiler } from './generated/compiler';
 import type { Preview } from './previews';
 import { lambadaStatements } from './statements';
+import type { Tree } from './tree';
 
-export type { Compilation, Tree, Preview };
+export type { Compilation, Preview };
 
 /** Carries results from the worker into the state, keyed by statement text. */
 const setCompilations = StateEffect.define<ReadonlyMap<string, Compilation>>();

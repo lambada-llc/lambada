@@ -15,8 +15,9 @@ import {
 } from '@codemirror/view';
 
 import { analyze } from './analysis';
-import { Compiler, treeOf, type Evaluation, type Tree, type Value } from './compile';
+import { Compiler, type Evaluation } from './compile';
 import { lambadaCompilations, type CompileConfig } from './compilation';
+import { treeOf, type Tree, type Value } from './tree';
 import { defaultCompiler } from './generated/compiler';
 
 /** A statement that is an expression, and the whole program that produces it. */

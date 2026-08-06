@@ -8,10 +8,12 @@ import { lambadaLanguage } from './language';
 import { defaultNodeKeys, insertNode, nodeKeymap } from './node-keys';
 import { lambadaStatements } from './statements';
 import { statementStatus } from './status';
+import { dagOf } from './tree';
 
-export { lambadaLanguage, lambadaStatements, lambadaCompilations, insertNode };
+export { lambadaLanguage, lambadaStatements, lambadaCompilations, insertNode, dagOf };
 export type { Statement } from './statements';
-export type { Compilation, Tree, Preview } from './compilation';
+export type { Compilation, Preview } from './compilation';
+export type { Tree } from './tree';
 
 export interface LambadaConfig {
   /**
