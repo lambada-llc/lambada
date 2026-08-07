@@ -168,13 +168,44 @@
         cursor: pointer;
       }
       /* Indented and dimmed while they apply, greyed out when they do not:
-         both read a compilation, and there is none to read with compiling off. */
-      label.nested {
+         all of them read a compilation, and there is none to read with
+         compiling off. */
+      .nested {
         padding-left: 1.3rem;
       }
-      label:has(input:disabled) {
+      label:has(input:disabled),
+      #environment:has(input:disabled) {
         color: GrayText;
         cursor: default;
+      }
+      /* The modules, in a row: they are one option — what is in scope before
+         the first line — rather than a stack of unrelated ones. Positioned for
+         the same reason a label is, since the tip hangs off it. */
+      #environment {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.3rem 1rem;
+      }
+      #environment label {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3rem;
+      }
+      /* Part of the sentence it ends rather than a control sitting beside it,
+         and mixed from the same pair of system colours as every other surface
+         here — Button* does not follow a forced colour scheme. */
+      #preview-mode {
+        margin: 0 0.15em;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--surface);
+        color: CanvasText;
+        font: inherit;
+      }
+      #preview-mode:disabled {
+        color: GrayText;
       }
       /* A line may break either side of an inline box, so the badge needs tying
          to the words it belongs to or it ends up alone on a line of its own. */
@@ -336,20 +367,29 @@
         </label>
         <label class="nested">
           <input id="previews" type="checkbox" checked />
-          Evaluate expressions and preview the
-          <span class="keep-together">result <button
+          Evaluate expressions and show the result as
+          <span class="keep-together"><select
+            id="preview-mode"
+            aria-label="What to show for a value"
+          >
+              <option value="inferred">what it looks like</option>
+              <option value="tree">the tree itself</option>
+              <option value="size">how big it is</option>
+            </select> <button
             class="info"
             type="button"
             aria-label="Why this option is here"
           >ⓘ<span class="tip">
               A statement that is an expression rather than a definition gets
               evaluated, against everything defined above it, and the value
-              lands at the end of the line, written as the tree it is. What a
-              tree stands for is the host's to say: a function in place of
-              <code>true</code> is handed the tree and answers with text or
-              an element. On a second worker: evaluating does not have to
-              finish, and must not hold up the compiling that marks the
-              document.
+              lands at the end of the line. What a tree stands for is the
+              host's to say: the package writes the tree itself and reads
+              nothing into it, and a function in its place is handed the tree
+              and answers with text or an element — which is what the other
+              two settings here are. Guessing from the shape is a guess, and
+              two booleans in a list really are the number they spell. On a
+              second worker: evaluating does not have to finish, and must not
+              hold up the compiling that marks the document.
             </span></button></span>
         </label>
         <label class="nested">
@@ -366,6 +406,24 @@
               compiler makes up on the way.
             </span></button></span>
         </label>
+        <!-- One box per file in demo/env-dags, added by the script rather
+             than written out here. -->
+        <div id="environment" class="nested">
+          <span>Definitions to put in
+            <span class="keep-together">scope <button
+            class="info"
+            type="button"
+            aria-label="Why this option is here"
+          >ⓘ<span class="tip">
+              The LambAda compiler merely desugars syntax and has no native
+              "import" mechanism that would resolve modules from some registry
+              or filesystem.
+              In order to have access to symbols other than <code>△</code> (the
+              only operator known to runtimes), the code codemirror component
+              allows effectively prepending definitions, expected to be in
+              exactly the format the LambAda compiler produces.
+            </span></button></span></span>
+        </div>
       </div>
       <div class="group">
         <label>

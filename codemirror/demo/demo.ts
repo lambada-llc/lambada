@@ -11,6 +11,8 @@ import { basicDark } from 'cm6-theme-basic-dark';
 import { basicLight } from 'cm6-theme-basic-light';
 
 import { insertNode, lambada, type LambadaConfig } from '../src/index';
+import { modules } from './environment';
+import { inferred, size } from './preview';
 import { sample } from './sample';
 
 // Try Alt-t, Alt-n, Ctrl-t or Ctrl-n in the editor. The box starts checked
@@ -26,6 +28,36 @@ const compile = document.querySelector<HTMLInputElement>('#compile')!;
 const diagnostics = document.querySelector<HTMLInputElement>('#diagnostics')!;
 const completions = document.querySelector<HTMLInputElement>('#completions')!;
 const previews = document.querySelector<HTMLInputElement>('#previews')!;
+
+// What to show for a value. Each option is named after the function `./preview`
+// exports for it, so the snippet can write one straight into an import — bar
+// `tree`, which is the package's own default and imports nothing.
+const previewMode = document.querySelector<HTMLSelectElement>('#preview-mode')!;
+const previewOf = () =>
+  previewMode.value === 'inferred'
+    ? inferred
+    : previewMode.value === 'size'
+      ? size
+      : undefined;
+
+// A box per DAG module, built rather than written into the markup: the modules
+// are whatever files are in `env-dags`, and a list kept by hand would sooner or
+// later disagree with them. All on, because every one of them is used further
+// down the sample.
+const environment = document.querySelector<HTMLElement>('#environment')!;
+const moduleBoxes = modules.map((module) => {
+  const label = document.createElement('label');
+  const box = document.createElement('input');
+  box.type = 'checkbox';
+  box.checked = true;
+  label.append(box, module.name);
+  environment.append(label);
+  return { module, box };
+});
+
+/** The modules ticked on, in the order they would be concatenated. */
+const chosen = () =>
+  moduleBoxes.filter(({ box }) => box.checked).map(({ module }) => module);
 
 // Whether a theme is loaded alongside. Not the package's to provide, but the
 // grammar marks more than CodeMirror's default highlight style paints, so
@@ -49,6 +81,17 @@ function currentConfig(): LambadaConfig {
   if (!diagnostics.checked) compileOptions.showDiagnostics = false;
   if (!completions.checked) compileOptions.showCompletions = false;
   if (!previews.checked) compileOptions.previewResults = false;
+  else {
+    // Nothing to write for the tree itself, which is what the package does
+    // when nobody says otherwise.
+    const mode = previewOf();
+    if (mode) compileOptions.previewResults = mode;
+  }
+  // Several of them simply concatenate — a DAG module is a list of definitions.
+  const dag = chosen()
+    .map((module) => module.dag)
+    .join('\n');
+  if (dag) compileOptions.environment = dag;
   if (Object.keys(compileOptions).length) config.compile = compileOptions;
   return config;
 }
@@ -72,21 +115,52 @@ const language = new Compartment();
 
 function snippet(config: LambadaConfig): string {
   const themed = loadTheme.checked;
-  const asSource = (value: unknown, indent: string): string =>
-    typeof value === 'object' && value !== null
+  // Both only reach the configuration through `compile`, so with compiling off
+  // there is nothing to import for them either.
+  const picked = compile.checked ? chosen() : [];
+  // `tree` is the package's own default, which is written by writing nothing.
+  const mode =
+    compile.checked && previews.checked && previewMode.value !== 'tree'
+      ? previewMode.value
+      : '';
+
+  // Two of the options have nothing worth reading as a value: an environment
+  // is a hundred thousand lines of DAG, and a preview is a function. The
+  // snippet names them instead, and the imports account for the names.
+  const named: Record<string, string> = {};
+  if (picked.length)
+    named.environment =
+      picked.length === 1
+        ? picked[0].binding
+        : `[${picked.map((module) => module.binding).join(', ')}].join('\\n')`;
+  if (mode) named.previewResults = mode;
+
+  const asSource = (key: string, value: unknown, indent: string): string =>
+    named[key] ??
+    (typeof value === 'object' && value !== null
       ? `{\n${Object.entries(value)
-          .map(([k, v]) => `${indent}  ${k}: ${asSource(v, `${indent}  `)},`)
+          .map(([k, v]) => `${indent}  ${k}: ${asSource(k, v, `${indent}  `)},`)
           .join('\n')}\n${indent}}`
-      : JSON.stringify(value);
+      : JSON.stringify(value));
   const options = Object.entries(config).map(
-    ([key, value]) => `      ${key}: ${asSource(value, '      ')},`,
+    ([key, value]) => `      ${key}: ${asSource(key, value, '      ')},`,
   );
   const argument = options.length ? `{\n${options.join('\n')}\n    }` : '';
-  return `import { EditorView, basicSetup } from 'codemirror';
-import { indentWithTab } from '@codemirror/commands';
-import { keymap } from '@codemirror/view';
-import { lambada } from '@lambada-llc/codemirror-lang-lambada';
-${themed ? `import { ${themeName()} } from '${themePackage()}';\n` : ''}
+
+  const imports = [
+    `import { EditorView, basicSetup } from 'codemirror';`,
+    `import { indentWithTab } from '@codemirror/commands';`,
+    `import { keymap } from '@codemirror/view';`,
+    `import { lambada } from '@lambada-llc/codemirror-lang-lambada';`,
+    ...(themed ? [`import { ${themeName()} } from '${themePackage()}';`] : []),
+    ...(mode ? [`import { ${mode} } from './preview';`] : []),
+    // Vite hands a file over as text for a `?raw` import; another bundler has
+    // its own way of saying the same thing.
+    ...picked.map((module) => `import ${module.binding} from '${module.path}?raw';`),
+  ];
+
+  return `${imports.join('\n')}
+
 new EditorView({
   doc,
   extensions: [
@@ -146,12 +220,29 @@ function render() {
         : { from: 0, to: snippetView.state.doc.length, insert: code },
     effects: theme.reconfigure(themeExtension()),
   });
-  for (const box of [diagnostics, completions, previews])
-    box.disabled = !compile.checked;
+  // Everything that reads a compilation, and the modules there would be
+  // nothing to compile them against.
+  for (const control of [
+    diagnostics,
+    completions,
+    previews,
+    ...moduleBoxes.map(({ box }) => box),
+  ])
+    control.disabled = !compile.checked;
+  previewMode.disabled = !compile.checked || !previews.checked;
 }
 
-for (const box of [nodeKeys, compile, diagnostics, completions, previews, loadTheme])
-  box.addEventListener('change', render);
+for (const control of [
+  nodeKeys,
+  compile,
+  diagnostics,
+  completions,
+  previews,
+  previewMode,
+  loadTheme,
+  ...moduleBoxes.map(({ box }) => box),
+])
+  control.addEventListener('change', render);
 
 // Pressing a button would otherwise take the focus, and on a phone that closes
 // the keyboard the button exists to make up for. Refused here, the editor never

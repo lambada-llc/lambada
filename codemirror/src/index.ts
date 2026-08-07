@@ -3,14 +3,21 @@ import { LanguageSupport } from '@codemirror/language';
 import { compilation, lambadaCompilations, type CompileConfig } from './compilation';
 import { completions } from './completions';
 import { diagnostics } from './diagnostics';
-import { previews } from './previews';
+import { defaultPreview, previews } from './previews';
 import { lambadaLanguage } from './language';
 import { defaultNodeKeys, insertNode, nodeKeymap } from './node-keys';
 import { lambadaStatements } from './statements';
 import { statementStatus } from './status';
 import { dagOf } from './tree';
 
-export { lambadaLanguage, lambadaStatements, lambadaCompilations, insertNode, dagOf };
+export {
+  lambadaLanguage,
+  lambadaStatements,
+  lambadaCompilations,
+  insertNode,
+  dagOf,
+  defaultPreview,
+};
 export type { Statement } from './statements';
 export type { Compilation, Preview } from './compilation';
 export type { Tree } from './tree';

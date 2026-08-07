@@ -76,6 +76,11 @@ function expressionsIn(state: EditorState, environment: string): readonly Expres
  * What to show for a value. A block says how much room to keep for it, since
  * the editor places what follows before the element has drawn anything; an
  * element that ends up taller pushes the rest of the document down.
+ *
+ * An inline preview lands at the end of the line as it stands. Nothing is put
+ * in front of it: whatever marks it off from the code is part of what the
+ * preview said, so a host that wants no marker, or a different one, is not
+ * overruled.
  */
 export type Preview =
   | { type: 'inline'; formatted: string }
@@ -86,9 +91,18 @@ const width = 40;
 
 /**
  * The default: the tree itself, `△ (△ △) △`, application to the left and cut
- * short past [width]. Nothing is read into it — that is the host's to know.
+ * short past [width]. Nothing is read into it — that is the host's to know,
+ * which is also why this is exported: a host that reads only the values it
+ * recognises hands the rest back here.
+ *
+ * The `=` is what keeps the value from reading as more of the program. It is
+ * written here rather than by whatever draws the preview, so that a host can
+ * write something else.
  */
-const asTree = (tree: Tree): Preview => ({ type: 'inline', formatted: written(tree) });
+export const defaultPreview = (tree: Tree): Preview => ({
+  type: 'inline',
+  formatted: `= ${written(tree)}`,
+});
 
 function written(tree: Tree): string {
   const parts: string[] = [];
@@ -237,8 +251,7 @@ function build(
       expression.to,
       expression.to,
       value.type === 'inline'
-        ? // An `=` so the value does not read as more of the program.
-          Decoration.widget({ side: 1, widget: new InlinePreview(`= ${value.formatted}`) })
+        ? Decoration.widget({ side: 1, widget: new InlinePreview(value.formatted) })
         : Decoration.widget({
             side: 1,
             block: true,
@@ -254,7 +267,8 @@ export function previews(
   environment: string,
   { compiler = defaultCompiler, timeout = 10000, previewResults = true }: CompileConfig,
 ): Extension {
-  const preview = typeof previewResults === 'function' ? previewResults : asTree;
+  const preview =
+    typeof previewResults === 'function' ? previewResults : defaultPreview;
 
   const plugin = ViewPlugin.fromClass(
     class {
