@@ -83,9 +83,16 @@ editor still works, nothing is marked, and the reason is logged once.
 ``` bash
 npm install
 npm run dev         # the demo, served
+npm test            # both suites, the second in a real browser
 npm run build       # both of the below
 npm run build:lib   # the library, written to dist/
 npm run build:demo  # the demo page, written to demo-dist/
 ```
+
+The tests are in two halves. What the package works out about a document —
+where the statements are, what a value is written as — is state and text, and
+runs in Node. Everything else needs a browser: the compiler runs on a worker,
+and the rest of what this package does is only observable once it is on screen.
+`npx playwright install chromium` once, for that half.
 
 Vite wants Node 20.19+, hence the [`.nvmrc`](./.nvmrc).

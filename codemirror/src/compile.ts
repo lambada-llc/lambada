@@ -7,11 +7,14 @@ export type Outcome<T> =
   | ({ status: 'ok' } & T)
   | { status: 'error'; message: string };
 
-/** What the compiler produced for one statement. */
-export type Compilation = Outcome<{
+/** What the compiler produces for one statement, as it crosses back. */
+export interface Compiled {
   dagLines: readonly string[];
   steps: number;
-}>;
+}
+
+/** That, or why there is none. */
+export type Compilation = Outcome<Compiled>;
 
 export type Evaluation = Outcome<Value>;
 

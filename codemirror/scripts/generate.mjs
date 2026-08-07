@@ -5,6 +5,7 @@
 // keeps the output identical whether a host bundles this package or serves it
 // as files.
 
+import { buildSync } from 'esbuild';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -15,10 +16,17 @@ const out = resolve(src, 'generated');
 
 const read = (p) => readFileSync(p, 'utf8');
 
-const worker = [
-  read(resolve(src, 'runtime/machine.js')),
-  read(resolve(src, 'runtime/worker-body.js')),
-].join('\n');
+// Bundled rather than concatenated, so the worker can be an ordinary module
+// that imports what it uses and is typechecked like everything else. What comes
+// out is one script with the imports resolved away, which is what a blob needs.
+const bundled = buildSync({
+  entryPoints: [resolve(src, 'runtime/worker-body.ts')],
+  bundle: true,
+  format: 'iife',
+  target: 'es2022',
+  write: false,
+});
+const worker = bundled.outputFiles[0].text;
 
 if (/^\s*(import|export)\s/m.test(worker)) {
   throw new Error(

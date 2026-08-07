@@ -1,8 +1,9 @@
 // A tree calculus evaluator, the DAG text format, and the conversions between
 // trees and JavaScript values.
 //
-// Copied, not depended on: this file is concatenated verbatim into the worker
-// source, and anything with an `import` in it could not be. Taken from
+// Copied, not depended on, and left as JavaScript: annotating it would make
+// every update from upstream a merge. `machine.d.ts` beside it states what it
+// offers, and is what the worker is checked against. Taken from
 // https://github.com/lambada-llc/tree-calculus (MIT), where the originals are
 // `implementation/typescript/src/common.mjs`, `format/dag.mjs` and
 // `evaluator/lazy-stacks.mjs`.
@@ -201,3 +202,5 @@ function makeMachine() {
     steps,
   };
 }
+
+export { makeMachine };

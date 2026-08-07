@@ -1,0 +1,15 @@
+{
+  // The worker, which has no DOM and a `self` of its own — so it cannot be
+  // checked under the same lib as everything else, and gets a project instead.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["src/runtime"]
+}
