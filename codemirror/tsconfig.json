@@ -9,5 +9,6 @@
     "skipLibCheck": true,
     "types": []
   },
-  "include": ["src", "demo", "vite.config.ts", "vite.lib.config.ts"]
+  "include": ["src", "demo", "vite.config.ts", "vite.lib.config.ts"],
+  "exclude": ["src/runtime"]
 }

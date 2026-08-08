@@ -1,13 +1,15 @@
-// The worker's protocol. Concatenated after `machine.js`, which is why it can
-// call `makeMachine` without importing it — and why the whole thing can be
-// handed to `new Worker` as a blob. Nothing to resolve means neither a bundler
+// The worker's protocol. Bundled into one script with no imports left in it,
+// because it is started from a blob: nothing to resolve means neither a bundler
 // nor an import map can get it wrong, and import maps do not reach workers at
 // all.
 
-const machine = makeMachine();
-let compiler = null;
+import type { Compiled, Value } from '../tree';
+import { makeMachine } from './machine.js';
 
-function compile(source) {
+const machine = makeMachine();
+let compiler: ReturnType<typeof machine.ofDag> | null = null;
+
+function compile(source: string): Compiled {
   if (!compiler) throw new Error('compiler not loaded');
   machine.steps.count = 0;
   const out = machine.toString(machine.apply(compiler, machine.ofString(source)));
@@ -24,13 +26,19 @@ function compile(source) {
 // message out of a worker is copied by a recursive walk and a value is deeper
 // than that walk can go. The cost is all in `toNodes`, since `apply` only
 // conses and nothing reduces until something forces it.
-function run(dag) {
+function run(dag: string): Value {
   machine.steps.count = 0;
   const { nodes, root } = machine.toNodes(machine.ofDag(dag));
   return { nodes, root, steps: machine.steps.count };
 }
 
-self.addEventListener('message', (e) => {
+interface Request {
+  id: number;
+  type: 'load' | 'compile' | 'run';
+  payload: string;
+}
+
+self.addEventListener('message', (e: MessageEvent<Request>) => {
   const { id, type, payload } = e.data;
   try {
     switch (type) {
@@ -51,6 +59,10 @@ self.addEventListener('message', (e) => {
         throw new Error(`unknown request: ${type}`);
     }
   } catch (error) {
-    self.postMessage({ id, ok: false, error: `${error && error.message ? error.message : error}` });
+    self.postMessage({
+      id,
+      ok: false,
+      error: `${error instanceof Error ? error.message : error}`,
+    });
   }
 });
