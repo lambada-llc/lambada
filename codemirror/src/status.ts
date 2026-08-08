@@ -6,7 +6,6 @@ import {
 } from '@codemirror/state';
 import { Decoration, EditorView, type DecorationSet } from '@codemirror/view';
 
-import { analyze } from './analysis';
 import type { Resolved } from './config';
 
 // A border rather than a gutter marker: a statement is a run of lines, and one
@@ -42,7 +41,7 @@ const statusDecorations = (config: Resolved) =>
 
 function build(state: EditorState, config: Resolved): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
-  for (const { statement, state: status } of analyze(state, config.environment)) {
+  for (const { statement, state: status } of state.field(config.analyses)) {
     const mark = marks[status];
     const first = state.doc.lineAt(statement.from).number;
     const last = state.doc.lineAt(statement.to).number;

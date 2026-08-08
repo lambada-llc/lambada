@@ -58,7 +58,7 @@ export function completions(config: Resolved): Extension {
         const options = [];
         for (const [name, definedIn] of scopeAt(
           context.state,
-          config.environment,
+          config.initialScope,
           context.pos,
         )) {
           if (!isOfferable(name)) continue;

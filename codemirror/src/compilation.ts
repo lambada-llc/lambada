@@ -1,6 +1,6 @@
 import type { EditorState, Extension, StateField } from '@codemirror/state';
 
-import { results, type Outcome } from './compile';
+import { results, type Outcome } from './worker';
 import type { Resolved } from './config';
 import { lambadaStatements } from './statements';
 
@@ -26,7 +26,10 @@ export const lambadaCompilations: StateField<ReadonlyMap<string, Compilation>> =
 const statementTexts = (state: EditorState): Iterable<string> =>
   state.field(lambadaStatements).map((statement) => statement.text);
 
+// The analyses come with the compilations because they are made of them, and
+// after them, because a state field may only read one defined before it.
 export const compilation = (config: Resolved): Extension => [
   lambadaCompilations,
+  config.analyses,
   compiled.keep(config, statementTexts),
 ];

@@ -1,3 +1,6 @@
+import type { StateField } from '@codemirror/state';
+
+import { analyses, initialScope, type Analysis } from './analysis';
 import { defaultCompiler } from './generated/compiler';
 import { defaultPreview, type Preview } from './previews';
 import type { Tree } from './tree';
@@ -50,6 +53,10 @@ export interface Resolved {
   compiler: string;
   timeout: number;
   environment: string;
+  /** The names the environment brings into scope, read out of it once. */
+  initialScope: ReadonlySet<string>;
+  /** What each statement came to, so that every reader gets the same answer. */
+  analyses: StateField<readonly Analysis[]>;
   showStatus: boolean;
   showDiagnostics: boolean;
   showCompletions: boolean;
@@ -62,10 +69,14 @@ export interface Resolved {
 export function resolve(compile: boolean | CompileConfig): Resolved | null {
   if (compile === false) return null;
   const config = compile === true ? {} : compile;
+  const environment = config.environment ?? '';
+  const scope = initialScope(environment);
   return {
     compiler: config.compiler ?? defaultCompiler,
     timeout: config.timeout ?? 10000,
-    environment: config.environment ?? '',
+    environment,
+    initialScope: scope,
+    analyses: analyses(scope),
     showStatus: config.showStatus !== false,
     showDiagnostics: config.showDiagnostics !== false,
     showCompletions: config.showCompletions !== false,

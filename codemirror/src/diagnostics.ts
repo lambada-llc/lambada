@@ -3,7 +3,7 @@ import type { EditorState, Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { linter, type Diagnostic } from '@codemirror/lint';
 
-import { analyze, type Problem } from './analysis';
+import type { Problem } from './analysis';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
 import type { Statement } from './statements';
@@ -37,7 +37,7 @@ export function diagnostics(config: Resolved): Extension {
     theme,
     linter(
       (view) =>
-        analyze(view.state, config.environment).flatMap((analysis) =>
+        view.state.field(config.analyses).flatMap((analysis) =>
           analysis.problems.map((problem) =>
             locate(view.state, analysis.statement, problem),
           ),

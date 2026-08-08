@@ -11,8 +11,7 @@ import {
   type DecorationSet,
 } from '@codemirror/view';
 
-import { analyze } from './analysis';
-import { results } from './compile';
+import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
 import { treeOf, type Tree, type Value } from './tree';
@@ -40,12 +39,12 @@ const isBare = (line: string) => line.trim().split(' ').length === 1;
  * are told apart. Carrying an expression forward means dropping that bare name
  * again, since it would end the document before the statements below it.
  */
-function expressionsIn(state: EditorState, environment: string): readonly Expression[] {
+function expressionsIn(state: EditorState, config: Resolved): readonly Expression[] {
   const context: string[] = [leafBinding];
-  if (environment.trim()) context.push(environment.trim());
+  if (config.environment.trim()) context.push(config.environment.trim());
   const found: Expression[] = [];
 
-  for (const { statement, state: status } of analyze(state, environment)) {
+  for (const { statement, state: status } of state.field(config.analyses)) {
     if (status !== 'ok') {
       // Nothing below a statement that did not compile can be evaluated
       // either: its definitions are missing from everything that follows.
@@ -214,23 +213,16 @@ interface Previews {
   decorations: DecorationSet;
 }
 
-const previewDecorations = (config: Resolved) =>
-  StateField.define<Previews>({
-    create: (state) => build(state, config, new Map()),
-    update: (value, tr) =>
-      tr.docChanged || tr.effects.length ? build(tr.state, config, value.shown) : value,
-    provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
-  });
-
 function build(
   state: EditorState,
   config: Resolved,
+  expressions: readonly Expression[],
   shown: Map<string, Preview>,
 ): Previews {
   const builder = new RangeSetBuilder<Decoration>();
   const known = state.field(evaluated.field);
   const live = new Set<string>();
-  for (const expression of expressionsIn(state, config.environment)) {
+  for (const expression of expressions) {
     const evaluation = known.get(expression.dag);
     if (evaluation?.status !== 'ok') continue;
     live.add(expression.dag);
@@ -253,12 +245,31 @@ function build(
 }
 
 export function previews(config: Resolved): Extension {
+  // In the state rather than worked out per reader: the decorations, the
+  // evaluations asked for and the evaluations published all want the same list,
+  // and finding it means writing out a program per expression.
+  const expressions = StateField.define<readonly Expression[]>({
+    create: (state) => expressionsIn(state, config),
+    update: (value, tr) =>
+      tr.docChanged || tr.effects.length ? expressionsIn(tr.state, config) : value,
+  });
+
+  const decorations = StateField.define<Previews>({
+    create: (state) => build(state, config, state.field(expressions), new Map()),
+    update: (value, tr) =>
+      tr.docChanged || tr.effects.length
+        ? build(tr.state, config, tr.state.field(expressions), value.shown)
+        : value,
+    provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
+  });
+
   return [
     theme,
     evaluated.field,
-    previewDecorations(config),
+    expressions,
+    decorations,
     evaluated.keep(config, (state) =>
-      expressionsIn(state, config.environment).map((expression) => expression.dag),
+      state.field(expressions).map((expression) => expression.dag),
     ),
   ];
 }

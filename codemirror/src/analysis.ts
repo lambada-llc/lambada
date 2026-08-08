@@ -1,4 +1,4 @@
-import type { EditorState } from '@codemirror/state';
+import { StateField, type EditorState } from '@codemirror/state';
 
 import { lambadaCompilations } from './compilation';
 import { lambadaStatements, type Statement } from './statements';
@@ -30,17 +30,20 @@ const leaf = '△';
 // The compiler calls that same leaf `__ENV△` in what it emits, and references
 // it in every compilation — so it has to be in scope, but nobody writes it.
 const compilersLeaf = '__ENV△';
-const builtIn = [leaf, compilersLeaf];
 
 /**
- * The names a DAG module defines, which for an environment is what it brings
- * into scope. See https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules
+ * What is in scope before the document starts: those two, plus whatever the
+ * environment's DAG module defines. See
+ * https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules
+ *
+ * Read once, when the extension is configured. An environment runs to tens of
+ * thousands of lines, and it does not change while a document is open.
  */
-export function definedBy(environment: string): string[] {
-  const names: string[] = [];
+export function initialScope(environment: string): ReadonlySet<string> {
+  const names = new Set([leaf, compilersLeaf]);
   for (const line of environment.split(/\r?\n/)) {
     const [name, value] = line.split(' ');
-    if (name && value) names.push(name);
+    if (name && value) names.add(name);
   }
   return names;
 }
@@ -56,12 +59,12 @@ export function definedBy(environment: string): string[] {
  */
 export function scopeAt(
   state: EditorState,
-  environment: string,
+  initial: ReadonlySet<string>,
   pos: number,
 ): ReadonlyMap<string, string | null> {
   const compilations = state.field(lambadaCompilations);
   const scope = new Map<string, string | null>();
-  for (const name of [...builtIn, ...definedBy(environment)]) scope.set(name, null);
+  for (const name of initial) scope.set(name, null);
 
   for (const statement of state.field(lambadaStatements)) {
     if (pos <= statement.to) break;
@@ -98,12 +101,16 @@ export function isOfferable(name: string): boolean {
  * definitions are all there in what the compiler produced, so they carry
  * forward and the statements below it are judged on their own.
  */
-export function analyze(
+function analyze(
   state: EditorState,
-  environment: string,
+  initial: ReadonlySet<string>,
 ): readonly Analysis[] {
   const compilations = state.field(lambadaCompilations);
-  const scope = new Set([...builtIn, ...definedBy(environment)]);
+  // The environment's names are kept beside what the document defines rather
+  // than copied into it: there are tens of thousands of them and they are the
+  // same for every statement, in every state, for as long as the editor lives.
+  const defined = new Set<string>();
+  const inScope = (name: string) => initial.has(name) || defined.has(name);
   const analyses: Analysis[] = [];
   let stopped = false;
 
@@ -133,7 +140,7 @@ export function analyze(
     // name is in scope from the line below the one that introduced it.
     const problems: Problem[] = [];
     const missing = (name: string) => {
-      if (scope.has(name) || problems.some((p) => p.symbol === name)) return;
+      if (inScope(name) || problems.some((p) => p.symbol === name)) return;
       problems.push({ symbol: name, message: `${name} is not defined` });
     };
     for (const line of known.dagLines) {
@@ -141,7 +148,7 @@ export function analyze(
       if (first) {
         missing(first);
         if (second) missing(second);
-        scope.add(name);
+        defined.add(name);
       } else if (name) {
         missing(name);
       }
@@ -156,3 +163,22 @@ export function analyze(
 
   return analyses;
 }
+
+/**
+ * The walk, held in the state so that it happens once per change rather than
+ * once per reader — the marks, the reported names and the previews all want the
+ * same answer, and it costs a pass over every statement to find.
+ *
+ * One field per configured editor, since what is in scope to begin with is the
+ * host's to say.
+ */
+export const analyses = (
+  initial: ReadonlySet<string>,
+): StateField<readonly Analysis[]> =>
+  StateField.define<readonly Analysis[]>({
+    create: (state) => analyze(state, initial),
+    // Compilations arrive as effects, and a statement's state is what they
+    // decide, so an effect is as much of a change here as an edit is.
+    update: (value, tr) =>
+      tr.docChanged || tr.effects.length ? analyze(tr.state, initial) : value,
+  });
