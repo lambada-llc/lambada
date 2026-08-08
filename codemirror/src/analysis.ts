@@ -1,7 +1,7 @@
 import { StateField, type EditorState } from '@codemirror/state';
 
 import { lambadaCompilations } from './compilation';
-import { dagLine } from './dag';
+import { dagLine, type DagLine } from './dag';
 import { isIdentifier } from './language';
 import { lambadaStatements, type Statement } from './statements';
 
@@ -41,12 +41,9 @@ const compilersLeaf = '__ENV△';
  * Read once, when the extension is configured. An environment runs to tens of
  * thousands of lines, and it does not change while a document is open.
  */
-export function initialScope(environment: string): ReadonlySet<string> {
+export function initialScope(environment: readonly DagLine[]): ReadonlySet<string> {
   const names = new Set([leaf, compilersLeaf]);
-  for (const line of environment.split(/\r?\n/)) {
-    const { name, from } = dagLine(line);
-    if (name && from.length) names.add(name);
-  }
+  for (const { name, from } of environment) if (name && from.length) names.add(name);
   return names;
 }
 

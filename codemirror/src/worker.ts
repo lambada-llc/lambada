@@ -15,6 +15,14 @@ export type Outcome<T> =
   | { status: 'error'; message: string };
 
 /**
+ * How many answers to keep after they stop being wanted. Enough for a document
+ * to stop wanting all of them and want them all back, which is what an edit
+ * near the top does, and few enough that a long-lived editor does not hold on
+ * to everything it has ever been shown.
+ */
+const spares = 32;
+
+/**
  * A compiler running on a worker of its own.
  *
  * The worker is started from a blob rather than a URL: the source has no
@@ -35,6 +43,7 @@ export class Compiler<T> {
   #onChange: () => void;
 
   #results = new Map<string, Outcome<T>>();
+  #spare = new Map<string, Outcome<T>>();
   #queue: string[] = [];
   #inFlight: { text: string; timer: ReturnType<typeof setTimeout> } | null = null;
   #loaded = false;
@@ -61,23 +70,49 @@ export class Compiler<T> {
     return this.#results.get(text);
   }
 
-  /** Ask for a compilation, unless one has already been asked for. */
+  /** Ask for a compilation, unless the answer is already to hand. */
   request(text: string): void {
     if (this.#destroyed || this.#results.has(text)) return;
+    const kept = this.#spare.get(text);
+    if (kept) {
+      // Asked for again, and the answer never stopped being true.
+      this.#spare.delete(text);
+      this.#results.set(text, kept);
+      return;
+    }
     this.#results.set(text, { status: 'pending' });
     this.#queue.push(text);
     this.#pump();
   }
 
   /**
-   * Forget everything no longer in `keep`. Work already in flight is left to
+   * Drop everything no longer in `keep`. Work already in flight is left to
    * finish rather than cancelled: a compilation costs single-digit
    * milliseconds, and restarting the worker to save one costs far more.
+   *
+   * An answer that had been reached is set aside rather than thrown away. The
+   * same input always evaluates to the same thing, so keeping one is only ever
+   * a question of room — and a statement stops being wanted for a moment every
+   * time one above it is edited, which is exactly when the document is about to
+   * ask for it again.
    */
   retain(keep: ReadonlySet<string>): void {
-    for (const text of this.#results.keys())
-      if (!keep.has(text)) this.#results.delete(text);
+    for (const [text, value] of this.#results)
+      if (!keep.has(text)) {
+        this.#results.delete(text);
+        if (value.status !== 'pending') this.#setAside(text, value);
+      }
     this.#queue = this.#queue.filter((text) => keep.has(text));
+  }
+
+  #setAside(text: string, value: Outcome<T>): void {
+    // Re-inserting moves it to the end, so the oldest is the first one out.
+    this.#spare.delete(text);
+    this.#spare.set(text, value);
+    for (const oldest of this.#spare.keys()) {
+      if (this.#spare.size <= spares) break;
+      this.#spare.delete(oldest);
+    }
   }
 
   destroy(): void {
@@ -137,6 +172,7 @@ export class Compiler<T> {
     this.#clearTimer();
     this.#queue = [];
     this.#results.clear();
+    this.#spare.clear();
     this.#destroyed = true;
     this.#onChange();
   };

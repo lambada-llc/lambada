@@ -14,7 +14,7 @@ import {
 import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
-import { dagLine } from './dag';
+import { dagLine, needed, type DagLine } from './dag';
 import { treeOf, type Tree, type Value } from './tree';
 
 /** A statement that is an expression, and the whole program that produces it. */
@@ -27,9 +27,9 @@ interface Expression {
 
 // The compiler emits references to `__ENV△` and expects it to be the leaf.
 // Nothing in the DAG format binds it, so anything evaluated has to say so.
-const leafBinding = '__ENV△ △';
+const leafBinding = dagLine('__ENV△ △');
 
-const isBare = (line: string) => dagLine(line).from.length === 0;
+const isBare = (line: DagLine) => line.from.length === 0;
 
 /**
  * The statements that are expressions rather than definitions, each with the
@@ -39,10 +39,16 @@ const isBare = (line: string) => dagLine(line).from.length === 0;
  * expression, and with nothing when it was a definition — which is how the two
  * are told apart. Carrying an expression forward means dropping that bare name
  * again, since it would end the document before the statements below it.
+ *
+ * The program is cut down to what the expression actually reaches. That is
+ * mostly not an optimisation: a program is remembered by its text, so carrying
+ * a definition the expression never looks at means an edit to that definition
+ * asks for the same value to be worked out again. Cut down, an expression is
+ * only ever recomputed when something it truly depends on changes — and the
+ * program is smaller to send and to read, which is the part that is.
  */
 function expressionsIn(state: EditorState, config: Resolved): readonly Expression[] {
-  const context: string[] = [leafBinding];
-  if (config.environment.trim()) context.push(config.environment.trim());
+  const context: DagLine[] = [leafBinding, ...config.environment];
   const found: Expression[] = [];
 
   for (const { statement, state: status } of state.field(config.analyses)) {
@@ -54,12 +60,14 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
     }
     const compilation = state.field(lambadaCompilations).get(statement.text);
     if (compilation?.status !== 'ok') continue;
-    const lines = compilation.dagLines.filter((line) => line.trim());
+    const lines = compilation.dagLines.filter((line) => line.trim()).map(dagLine);
     if (lines.some(isBare))
       found.push({
         from: statement.from,
         to: statement.to,
-        dag: context.concat(lines).join('\n'),
+        dag: needed(context.concat(lines))
+          .map((line) => line.text)
+          .join('\n'),
       });
     // One at a time: a statement can compile to a hundred thousand lines, and
     // spreading that many arguments into `push` overflows the stack.
@@ -223,11 +231,17 @@ function build(
   const known = state.field(evaluated.field);
   const live = new Set<string>();
   for (const expression of expressions) {
-    const evaluation = known.get(expression.dag);
-    if (evaluation?.status !== 'ok') continue;
     live.add(expression.dag);
+    // What was shown for this program is asked for first, and not only to save
+    // rebuilding a host's element: a program is its own answer, so a preview
+    // once drawn for it stays true, and it outlives the moment between the
+    // statements settling and the value being published again.
     let value = shown.get(expression.dag);
-    if (!value) shown.set(expression.dag, (value = config.preview(treeOf(evaluation))));
+    if (!value) {
+      const evaluation = known.get(expression.dag);
+      if (evaluation?.status !== 'ok') continue;
+      shown.set(expression.dag, (value = config.preview(treeOf(evaluation))));
+    }
     builder.add(
       expression.to,
       expression.to,
@@ -256,10 +270,18 @@ export function previews(config: Resolved): Extension {
 
   const decorations = StateField.define<Previews>({
     create: (state) => build(state, config, state.field(expressions), new Map()),
-    update: (value, tr) =>
-      tr.docChanged || tr.effects.length
-        ? build(tr.state, config, tr.state.field(expressions), value.shown)
-        : value,
+    update: (value, tr) => {
+      if (!tr.docChanged && !tr.effects.length) return value;
+      // A statement that is still compiling says nothing about what is below
+      // it, so there is nothing to draw there — but what is already drawn was
+      // true of the text a moment ago and will be true again in a few
+      // milliseconds. Carried along rather than taken away and put back, since
+      // a preview that blinks on every keystroke is worse than one that is
+      // briefly out of date.
+      if (tr.state.field(config.analyses).some((a) => a.state === 'pending'))
+        return { shown: value.shown, decorations: value.decorations.map(tr.changes) };
+      return build(tr.state, config, tr.state.field(expressions), value.shown);
+    },
     provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
 

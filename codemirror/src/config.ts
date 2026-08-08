@@ -1,6 +1,7 @@
 import type { StateField } from '@codemirror/state';
 
 import { analyses, initialScope, type Analysis } from './analysis';
+import { dagLines, type DagLine } from './dag';
 import { defaultCompiler } from './generated/compiler';
 import { defaultPreview, type Preview } from './previews';
 import type { Tree } from './tree';
@@ -48,8 +49,9 @@ export interface CompileConfig {
 export interface Resolved {
   compiler: string;
   timeout: number;
-  environment: string;
-  /** The names the environment brings into scope, read out of it once. */
+  /** The environment's lines, read once: it is long and it never changes. */
+  environment: readonly DagLine[];
+  /** The names the environment brings into scope. */
   initialScope: ReadonlySet<string>;
   /** What each statement came to, so that every reader gets the same answer. */
   analyses: StateField<readonly Analysis[]>;
@@ -65,7 +67,7 @@ export interface Resolved {
 export function resolve(compile: boolean | CompileConfig): Resolved | null {
   if (compile === false) return null;
   const config = compile === true ? {} : compile;
-  const environment = config.environment ?? '';
+  const environment = dagLines(config.environment ?? '');
   const scope = initialScope(environment);
   return {
     compiler: config.compiler ?? defaultCompiler,
