@@ -14,6 +14,7 @@ import {
 import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
+import { dagLine } from './dag';
 import { treeOf, type Tree, type Value } from './tree';
 
 /** A statement that is an expression, and the whole program that produces it. */
@@ -28,7 +29,7 @@ interface Expression {
 // Nothing in the DAG format binds it, so anything evaluated has to say so.
 const leafBinding = '__ENV△ △';
 
-const isBare = (line: string) => line.trim().split(' ').length === 1;
+const isBare = (line: string) => dagLine(line).from.length === 0;
 
 /**
  * The statements that are expressions rather than definitions, each with the
@@ -54,8 +55,7 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
     const compilation = state.field(lambadaCompilations).get(statement.text);
     if (compilation?.status !== 'ok') continue;
     const lines = compilation.dagLines.filter((line) => line.trim());
-    const bare = lines.filter(isBare);
-    if (bare.length)
+    if (lines.some(isBare))
       found.push({
         from: statement.from,
         to: statement.to,

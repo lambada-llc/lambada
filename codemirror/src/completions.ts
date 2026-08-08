@@ -3,41 +3,22 @@ import type {
   CompletionResult,
 } from '@codemirror/autocomplete';
 import type { Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 
 import { isOfferable, scopeAt } from './analysis';
 import type { Resolved } from './config';
-import { lambadaLanguage } from './language';
+import { identifier, lambadaLanguage } from './language';
+import { legible } from './tooltips';
 
-// The same fix the diagnostics needed, for the same reason: a theme that picks
-// the completion list's background from the wrong end of its palette leaves
-// every row but the selected one unreadable. A base theme, so a theme that
-// does style the list still wins — this only shows through where nothing else
-// has an opinion.
-// On the list inside the tooltip rather than the tooltip: a theme's rule for
+// The list inside the tooltip rather than the tooltip: a theme's rule for
 // `.cm-tooltip` outranks a base theme's for the same element, so a background
 // stated there would never show. The list is a child, and painting a child
 // covers what is behind it.
-// The panel beside the list, saying what defined the name, needs the same
-// colours and cannot be reached the same way: it holds one text node, so there
-// is no child to paint. Naming both of its classes is what wins instead — two
-// classes outrank the single `.cm-tooltip` a theme states, and specificity is
-// settled before the order the rules were added in.
-const theme = EditorView.baseTheme({
-  '&light .cm-tooltip-autocomplete > ul, &light .cm-tooltip.cm-completionInfo': {
-    backgroundColor: '#f5f5f5',
-    color: '#1c1c1c',
-  },
-  '&dark .cm-tooltip-autocomplete > ul, &dark .cm-tooltip.cm-completionInfo': {
-    backgroundColor: '#2b2b2b',
-    color: '#eeeeee',
-  },
-});
-
-// The same characters the grammar's `identifier` accepts, so that what is
-// matched before the cursor is what would be replaced.
-const identifier =
-  /[@A-Z_`a-z\u{80}-\u{10ffff}][@A-Z_`a-z\u{80}-\u{10ffff}0-9.]*/u;
+// The panel beside the list, saying what defined the name, cannot be reached
+// the same way: it holds one text node, so there is no child to paint. Naming
+// both of its classes is what wins instead — two classes outrank the single
+// `.cm-tooltip` a theme states, and specificity is settled before the order the
+// rules were added in.
+const theme = legible('.cm-tooltip-autocomplete > ul', '.cm-tooltip.cm-completionInfo');
 
 /**
  * The names in scope where the cursor is.

@@ -11,7 +11,12 @@ function compile(source) {
   if (!compiler) throw new Error('compiler not loaded');
   machine.steps.count = 0;
   const out = machine.toString(machine.apply(compiler, machine.ofString(source)));
-  return { dagLines: out.split(/\r?\n/), steps: machine.steps.count };
+  const dagLines = out.split(/\r?\n/);
+  // A source it cannot read is what the compiler answers with nothing at all,
+  // rather than by failing. Said here, where the emptiness means something,
+  // rather than by whatever reads the result.
+  if (dagLines.every((line) => line.trim() === '')) throw new Error('syntax error');
+  return { dagLines, steps: machine.steps.count };
 }
 
 // A tree and nothing else: what a value stands for is the caller's to decide,

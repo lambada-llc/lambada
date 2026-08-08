@@ -24,3 +24,17 @@ export const lambadaLanguage = LRLanguage.define({
     commentTokens: { line: '#' },
   },
 });
+
+/**
+ * The characters `identifier` accepts in [syntax.grammar], as a pattern —
+ * stated here rather than at each of the two places that need it, because both
+ * are claims about what the grammar does and one copy cannot drift from the
+ * other.
+ */
+export const identifier =
+  /[@A-Z_`a-z\u{80}-\u{10ffff}][@A-Z_`a-z\u{80}-\u{10ffff}0-9.]*/u;
+
+const whole = new RegExp(`^(?:${identifier.source})$`, 'u');
+
+/** Whether a name is an identifier and nothing but. */
+export const isIdentifier = (name: string): boolean => whole.test(name);

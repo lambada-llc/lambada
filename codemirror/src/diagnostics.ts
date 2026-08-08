@@ -1,12 +1,16 @@
 import { syntaxTree } from '@codemirror/language';
 import type { EditorState, Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
 import { linter, type Diagnostic } from '@codemirror/lint';
 
 import type { Problem } from './analysis';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
 import type { Statement } from './statements';
+import { legible } from './tooltips';
+
+// The message and the tooltip around it both, since a diagnostic is drawn into
+// the panel as well as into the hover.
+const theme = legible('.cm-tooltip-lint', '.cm-diagnostic');
 
 /**
  * Undefined names, reported where they are written.
@@ -15,23 +19,6 @@ import type { Statement } from './statements';
  * it was: the syntax tree is what turns a name back into a range, so the
  * squiggle lands under the word rather than over the whole statement.
  */
-// The tooltip a diagnostic appears in belongs to whatever theme the host
-// loaded, and a theme that picks its background from the wrong end of its own
-// palette leaves the message unreadable — dark on dark, or light on light.
-// Stating both colours on the diagnostic itself keeps it legible whatever is
-// around it. `&light` and `&dark` follow the editor's own theme rather than the
-// page's, and a theme that does style diagnostics still wins over a base theme.
-const theme = EditorView.baseTheme({
-  '&light .cm-tooltip-lint, &light .cm-diagnostic': {
-    backgroundColor: '#f5f5f5',
-    color: '#1c1c1c',
-  },
-  '&dark .cm-tooltip-lint, &dark .cm-diagnostic': {
-    backgroundColor: '#2b2b2b',
-    color: '#eeeeee',
-  },
-});
-
 export function diagnostics(config: Resolved): Extension {
   return [
     theme,

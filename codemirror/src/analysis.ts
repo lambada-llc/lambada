@@ -1,6 +1,8 @@
 import { StateField, type EditorState } from '@codemirror/state';
 
 import { lambadaCompilations } from './compilation';
+import { dagLine } from './dag';
+import { isIdentifier } from './language';
 import { lambadaStatements, type Statement } from './statements';
 
 export interface Problem {
@@ -42,8 +44,8 @@ const compilersLeaf = '__ENV△';
 export function initialScope(environment: string): ReadonlySet<string> {
   const names = new Set([leaf, compilersLeaf]);
   for (const line of environment.split(/\r?\n/)) {
-    const [name, value] = line.split(' ');
-    if (name && value) names.add(name);
+    const { name, from } = dagLine(line);
+    if (name && from.length) names.add(name);
   }
   return names;
 }
@@ -71,10 +73,10 @@ export function scopeAt(
     const known = compilations.get(statement.text);
     if (known?.status !== 'ok') continue;
     for (const line of known.dagLines) {
-      const [name, value, applied] = line.split(' ');
-      // `name value` is a definition; `name value applied` is one of the
-      // applications the compiler makes on the way, which nothing wrote.
-      if (value && !applied) scope.set(name, statement.text);
+      const { name, from } = dagLine(line);
+      // One name is a definition; two is one of the applications the compiler
+      // makes on the way, which nothing wrote.
+      if (from.length === 1) scope.set(name, statement.text);
     }
   }
   return scope;
@@ -86,8 +88,7 @@ export function scopeAt(
  * the grammar's — and `__ENV△` is an identifier that only the compiler uses.
  */
 export function isOfferable(name: string): boolean {
-  if (name === compilersLeaf) return false;
-  return /^[@A-Z_`a-z\u{80}-\u{10ffff}][@A-Z_`a-z\u{80}-\u{10ffff}0-9.]*$/u.test(name);
+  return name !== compilersLeaf && isIdentifier(name);
 }
 
 /**
@@ -144,10 +145,9 @@ function analyze(
       problems.push({ symbol: name, message: `${name} is not defined` });
     };
     for (const line of known.dagLines) {
-      const [name, first, second] = line.split(' ');
-      if (first) {
-        missing(first);
-        if (second) missing(second);
+      const { name, from } = dagLine(line);
+      if (from.length) {
+        for (const used of from) missing(used);
         defined.add(name);
       } else if (name) {
         missing(name);

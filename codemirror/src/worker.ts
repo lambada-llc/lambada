@@ -118,10 +118,6 @@ export class Compiler<T> {
     if (!current) return;
     this.#clearTimer();
     if (!ok) this.#settle(current.text, { status: 'error', message: String(error) });
-    else if (this.#action === 'compile' && isEmpty(result.dagLines))
-      // The compiler reports a source it cannot read by producing nothing at
-      // all, rather than by failing.
-      this.#settle(current.text, { status: 'error', message: 'syntax error' });
     else this.#settle(current.text, { status: 'ok', ...result });
     this.#pump();
   };
@@ -169,9 +165,6 @@ export class Compiler<T> {
     this.#spawn();
   }
 }
-
-const isEmpty = (dagLines: readonly string[]): boolean =>
-  dagLines.every((line) => line.trim() === '');
 
 /**
  * A worker's answers, in the editor's state, keyed by what was asked.

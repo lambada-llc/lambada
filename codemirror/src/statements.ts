@@ -21,7 +21,7 @@ export interface Statement {
  * and neither does a blank line, though a line of only spaces does without
  * contributing anything.
  */
-export function splitStatements(doc: Text): readonly Statement[] {
+function splitStatements(doc: Text): readonly Statement[] {
   const blank = (text: string) => text.trim() === '';
   const result: Statement[] = [];
 
