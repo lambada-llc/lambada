@@ -7,6 +7,7 @@ import {
 import { Decoration, EditorView, type DecorationSet } from '@codemirror/view';
 
 import { analyze } from './analysis';
+import type { Resolved } from './config';
 
 // A border rather than a gutter marker: a statement is a run of lines, and one
 // border down its left edge reads as one thing where a marker per line does
@@ -31,17 +32,17 @@ const marks = {
   error: Decoration.line({ class: 'cm-statement-error' }),
 };
 
-const statusDecorations = (environment: string) =>
+const statusDecorations = (config: Resolved) =>
   StateField.define<DecorationSet>({
-    create: (state) => build(state, environment),
+    create: (state) => build(state, config),
     update: (value, tr) =>
-      tr.docChanged || tr.effects.length ? build(tr.state, environment) : value,
+      tr.docChanged || tr.effects.length ? build(tr.state, config) : value,
     provide: (field) => EditorView.decorations.from(field),
   });
 
-function build(state: EditorState, environment: string): DecorationSet {
+function build(state: EditorState, config: Resolved): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
-  for (const { statement, state: status } of analyze(state, environment)) {
+  for (const { statement, state: status } of analyze(state, config.environment)) {
     const mark = marks[status];
     const first = state.doc.lineAt(statement.from).number;
     const last = state.doc.lineAt(statement.to).number;
@@ -53,7 +54,7 @@ function build(state: EditorState, environment: string): DecorationSet {
   return builder.finish();
 }
 
-export const statementStatus = (environment: string): Extension => [
+export const statementStatus = (config: Resolved): Extension => [
   theme,
-  statusDecorations(environment),
+  statusDecorations(config),
 ];

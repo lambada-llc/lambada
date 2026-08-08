@@ -5,6 +5,7 @@ import { linter, type Diagnostic } from '@codemirror/lint';
 
 import { analyze, type Problem } from './analysis';
 import { lambadaCompilations } from './compilation';
+import type { Resolved } from './config';
 import type { Statement } from './statements';
 
 /**
@@ -31,12 +32,12 @@ const theme = EditorView.baseTheme({
   },
 });
 
-export function diagnostics(environment: string): Extension {
+export function diagnostics(config: Resolved): Extension {
   return [
     theme,
     linter(
       (view) =>
-        analyze(view.state, environment).flatMap((analysis) =>
+        analyze(view.state, config.environment).flatMap((analysis) =>
           analysis.problems.map((problem) =>
             locate(view.state, analysis.statement, problem),
           ),

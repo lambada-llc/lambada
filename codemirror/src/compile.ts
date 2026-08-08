@@ -1,19 +1,18 @@
+import {
+  StateEffect,
+  StateField,
+  type EditorState,
+  type Extension,
+} from '@codemirror/state';
+import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+
 import { workerSource } from './generated/worker-source';
-import type { Value } from './tree';
 
 /** Asked for, then either what came back or why nothing did. */
 export type Outcome<T> =
   | { status: 'pending' }
   | ({ status: 'ok' } & T)
   | { status: 'error'; message: string };
-
-/** What the compiler produced for one statement. */
-export type Compilation = Outcome<{
-  dagLines: readonly string[];
-  steps: number;
-}>;
-
-export type Evaluation = Outcome<Value>;
 
 /**
  * A compiler running on a worker of its own.
@@ -173,3 +172,107 @@ export class Compiler<T> {
 
 const isEmpty = (dagLines: readonly string[]): boolean =>
   dagLines.every((line) => line.trim() === '');
+
+/**
+ * A worker's answers, in the editor's state, keyed by what was asked.
+ *
+ * Both of this package's workers are driven the same way: ask for whatever the
+ * document wants, forget what it has stopped wanting, and put the answers into
+ * the state once they arrive. All that differs is the question — statements to
+ * compile, expressions to evaluate — which is what `wanted` names.
+ *
+ * The field is made here and the plugin separately, because the field is a
+ * document's own and exists whether or not anything is configured to fill it,
+ * while the plugin needs the configuration.
+ */
+export function results<T>(action: 'compile' | 'run') {
+  /** Carries answers from the worker into the state. */
+  const setResults = StateEffect.define<ReadonlyMap<string, Outcome<T>>>();
+
+  const field = StateField.define<ReadonlyMap<string, Outcome<T>>>({
+    create: () => new Map(),
+    update(value, tr) {
+      for (const effect of tr.effects) if (effect.is(setResults)) return effect.value;
+      return value;
+    },
+  });
+
+  /** Keep [field] holding an answer for everything `wanted` names, and nothing else. */
+  const keep = (
+    { compiler, timeout }: { compiler: string; timeout: number },
+    wanted: (state: EditorState) => Iterable<string>,
+  ): Extension =>
+    ViewPlugin.fromClass(
+      class {
+        jobs: Compiler<T>;
+        queued = false;
+        dead = false;
+
+        constructor(readonly view: EditorView) {
+          this.jobs = new Compiler<T>(compiler, timeout, () => this.schedule(), action);
+          this.sync();
+        }
+
+        // What is wanted is read off the state, so an edit can change it — and
+        // so can an answer landing, which arrives as an effect: the expressions
+        // worth evaluating are the ones the compilations turned out to be.
+        update(update: ViewUpdate) {
+          if (update.docChanged || update.transactions.some((tr) => tr.effects.length))
+            this.sync();
+        }
+
+        /** Ask for anything not yet asked for, and forget what is gone. */
+        sync() {
+          const keys = new Set(wanted(this.view.state));
+          this.jobs.retain(keys);
+          for (const key of keys) this.jobs.request(key);
+          this.schedule();
+        }
+
+        /**
+         * Never dispatches where it is called from. A plugin is constructed and
+         * updated inside an update, and starting another one there throws — and
+         * a worker that fails to start reports it early enough to land inside
+         * that same update, so a microtask is not late enough to help.
+         */
+        schedule() {
+          if (this.queued || this.dead) return;
+          this.queued = true;
+          setTimeout(() => {
+            this.queued = false;
+            if (!this.dead) this.publish();
+          }, 0);
+        }
+
+        publish() {
+          const next = new Map<string, Outcome<T>>();
+          for (const key of wanted(this.view.state)) {
+            const value = this.jobs.get(key);
+            if (value) next.set(key, value);
+          }
+          if (same(next, this.view.state.field(field))) return;
+          this.view.dispatch({ effects: setResults.of(next) });
+        }
+
+        destroy() {
+          this.dead = true;
+          this.jobs.destroy();
+        }
+      },
+    );
+
+  return { field, keep };
+}
+
+/** The same questions, settled the same way — so there is nothing to announce. */
+function same<T>(
+  a: ReadonlyMap<string, Outcome<T>>,
+  b: ReadonlyMap<string, Outcome<T>>,
+): boolean {
+  if (a.size !== b.size) return false;
+  for (const [key, value] of a) {
+    const other = b.get(key);
+    if (!other || other.status !== value.status) return false;
+  }
+  return true;
+}

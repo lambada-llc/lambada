@@ -1,6 +1,5 @@
 import {
   RangeSetBuilder,
-  StateEffect,
   StateField,
   type EditorState,
   type Extension,
@@ -8,17 +7,15 @@ import {
 import {
   Decoration,
   EditorView,
-  ViewPlugin,
   WidgetType,
   type DecorationSet,
-  type ViewUpdate,
 } from '@codemirror/view';
 
 import { analyze } from './analysis';
-import { Compiler, type Evaluation } from './compile';
-import { lambadaCompilations, type CompileConfig } from './compilation';
+import { results } from './compile';
+import { lambadaCompilations } from './compilation';
+import type { Resolved } from './config';
 import { treeOf, type Tree, type Value } from './tree';
-import { defaultCompiler } from './generated/compiler';
 
 /** A statement that is an expression, and the whole program that produces it. */
 interface Expression {
@@ -137,15 +134,10 @@ function written(tree: Tree): string {
   return parts.join('');
 }
 
-const setEvaluations = StateEffect.define<ReadonlyMap<string, Evaluation>>();
-
-const evaluations = StateField.define<ReadonlyMap<string, Evaluation>>({
-  create: () => new Map(),
-  update(value, tr) {
-    for (const effect of tr.effects) if (effect.is(setEvaluations)) return effect.value;
-    return value;
-  },
-});
+// A worker of its own. Evaluating is unbounded, and a program that will not
+// finish must not hold up the compilations that mark the document and feed the
+// completions.
+const evaluated = results<Value>('run');
 
 class InlinePreview extends WidgetType {
   constructor(readonly text: string) {
@@ -222,31 +214,28 @@ interface Previews {
   decorations: DecorationSet;
 }
 
-const previewDecorations = (environment: string, preview: (value: Tree) => Preview) =>
+const previewDecorations = (config: Resolved) =>
   StateField.define<Previews>({
-    create: (state) => build(state, environment, preview, new Map()),
+    create: (state) => build(state, config, new Map()),
     update: (value, tr) =>
-      tr.docChanged || tr.effects.length
-        ? build(tr.state, environment, preview, value.shown)
-        : value,
+      tr.docChanged || tr.effects.length ? build(tr.state, config, value.shown) : value,
     provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
 
 function build(
   state: EditorState,
-  environment: string,
-  preview: (value: Tree) => Preview,
+  config: Resolved,
   shown: Map<string, Preview>,
 ): Previews {
   const builder = new RangeSetBuilder<Decoration>();
-  const known = state.field(evaluations);
+  const known = state.field(evaluated.field);
   const live = new Set<string>();
-  for (const expression of expressionsIn(state, environment)) {
+  for (const expression of expressionsIn(state, config.environment)) {
     const evaluation = known.get(expression.dag);
     if (evaluation?.status !== 'ok') continue;
     live.add(expression.dag);
     let value = shown.get(expression.dag);
-    if (!value) shown.set(expression.dag, (value = preview(treeOf(evaluation))));
+    if (!value) shown.set(expression.dag, (value = config.preview(treeOf(evaluation))));
     builder.add(
       expression.to,
       expression.to,
@@ -263,79 +252,13 @@ function build(
   return { shown, decorations: builder.finish() };
 }
 
-export function previews(
-  environment: string,
-  { compiler = defaultCompiler, timeout = 10000, previewResults = true }: CompileConfig,
-): Extension {
-  const preview =
-    typeof previewResults === 'function' ? previewResults : defaultPreview;
-
-  const plugin = ViewPlugin.fromClass(
-    class {
-      runner: Compiler<Value>;
-      queued = false;
-      dead = false;
-
-      constructor(readonly view: EditorView) {
-        // A worker of its own. Evaluating is unbounded, and a program that
-        // will not finish must not hold up the compilations that mark the
-        // document and feed the completions.
-        this.runner = new Compiler<Value>(compiler, timeout, () => this.schedule(), 'run');
-        this.sync();
-      }
-
-      update(update: ViewUpdate) {
-        if (update.docChanged || update.transactions.some((tr) => tr.effects.length))
-          this.sync();
-      }
-
-      sync() {
-        const wanted = new Set(
-          expressionsIn(this.view.state, environment).map((e) => e.dag),
-        );
-        this.runner.retain(wanted);
-        for (const dag of wanted) this.runner.request(dag);
-        this.schedule();
-      }
-
-      // As with compilations: never dispatch from inside an update.
-      schedule() {
-        if (this.queued || this.dead) return;
-        this.queued = true;
-        setTimeout(() => {
-          this.queued = false;
-          if (!this.dead) this.publish();
-        }, 0);
-      }
-
-      publish() {
-        const next = new Map<string, Evaluation>();
-        for (const { dag } of expressionsIn(this.view.state, environment)) {
-          const value = this.runner.get(dag);
-          if (value) next.set(dag, value);
-        }
-        if (same(next, this.view.state.field(evaluations))) return;
-        this.view.dispatch({ effects: setEvaluations.of(next) });
-      }
-
-      destroy() {
-        this.dead = true;
-        this.runner.destroy();
-      }
-    },
-  );
-
-  return [theme, evaluations, previewDecorations(environment, preview), plugin];
-}
-
-function same(
-  a: ReadonlyMap<string, Evaluation>,
-  b: ReadonlyMap<string, Evaluation>,
-): boolean {
-  if (a.size !== b.size) return false;
-  for (const [key, value] of a) {
-    const other = b.get(key);
-    if (!other || other.status !== value.status) return false;
-  }
-  return true;
+export function previews(config: Resolved): Extension {
+  return [
+    theme,
+    evaluated.field,
+    previewDecorations(config),
+    evaluated.keep(config, (state) =>
+      expressionsIn(state, config.environment).map((expression) => expression.dag),
+    ),
+  ];
 }

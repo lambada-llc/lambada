@@ -6,6 +6,7 @@ import type { Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import { isOfferable, scopeAt } from './analysis';
+import type { Resolved } from './config';
 import { lambadaLanguage } from './language';
 
 // The same fix the diagnostics needed, for the same reason: a theme that picks
@@ -45,7 +46,7 @@ const identifier =
  * host with more to offer — a standard library, snippets — adds theirs beside
  * it and both appear.
  */
-export function completions(environment: string): Extension {
+export function completions(config: Resolved): Extension {
   return [
     theme,
     lambadaLanguage.data.of({
@@ -57,7 +58,7 @@ export function completions(environment: string): Extension {
         const options = [];
         for (const [name, definedIn] of scopeAt(
           context.state,
-          environment,
+          config.environment,
           context.pos,
         )) {
           if (!isOfferable(name)) continue;
