@@ -18,6 +18,13 @@
 // The test signal is the diff, not an exit code: a result that changed shows up
 // as a changed source file, to be reviewed and committed or fixed.
 //
+// The bundle is read in two parts: the library, and each test as a DAG of its
+// own evaluated against it. Compiled, a test is a binding like any other, and
+// an evaluator that normalizes what it reads — which is what a repository
+// holding itself to eager termination asks for — would run every test in the
+// library before the first result could be written. Split, a test costs what it
+// costs, where it is reported, and one that fails to finish is named.
+//
 // An expression that evaluates to a file — △ (△ <name> <media type>) <bytes> —
 // is written into a sibling expect-test-out/ directory instead, and the comment
 // records its name and content hash.
@@ -95,13 +102,13 @@ function remove_stale(stale) {
 }
 
 /** Group the bundle's test symbols by the source they came from. */
-function tests_by_source(runtime, root, bundle) {
-  const { DagModule, is_label } = runtime;
+function tests_by_source(runtime, root, linked) {
+  const { is_label } = runtime;
   const defining_line = new Map();
   const by_source = new Map();
   const compiled_from = new Map();
 
-  for (const line of DagModule.parse(bundle).lines) {
+  for (const line of linked.lines) {
     if (line.length === 2 || line.length === 3) defining_line.set(line[0], line);
     if (line.length !== 2 || !is_label(line[0].symbol)) continue;
 
@@ -141,12 +148,44 @@ function check_compiled_from(source_path, content, recorded) {
       + 'on the wrong lines; compile and link again');
 }
 
+/**
+ * One test as a DAG to be read against the library, ending in a fork of the two
+ * values it yields: the expression itself, which is what a file has to be
+ * recognized on, and the expression through `_to_string`, which is what the
+ * result comment says.
+ *
+ * One fork rather than two reductions, because the first value is inside the
+ * second — asked for separately they would be computed twice, and neither half
+ * is forced before something reads it.
+ */
+function test_dag({ box, LEAF }, own, expression, symbol) {
+  const [stem, pair] = [box(':stem'), box(':pair')];
+  own.lines.push([stem, box(LEAF), box(expression)], [pair, stem, box(symbol)]);
+  return own.toString([pair.symbol]);
+}
+
 function expect_test({ runtime, root, bundle_path }) {
-  const { environment, evaluator, marshal, to_file } = runtime;
+  const { DagModule, LEAF, environment, evaluator, marshal, to_file } = runtime;
 
   const bundle = readFileSync(bundle_path, 'utf8');
-  const get = environment(evaluator, bundle, { origin: bundle_path });
-  const { defining_line, by_source, compiled_from } = tests_by_source(runtime, root, bundle);
+  const linked = DagModule.parse(bundle);
+  const { defining_line, by_source, compiled_from } = tests_by_source(runtime, root, linked);
+
+  // Nothing in the bundle refers to a test, so every test is a root the library
+  // is entirely separable from. Only the library goes into scope; the tests are
+  // read one at a time against it, below.
+  const { shared, exclusive } = linked.partition(
+    [...by_source.values()].flatMap(({ tests }) => tests.map(({ symbol }) => symbol)));
+  const get = environment(evaluator, shared.toString(), { origin: bundle_path });
+  const not_a_pair = () => { throw new Error('a test did not reduce to a pair of values'); };
+  const halves = evaluator.triage(not_a_pair, not_a_pair, (raw, rendered) => [raw, rendered]);
+
+  // Read the library before the first test rather than during it — asking for
+  // anything at all is what pulls it into scope, and what it costs is its own
+  // to report. Splitting the bundle is what makes that cost separable; saying
+  // whose it is is what makes the split visible.
+  process.stderr.write('  the library\n');
+  get.reduce(`${LEAF}\n`);
 
   const stale = generated_files(root);
   for (const [source_path, { file_directory, tests }] of by_source) {
@@ -166,7 +205,9 @@ function expect_test({ runtime, root, bundle_path }) {
 
       let result;
       try {
-        const file = to_file(evaluator, get(expression));
+        const [raw, rendered] = halves(
+          get.reduce(test_dag(runtime, exclusive.get(symbol), expression, symbol)));
+        const file = to_file(evaluator, raw);
         if (file) {
           mkdirSync(file_directory, { recursive: true });
           const path = resolve(file_directory, file.name);
@@ -176,7 +217,7 @@ function expect_test({ runtime, root, bundle_path }) {
           const hash = createHash('sha256').update(file.bytes).digest('hex');
           result = `${file.name} sha256:${hash}`;
         } else {
-          result = marshal.to_string(get(symbol));
+          result = marshal.to_string(rendered);
         }
       } catch (error) {
         throw new Error(`${source_path}:${physical[code_line]}: ${error.message}`);
