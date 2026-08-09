@@ -18,8 +18,9 @@ Serialize.to_source Serialize.to_source
 size size
 
 # More powerful library functions -- still nothing but trees!
-size Qr.svg_of_string
-file "qr.svg" "image/svg+xml" $ Qr.svg_of_string "https://treecalcul.us/"
+qr_svg = compose Qr.to_svg Qr.create
+size qr_svg
+file "qr.svg" "image/svg+xml" $ qr_svg "https://treecalcul.us/"
 
 # Syntax medley
 map_of_examples =
