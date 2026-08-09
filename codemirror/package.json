@@ -29,7 +29,7 @@
     "prebuild:lib": "npm run generate",
     "predev": "npm run generate",
     "pretypecheck": "npm run generate",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.worker.json"
   },
   "peerDependencies": {
     "@codemirror/autocomplete": "^6.0.0",
@@ -54,6 +54,7 @@
     "cm6-theme-basic-dark": "^0.2.0",
     "cm6-theme-basic-light": "^0.2.0",
     "codemirror": "^6.0.2",
+    "esbuild": "^0.28.1",
     "typescript": "^5.7.0",
     "vite": "^7.0.0"
   }

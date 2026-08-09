@@ -17,6 +17,18 @@ export interface Value {
 }
 
 /**
+ * The DAG the compiler emitted for one statement, and what it cost.
+ *
+ * Here beside [Value] because the two are what the worker sends back, and this
+ * file is the only one it can read them from: everything else reaches the
+ * editor, and the worker has no DOM to reach it with.
+ */
+export interface Compiled {
+  dagLines: readonly string[];
+  steps: number;
+}
+
+/**
  * The tree a value stands for.
  *
  * Put together here rather than sent as one, because the structured clone that

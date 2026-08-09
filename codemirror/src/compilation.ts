@@ -3,12 +3,7 @@ import type { EditorState, Extension, StateField } from '@codemirror/state';
 import { results, type Outcome } from './worker';
 import type { Resolved } from './config';
 import { lambadaStatements } from './statements';
-
-/** The DAG the compiler emitted for one statement, and what it cost. */
-interface Compiled {
-  dagLines: readonly string[];
-  steps: number;
-}
+import type { Compiled } from './tree';
 
 /** What the compiler produced for one statement. */
 export type Compilation = Outcome<Compiled>;
