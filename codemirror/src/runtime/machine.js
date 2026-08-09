@@ -6,49 +6,116 @@
 // offers, and is what the worker is checked against. Taken from
 // https://github.com/lambada-llc/tree-calculus (MIT), where the originals are
 // `implementation/typescript/src/common.mjs`, `format/dag.mjs` and
-// `evaluator/lazy-stacks.mjs`.
+// `evaluator/lazy-stacks-opt.mjs`.
 
 // --- evaluator: lazy, with an explicit stack ------------------------------
 // `apply` costs nothing — it conses. Everything happens in `triage`, which
 // forces, which is why a runaway program can only be stopped by killing the
 // thread it runs on.
+//
+// A step whose operand is not yet a value cannot proceed, so it pushes its
+// three operands back, puts that operand on the work stack, and runs again once
+// it has been forced. Re-running costs three pops and a length test, and can
+// happen at most once per force, because forcing leaves the operand a value.
+// Hence the step count sits at each rewrite rather than at the top of the loop:
+// a re-run is not a reduction.
+//
+// The pushes are written out per length rather than spread. Forcing reduces a
+// node to a value, so every operand pushed here holds at most two arguments,
+// and a spread costs a variadic call where a fixed-arity push does not. The
+// exception is rule 2's `y`, which is not forced, so its common lengths are
+// unrolled and the general case kept.
 
-const reduce_one = function* (s) {
-  while (s.length >= 3) {
-    steps.count++;
-    const x = s.pop(),
-      y = s.pop(),
-      z = s.pop();
-    if (x.length > 2) yield x;
-    if (x.length === 0) {
-      if (y.length > 2) yield y;
-      s.push(...y); // leaf
-    } else if (x.length === 1) {
-      if (x[0].length > 2) yield x[0];
-      s.push([z, ...y], z, ...x[0]);
-    } else if (x.length === 2) {
-      // fork
-      if (z.length > 2) yield z;
-      if (z.length === 0) {
-        if (x[1].length > 2) yield x[1];
-        s.push(...x[1]);
-      } else if (z.length === 1) {
-        if (x[0].length > 2) yield x[0];
-        s.push(z[0], ...x[0]);
-      } else if (z.length === 2) {
-        if (y.length > 2) yield y;
-        s.push(z[0], z[1], ...y);
+function force_root(root) {
+  const work = [root];
+  outer: while (work.length > 0) {
+    const s = work[work.length - 1];
+    while (s.length >= 3) {
+      const x = s.pop(),
+        y = s.pop(),
+        z = s.pop();
+      if (x.length > 2) {
+        s.push(z, y, x);
+        work.push(x);
+        continue outer;
+      }
+      if (x.length === 0) {
+        // leaf
+        if (y.length > 2) {
+          s.push(z, y, x);
+          work.push(y);
+          continue outer;
+        }
+        steps.count++;
+        if (y.length === 1) s.push(y[0]);
+        else if (y.length === 2) s.push(y[0], y[1]);
+      } else if (x.length === 1) {
+        const u = x[0];
+        if (u.length > 2) {
+          s.push(z, y, x);
+          work.push(u);
+          continue outer;
+        }
+        steps.count++;
+        // [z, ...y] is tricky:
+        // - if y is unreduced and we don't force it, we may end up reducing it multiple times
+        // - if y is unreduced and we force it, it might end up getting dropped
+        const yz =
+          y.length === 0
+            ? [z]
+            : y.length === 1
+              ? [z, y[0]]
+              : y.length === 2
+                ? [z, y[0], y[1]]
+                : [z, ...y];
+        if (u.length === 0) s.push(yz, z);
+        else if (u.length === 1) s.push(yz, z, u[0]);
+        else s.push(yz, z, u[0], u[1]);
+      } else {
+        // fork
+        if (z.length > 2) {
+          s.push(z, y, x);
+          work.push(z);
+          continue outer;
+        }
+        if (z.length === 0) {
+          // leaf
+          const v = x[1];
+          if (v.length > 2) {
+            s.push(z, y, x);
+            work.push(v);
+            continue outer;
+          }
+          steps.count++;
+          if (v.length === 1) s.push(v[0]);
+          else if (v.length === 2) s.push(v[0], v[1]);
+        } else if (z.length === 1) {
+          // stem
+          const u = x[0];
+          if (u.length > 2) {
+            s.push(z, y, x);
+            work.push(u);
+            continue outer;
+          }
+          steps.count++;
+          if (u.length === 0) s.push(z[0]);
+          else if (u.length === 1) s.push(z[0], u[0]);
+          else s.push(z[0], u[0], u[1]);
+        } else {
+          // fork
+          if (y.length > 2) {
+            s.push(z, y, x);
+            work.push(y);
+            continue outer;
+          }
+          steps.count++;
+          if (y.length === 0) s.push(z[0], z[1]);
+          else if (y.length === 1) s.push(z[0], z[1], y[0]);
+          else s.push(z[0], z[1], y[0], y[1]);
+        }
       }
     }
-  }
-};
-
-function force_root(expression) {
-  const force = [reduce_one(expression)];
-  while (force.length > 0) {
-    const next = force[force.length - 1].next();
-    if (next.done) force.pop();
-    else force.push(reduce_one(next.value));
+    work.pop();
   }
 }
 
