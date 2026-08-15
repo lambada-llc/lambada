@@ -71,10 +71,9 @@ to_javascript example_program
 # 2. Bash runtime (leaning on Perl, in particular for PCRE substitutions)
 binstr_quote = \x (fix $ \self triage (△ 49) (\x \rest △ 48 $ △ 49 $ self x rest) (\x \y \rest △ 48 $ △ 48 $ △ 49 $ self x $ self y rest)) x △
 map = \f foldr (\e \a △ (f e) a) []
-amp2quot = map (\c match_bool 34 c $ equal 38 c)
-to_bash = \program concat_list [[35], "!/bin/bash
+to_bash = \program concat_list ["#!/bin/bash
   set -euo pipefail
-  program=", binstr_quote program, amp2quot " # this environment here does not support escaping, meaning we can'△ write double quotes in string constants; so we use & for quotes
+  program=", binstr_quote program, "
   # Runtime
   function reduce {
     # 00011ab -> a
@@ -87,24 +86,24 @@ to_bash = \program concat_list [[35], "!/bin/bash
   # Conversions: string <=> encoded tree
   function of_list () {
     while read -r line; do
-      echo -n &001$line&
+      echo -n \"001$line\"
     done
     echo 1
   }
   function to_list () {
-    sed 's/1$//' | perl -pe &s/0(1|0(?1)(?1))/\1\n/g& | sed -e 's/^01//g;$d'
+    sed 's/1$//' | perl -pe \"s/0(1|0(?1)(?1))/\\1\\n/g\" | sed -e 's/^01//g;$d'
   }
   function of_string () {
-    perl -ne 'printf &%vb\n&, $_'  | tr . '\n' | rev | sed 's/0/a/g;s/1/001011/g;s/a/0011/g;s/$/1/' | of_list
+    perl -ne 'printf \"%vb\\n\", $_'  | tr . '\\n' | rev | sed 's/0/a/g;s/1/001011/g;s/a/0011/g;s/$/1/' | of_list
   }
   function to_string () {
-    to_list | sed 's/1$//;s/0011/a/g;s/001011/1/g;s/a/0/g' | rev | echo &ibase=2;$(cat)& | bc | while read -r N; do printf &\\$(printf '%03o' &$N&)&; done
+    to_list | sed 's/1$//;s/0011/a/g;s/001011/1/g;s/a/0/g' | rev | echo \"ibase=2;$(cat)\" | bc | while read -r N; do printf \"\\\\$(printf '%03o' \"$N\")\"; done
   }
   
   fifo=$(mktemp -u)
-  mkfifo &$fifo&
-  (echo -n 0$program; of_string) | reduce &$fifo& | to_string
-  rm -f &$fifo&
+  mkfifo \"$fifo\"
+  (echo -n 0$program; of_string) | reduce \"$fifo\" | to_string
+  rm -f \"$fifo\"
  "
  ]
 △ (△ "demo.sh" "text/x-shellscript") $ to_bash example_program

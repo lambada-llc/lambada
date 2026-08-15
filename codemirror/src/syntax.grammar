@@ -40,8 +40,10 @@ Identifier { identifier }
 
   identifier { identifierStart identifierChar* }
 
-  // `parse_until _is_quot` — no escape sequences, a `"` always closes.
-  String { '"' !["]* '"' }
+  // A backslash escapes the character after it, so only an unescaped `"`
+  // closes. Which escapes the compiler accepts is its business — colouring one
+  // it rejects as part of the string beats ending the string early.
+  String { '"' (!["\\] | "\\" _)* '"' }
 
   // `parse_any` takes one code point, so `'x'`, `'△'` and `'🤡'` all fit. The
   // quote is allowed through deliberately: `'''` is how the compiler reads a

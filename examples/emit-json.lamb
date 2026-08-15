@@ -36,7 +36,7 @@ equal = fix $ \self triage
 # about how one would be able to evaluate that configuration in
 # environments besides this playground here.
 JSON = Null | Bool b | String s | Array a | Object list_of_pairs_of_string_and_json # skipping numbers here
-ctrl_to_escape = (\s \e \d \c \b \a concat "\u00" $ △ (△ e 24) $
+ctrl_to_escape = (\s \e \d \c \b \a concat "\\u00" $ △ (△ e 24) $
   s (△ (△ a $ △ b $ △ c $ 6) △) (s (s (s "8" "9") (s "a" "b")) (s (s "c" "d") (s "e" "f")) c b a) d
   ) match_bool
 is_ctrl_char = triage (\on_ctrl \on_other on_ctrl false false false false false) △ $ 
@@ -46,8 +46,8 @@ is_ctrl_char = triage (\on_ctrl \on_other on_ctrl false false false false false)
             \d triage (\on_ctrl \on_other on_ctrl false d c b a) △ $
             \e triage (\on_ctrl \on_other on_ctrl e d c b a) △ $
             \_ \_ (\on_ctrl \on_other on_other)
-quote_string = \s concats $ map (\c is_ctrl_char c ctrl_to_escape $ match_bool (match_bool [c] [92,92] (equal 92 c)) [92,34] (equal 34 c)) s
-quote_string = \s concats [[34],quote_string s,[34]]
+quote_string = \s concats $ map (\c is_ctrl_char c ctrl_to_escape $ match_bool (match_bool [c] "\\\\" (equal 92 c)) "\\\"" (equal 34 c)) s
+quote_string = \s concats ["\"",quote_string s,"\""]
 to_string = fix $ \self \json json
   "null"
   (triage "false" (\_ "true") △)
