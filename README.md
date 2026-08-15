@@ -55,6 +55,9 @@ What is notable is that, being reflective, tree calculus can all by itself conve
 - Natural numbers `123` desugar to lists of booleans representing their binary encoding, with the least significant bit (LSB) as first element of the list.
 - Character constants `'🤡'` desugar like their corresponding unicode code point (as a natural number) would. 
 - String constants `"foo"` desugar like a list of their corresponding unicode code points would.
+  A backslash escapes the next character, as in JSON but only as far as JSON's simple cases go: `\"`, `\\`, `\n`, `\t`, `\r`.
+  Any other character after a backslash is an error, and a string may still span lines by containing a line break as it is written.
+  Character constants take the character verbatim, so `'\'` and `'''` need no escape.
 - Records `{ k: v, ... }` desugar to `map_set k v ...` where the empty list `{}` desugars to `△`.
   The `: v` part is optional, `v` is assumed to be `△` when omitted. This is useful for defining sets.
   Note that `k` may be any value. Using string constants results in JSON-like notation.
