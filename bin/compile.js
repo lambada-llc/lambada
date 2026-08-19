@@ -12,7 +12,7 @@
 
 const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
 const { basename, dirname, relative, resolve } = require('path');
-const { sources, chunks, namespace, test_symbol, source_symbol } = require('./project.js');
+const { lamb_base, sources, chunks, namespace, test_symbol, source_symbol } = require('./project.js');
 
 // The compiler names the leaf `__ENV△` in its output, as a reference to the
 // binding compile.sh puts in front of everything it emits. Nothing downstream
@@ -118,7 +118,7 @@ function compile({ runtime, root, compiler, cache_dir, cwd }) {
     // tests were named after.
     module.lines.push([box(source_symbol(root, source_path, source)), box(LEAF)]);
 
-    const name = basename(source_path, '.lamb');
+    const name = lamb_base(basename(source_path));
     writeFileSync(resolve(dirname(source_path), `.${name}.dag`), module.toString());
   }
 }

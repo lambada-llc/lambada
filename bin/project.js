@@ -11,7 +11,7 @@
 // splits into compilable pieces, and how a path turns into a namespace and back.
 
 const { createHash } = require('crypto');
-const { readdirSync } = require('fs');
+const { existsSync, readdirSync } = require('fs');
 const { relative, resolve } = require('path');
 
 /** Where a test's generated files go, as a sibling of the source that made them. */
@@ -20,6 +20,36 @@ const EXPECT_DIR = 'expect-test-out';
 const TEST_SYMBOL = /^:test\.((?:[^.]+\.)+)(\d+)$/;
 const SOURCE_SYMBOL = /^:source\.((?:[^.]+\.)+)([0-9a-f]{64})$/;
 
+// A source file is `<name>.lamb`. Extra extensions may sit between the two —
+// `<name>.<anything>.lamb` — and are the project's own business. They are not
+// part of the name: `<name>` alone names the module, its DAG and its test
+// symbols, so marking a file this way renames nothing and moves no result.
+const LAMB_EXT = '.lamb';
+
+const is_lamb_file = name => name.endsWith(LAMB_EXT);
+
+/** What a source file name names: everything before its extensions. */
+function lamb_base(name) {
+  const dot = name.indexOf('.');
+  return dot === -1 ? name : name.slice(0, dot);
+}
+
+/**
+ * The source file that `base_path` names, whatever extensions it carries.
+ *
+ * Found by looking rather than by guessing, since the extensions are not this
+ * file's to know. Falls back to the bare spelling when there is nothing there,
+ * so the caller reports a missing source rather than an empty directory.
+ */
+function lamb_source_path(base_path) {
+  const at = base_path.lastIndexOf('/');
+  const [dir, name] = at === -1 ? ['.', base_path] : [base_path.slice(0, at), base_path.slice(at + 1)];
+  let entries;
+  try { entries = readdirSync(dir); } catch { return base_path + LAMB_EXT; }
+  const found = entries.filter(e => is_lamb_file(e) && lamb_base(e) === name).sort();
+  return found.length ? `${dir}/${found[0]}` : base_path + LAMB_EXT;
+}
+
 /** Every `.lamb` file under `dir`, in a stable order. */
 function sources(dir) {
   const found = [];
@@ -27,7 +57,7 @@ function sources(dir) {
     for (const entry of readdirSync(current, { withFileTypes: true })) {
       const full = resolve(current, entry.name);
       if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith('.lamb')) found.push(full);
+      else if (is_lamb_file(entry.name)) found.push(full);
     }
   })(dir);
   return found.sort();
@@ -96,10 +126,9 @@ const lower_initial = part => part.charAt(0).toLowerCase() + part.slice(1);
  * root `src` gives `['Bool.', 'Bool.']` — one for the directory, one for the file.
  */
 function namespace_parts(root, source_path) {
-  return relative(resolve(root), resolve(source_path))
-    .replace(/\.lamb$/, '')
-    .split('/')
-    .map(part => capitalize(sanitize(part)) + '.');
+  const parts = relative(resolve(root), resolve(source_path)).split('/');
+  parts[parts.length - 1] = lamb_base(parts[parts.length - 1]);
+  return parts.map(part => capitalize(sanitize(part)) + '.');
 }
 
 /** What a source's exports are prefixed with. Files at the root export unqualified. */
@@ -121,7 +150,7 @@ function test_symbol(root, source_path, code_line) {
 function source_of(root, prefix) {
   const segments = prefix.split('.').filter(Boolean).map(lower_initial);
   return {
-    source_path: `${root}/${segments.join('/')}.lamb`,
+    source_path: lamb_source_path(`${root}/${segments.join('/')}`),
     file_directory: [root, ...segments.slice(0, -1), EXPECT_DIR].join('/'),
   };
 }
@@ -159,6 +188,9 @@ const is_source_symbol = symbol => SOURCE_SYMBOL.test(symbol);
 
 module.exports = {
   EXPECT_DIR,
+  is_lamb_file,
+  lamb_base,
+  lamb_source_path,
   sources,
   chunks,
   is_source_line,

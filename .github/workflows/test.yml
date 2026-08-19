@@ -1,0 +1,28 @@
+# Runs the build tool's own tests.
+name: test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bin/**'
+      - '.github/workflows/test.yml'
+  pull_request:
+    paths:
+      - 'bin/**'
+      - '.github/workflows/test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # No dependencies to install: the tool is Node and nothing else.
+      - run: node bin/test.js
