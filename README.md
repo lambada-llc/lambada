@@ -58,7 +58,7 @@ What is notable is that, being reflective, tree calculus can all by itself conve
   A backslash escapes the next character, as in JSON but only as far as JSON's simple cases go: `\"`, `\\`, `\n`, `\t`, `\r`.
   Any other character after a backslash is an error, and a string may still span lines by containing a line break as it is written.
   Character constants take the character verbatim, so `'\'` and `'''` need no escape.
-- Records `{ k: v, ... }` desugar to `map_set k v ...` where the empty list `{}` desugars to `△`.
+- Records `{ k: v, ... }` desugar to `Map.set k v ...` where the empty list `{}` desugars to `△`.
   The `: v` part is optional, `v` is assumed to be `△` when omitted. This is useful for defining sets.
   Note that `k` may be any value. Using string constants results in JSON-like notation.
 - Expressions can be assigned to names using `=`, which hides any potential previous meaning of that same name to all code that follows. Those names may not start with an uppercase ASCII character, because those are reserved for:
