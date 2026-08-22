@@ -2,4 +2,3 @@ node_modules/
 demo-dist/
 dist/
 src/generated/
-test/.build/
