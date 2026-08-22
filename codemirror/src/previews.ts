@@ -166,6 +166,11 @@ class InlinePreview extends WidgetType {
   }
 }
 
+// Keyed by the wrap rather than kept on the widget, because `destroy` is
+// handed the DOM: the editor can make a widget's DOM again after discarding
+// it, and the old wrap's watcher must not take the new one's with it.
+const watchers = new WeakMap<HTMLElement, ResizeObserver>();
+
 class BlockPreview extends WidgetType {
   constructor(
     readonly element: HTMLElement,
@@ -185,13 +190,29 @@ class BlockPreview extends WidgetType {
 
   toDOM(): HTMLElement {
     // Wrapped rather than sized directly: the element belongs to the host.
-    // A floor rather than a height, so an element that grows — one that has
-    // loaded, or been expanded — moves the code below rather than covering it.
+    // Floored at the estimate, and the floor holds the room only until the
+    // content takes it — while the element has no height of its own, it keeps
+    // the document from reflowing under the reader; at the first report of a
+    // real box it comes down, and from then on the element speaks for itself,
+    // both ways: growing moves the code below rather than covering it, and
+    // settling smaller than the guess leaves no dead space. A report of no
+    // height — not laid out yet, or detached — settles nothing.
     const wrap = document.createElement('div');
     wrap.className = 'cm-preview-block';
     wrap.style.minHeight = `${this.height}px`;
     wrap.appendChild(this.element);
+    const watcher = new ResizeObserver((entries) => {
+      if (!entries.some((entry) => entry.contentRect.height > 0)) return;
+      wrap.style.minHeight = '';
+      watcher.disconnect();
+    });
+    watcher.observe(this.element);
+    watchers.set(wrap, watcher);
     return wrap;
+  }
+
+  destroy(dom: HTMLElement): void {
+    watchers.get(dom)?.disconnect();
   }
 }
 
