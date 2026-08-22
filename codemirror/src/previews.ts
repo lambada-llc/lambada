@@ -166,6 +166,42 @@ class InlinePreview extends WidgetType {
   }
 }
 
+/**
+ * The host's element under a floor. Wrapped rather than sized directly: the
+ * element belongs to the host. The floor is the editor's estimate, and it
+ * holds the room only until the content takes it — while the element has no
+ * height of its own, the estimate keeps the document from reflowing under the
+ * reader, and on the element's first report of a real box the floor comes
+ * down and the element speaks for itself, in both directions: one that grows
+ * moves the code below rather than covering it, and one that settles smaller
+ * than the guess leaves no dead space under it. A report of no height — not
+ * laid out yet, or detached — settles nothing, so the floor stands through it.
+ *
+ * `release` ends the watch for a wrap discarded before its element ever had a
+ * box. Exported for the tests; the package exports [previews], not this.
+ */
+export function floored(
+  element: HTMLElement,
+  height: number,
+): { wrap: HTMLElement; release: () => void } {
+  const wrap = document.createElement('div');
+  wrap.className = 'cm-preview-block';
+  wrap.style.minHeight = `${height}px`;
+  wrap.appendChild(element);
+  const watcher = new ResizeObserver((entries) => {
+    if (!entries.some((entry) => entry.contentRect.height > 0)) return;
+    wrap.style.minHeight = '';
+    watcher.disconnect();
+  });
+  watcher.observe(element);
+  return { wrap, release: () => watcher.disconnect() };
+}
+
+// Keyed by the wrap rather than kept on the widget, because `destroy` is
+// handed the DOM: the editor can make a widget's DOM again after discarding
+// it, and the old wrap's watcher must not take the new one's with it.
+const releases = new WeakMap<HTMLElement, () => void>();
+
 class BlockPreview extends WidgetType {
   constructor(
     readonly element: HTMLElement,
@@ -184,14 +220,13 @@ class BlockPreview extends WidgetType {
   }
 
   toDOM(): HTMLElement {
-    // Wrapped rather than sized directly: the element belongs to the host.
-    // A floor rather than a height, so an element that grows — one that has
-    // loaded, or been expanded — moves the code below rather than covering it.
-    const wrap = document.createElement('div');
-    wrap.className = 'cm-preview-block';
-    wrap.style.minHeight = `${this.height}px`;
-    wrap.appendChild(this.element);
+    const { wrap, release } = floored(this.element, this.height);
+    releases.set(wrap, release);
     return wrap;
+  }
+
+  destroy(dom: HTMLElement): void {
+    releases.get(dom)?.();
   }
 }
 

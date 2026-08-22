@@ -28,7 +28,9 @@
     "prebuild:demo": "npm run generate",
     "prebuild:lib": "npm run generate",
     "predev": "npm run generate",
+    "pretest": "npm run generate",
     "pretypecheck": "npm run generate",
+    "test": "esbuild test/previews.test.ts --bundle --platform=node --format=esm --outfile=test/.build/previews.test.mjs && node --test test/.build/previews.test.mjs",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.worker.json"
   },
   "peerDependencies": {

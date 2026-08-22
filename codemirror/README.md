@@ -83,6 +83,7 @@ editor still works, nothing is marked, and the reason is logged once.
 ``` bash
 npm install
 npm run dev         # the demo, served
+npm test            # the tests, on Node's own runner
 npm run build       # both of the below
 npm run build:lib   # the library, written to dist/
 npm run build:demo  # the demo page, written to demo-dist/
