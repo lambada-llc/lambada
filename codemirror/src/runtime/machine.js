@@ -156,7 +156,7 @@ const children = (e, x) =>
 // `a b c` reads as "let a = b c in", `a b` as "let a = b in", and a bare `a`
 // terminates the document, naming its value.
 
-function dagOf(e, s) {
+function treeOfDag(e, s) {
   const env = { '△': e.leaf };
   const get = (name) => (name in env ? env[name] : raise(`unbound variable: ${name}`));
   for (const line of s.split(/\r?\n/)) {
@@ -261,7 +261,7 @@ function makeMarshal(e) {
 function makeMachine() {
   const m = makeMarshal(evaluator);
   return {
-    ofDag: (text) => dagOf(evaluator, text.trimEnd()),
+    ofDag: (text) => treeOfDag(evaluator, text.trimEnd()),
     toNodes: (tree) => nodesOf(evaluator, tree),
     ofString: (s) => m.of_string(s),
     toString: (tree) => m.to_string(tree),

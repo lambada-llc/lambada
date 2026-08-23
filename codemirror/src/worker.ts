@@ -22,8 +22,12 @@ export type Outcome<T> =
  */
 const spares = 32;
 
+/** Told once per page: both workers fail for the same reason, together. */
+let blamed = false;
+
 /**
- * A compiler running on a worker of its own.
+ * Questions asked of a worker of its own, one at a time. Which question is the
+ * `action`: statements to compile, or expressions to evaluate.
  *
  * The worker is started from a blob rather than a URL: the source has no
  * imports, so there is nothing for a bundler or an import map to resolve, and
@@ -31,10 +35,10 @@ const spares = 32;
  * files. A host with a content security policy has to allow `blob:` workers —
  * `worker-src`, `child-src` or `script-src` will each do it.
  *
- * Killing the worker is the only way to stop a compilation: evaluating a tree
- * is one synchronous loop, so nothing in the page can interrupt it.
+ * Killing the worker is the only way to stop one: reducing a tree is one
+ * synchronous loop, so nothing in the page can interrupt it.
  */
-export class Compiler<T> {
+class Jobs<T> {
   #worker: Worker | null = null;
   #url: string;
   #dag: string;
@@ -70,7 +74,7 @@ export class Compiler<T> {
     return this.#results.get(text);
   }
 
-  /** Ask for a compilation, unless the answer is already to hand. */
+  /** Ask, unless the answer is already to hand. */
   request(text: string): void {
     if (this.#destroyed || this.#results.has(text)) return;
     const kept = this.#spare.get(text);
@@ -87,8 +91,9 @@ export class Compiler<T> {
 
   /**
    * Drop everything no longer in `keep`. Work already in flight is left to
-   * finish rather than cancelled: a compilation costs single-digit
-   * milliseconds, and restarting the worker to save one costs far more.
+   * finish or to time out rather than cancelled: nothing in the page can
+   * interrupt the thread, so cancelling means killing it, and a compilation
+   * costs single-digit milliseconds where a respawn costs far more.
    *
    * An answer that had been reached is set aside rather than thrown away. The
    * same input always evaluates to the same thing, so keeping one is only ever
@@ -164,11 +169,14 @@ export class Compiler<T> {
     // Nothing gets marked: the statements are not wrong, there is just nothing
     // to say about them, and marking every line red would claim otherwise.
     if (this.#destroyed) return;
-    console.warn(
-      'lambada: the compiler worker could not be started, so nothing will be ' +
-        'compiled. A content security policy has to allow blob: workers — ' +
-        'worker-src, child-src or script-src will each do it.',
-    );
+    if (!blamed) {
+      blamed = true;
+      console.warn(
+        'lambada: a worker could not be started, so nothing will be compiled ' +
+          'or evaluated. A content security policy has to allow blob: workers ' +
+          '— worker-src, child-src or script-src will each do it.',
+      );
+    }
     this.#clearTimer();
     this.#queue = [];
     this.#results.clear();
@@ -197,7 +205,10 @@ export class Compiler<T> {
     this.#worker?.removeEventListener('error', this.#onError);
     this.#worker?.terminate();
     if (current)
-      this.#settle(current.text, { status: 'error', message: 'took too long to compile' });
+      this.#settle(current.text, {
+        status: 'error',
+        message: `took too long to ${this.#action === 'run' ? 'evaluate' : 'compile'}`,
+      });
     this.#spawn();
   }
 }
@@ -233,12 +244,12 @@ export function results<T>(action: 'compile' | 'run') {
   ): Extension =>
     ViewPlugin.fromClass(
       class {
-        jobs: Compiler<T>;
+        jobs: Jobs<T>;
         queued = false;
         dead = false;
 
         constructor(readonly view: EditorView) {
-          this.jobs = new Compiler<T>(compiler, timeout, () => this.schedule(), action);
+          this.jobs = new Jobs<T>(compiler, timeout, () => this.schedule(), action);
           this.sync();
         }
 
