@@ -9,7 +9,7 @@ import { lambadaLanguage } from './language';
 import { defaultNodeKeys, insertNode, nodeKeymap } from './node-keys';
 import { lambadaStatements } from './statements';
 import { statementStatus } from './status';
-import { dagOf } from './tree';
+import { dagOf } from './dag';
 
 export {
   lambadaLanguage,

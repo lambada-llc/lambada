@@ -3,7 +3,8 @@
 // nor an import map can get it wrong, and import maps do not reach workers at
 // all.
 
-import type { Compiled, Value } from '../tree';
+import type { Compiled } from '../dag';
+import type { Value } from '../tree';
 import { makeMachine } from './machine.js';
 
 const machine = makeMachine();
