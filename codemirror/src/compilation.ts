@@ -3,7 +3,7 @@ import type { EditorState, Extension, StateField } from '@codemirror/state';
 import { results, type Outcome } from './worker';
 import type { Resolved } from './config';
 import { lambadaStatements } from './statements';
-import type { Compiled } from './tree';
+import type { Compiled } from './dag';
 
 /** What the compiler produced for one statement. */
 export type Compilation = Outcome<Compiled>;
