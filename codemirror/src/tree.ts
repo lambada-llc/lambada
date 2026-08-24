@@ -17,18 +17,6 @@ export interface Value {
 }
 
 /**
- * The DAG the compiler emitted for one statement, and what it cost.
- *
- * Here beside [Value] because the two are what the worker sends back, and this
- * file is the only one it can read them from: everything else reaches the
- * editor, and the worker has no DOM to reach it with.
- */
-export interface Compiled {
-  dagLines: readonly string[];
-  steps: number;
-}
-
-/**
  * The tree a value stands for.
  *
  * Put together here rather than sent as one, because the structured clone that
@@ -45,59 +33,4 @@ export function treeOf({ nodes, root }: Value): Tree {
     built.push(left < 0 ? [] : right < 0 ? [built[left]] : [built[left], built[right]]);
   }
   return built[root];
-}
-
-/**
- * A tree written as a
- * [DAG](https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-directed-acyclic-graph):
- * a line per application, then a bare name for the whole.
- *
- * This is how a value leaves the editor for anywhere else — a program that
- * renders it, a file, a link — since a `Tree` is only reachable from the page
- * that evaluated it.
- */
-export function dagOf(tree: Tree): string {
-  const lines: string[] = [];
-  const named = new Map<Tree, string>();
-  // Names for applications, not just for nodes. This is what keeps the output
-  // a DAG rather than a tree: two subtrees that were never shared in memory
-  // still end up as one name, because they are built of the same applications.
-  const applied = new Map<string, string>();
-  let next = 0;
-
-  const apply = (left: string, right: string): string => {
-    const key = `${left} ${right}`;
-    let name = applied.get(key);
-    if (name === undefined) {
-      applied.set(key, (name = `${next++}`));
-      lines.push(`${name} ${key}`);
-    }
-    return name;
-  };
-
-  // An explicit stack, for the reason `treeOf` builds one: a value nests as
-  // deep as the data it holds is long, and the call stack does not go that far.
-  const todo: Tree[] = [tree];
-  while (todo.length) {
-    const node = todo[todo.length - 1];
-    if (named.has(node)) {
-      todo.pop();
-      continue;
-    }
-    let waiting = false;
-    for (const child of node)
-      if (!named.has(child)) {
-        todo.push(child);
-        waiting = true;
-      }
-    if (waiting) continue;
-    // Every node is the leaf with its children applied to it in turn.
-    let name = '△';
-    for (const child of node) name = apply(name, named.get(child)!);
-    named.set(node, name);
-    todo.pop();
-  }
-
-  lines.push(named.get(tree)!);
-  return lines.join('\n');
 }

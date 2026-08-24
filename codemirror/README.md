@@ -19,6 +19,14 @@ new EditorView({
 The demo page displays an editor alongside the code that produces it. This lets
 you compare stock CodeMirror to what `lambada()` (from [`src/index.ts`](./src/index.ts)) adds, one option at a time.
 
+## Colours
+
+CodeMirror's own style leaves the grammar's brackets and operators unpainted, so
+with nothing but `basicSetup` they come out the colour of the surrounding text.
+Any theme fills them in; the demo loads
+[cm6-themes](https://github.com/craftzdog/cm6-themes) and has a switch for
+turning it off to see the difference.
+
 ## Compilation
 
 `lambada()` compiles each statement and marks it — green when it compiled, red
