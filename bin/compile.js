@@ -14,20 +14,6 @@ const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
 const { basename, dirname, relative, resolve } = require('path');
 const { lamb_base, sources, chunks, namespace, test_symbol, source_symbol } = require('./project.js');
 
-// The compiler names the leaf `__ENV△` in its output, as a reference to the
-// binding compile.sh puts in front of everything it emits. Nothing downstream
-// needs to know that: the leaf has a spelling of its own.
-const COMPILER_LEAF = '__ENV△';
-
-function normalize_leaf(dag) {
-  return dag.split('\n').flatMap(line => {
-    const words = line.split(/\s+/).filter(Boolean);
-    if (!words.length) return [line];
-    if (words[0] === COMPILER_LEAF) return []; // the binding itself, now redundant
-    return [words.map((word, i) => i > 0 && word === COMPILER_LEAF ? '△' : word).join(' ')];
-  }).join('\n');
-}
-
 /**
  * Turn each bare top-level expression into a named test.
  *
@@ -107,7 +93,10 @@ function compile({ runtime, root, compiler, cache_dir, cwd }) {
     }
     process.stderr.write(`  ${relative_path} (${pieces.length} chunks)\n`);
 
-    const module = DagModule.parse(normalize_leaf(dag), { absorb_internal_aliases: false });
+    // `__ENV△`, the name the compiler uses for the leaf so that a source
+    // binding `△` cannot capture its own prelude, needs nothing done to it:
+    // the runtime knows that spelling (see LEAF_ALIASES).
+    const module = DagModule.parse(dag, { absorb_internal_aliases: false });
     name_tests(runtime, module, root, source_path, test_lines);
     module.qualify(namespace(root, source_path));
 
