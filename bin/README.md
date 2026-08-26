@@ -27,7 +27,7 @@ An expression that evaluates to a [file](https://github.com/lambada-llc/tree-cal
 
 ```
 # src/expect_test.lamb
-△ (△ "hello.txt" "text/plain") "Hello, LambAda!"
+file "hello.txt" "text/plain" "Hello, LambAda!"
 # = hello.txt sha256:169f0107cf1f…
 ```
 
@@ -72,3 +72,4 @@ See [arboretum](https://github.com/lambada-llc/arboretum) for a repository built
 | `compile.js` | Applying the compiler to each chunk and namespacing the result. |
 | `expect-test.js` | Evaluating tests and writing results back into sources. |
 | `runtime.js` | Locating the tree calculus runtime. |
+| `test.js` | Tests for the conventions in `project.js` (what CI runs). |

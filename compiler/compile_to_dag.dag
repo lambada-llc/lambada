@@ -1662,28 +1662,28 @@ Serialize._fresh:1 Nat.to_bits_dstring
 Lambada.is_alpha_char:1 1472
 1473 Fn.p_or Lambada.is_alpha_char:1
 1474 1473 Char.is_digit
-Lambada.is_alphanum_char:2 1474
-1475 Fn.p_or Lambada.is_alphanum_char:2
+Lambada.is_alphanum_char 1474
+1475 Fn.p_or Lambada.is_alphanum_char
 1476 1475 1397
-Lambada.is_identifier_char:3 1476
+Lambada.is_identifier_char:2 1476
 Lambada.is_whitespace_char Char.is_whitespace__fastest
 Lambada.is_uppercase_char Char.is_uppercase__fastest
 Lambada.is_digit_char Char.is_digit__fastest
 1477 1045 true
 1478 1477 Lambada.is_alpha_char:1
 Lambada.is_alpha_char 1478
-1479 1477 Lambada.is_identifier_char:3
+1479 1477 Lambada.is_identifier_char:2
 Lambada.is_identifier_char 1479
 1480 △ Lambada.is_alpha_char
 1481 192 288
-Lambada._scan_stop:6 1481
+Lambada._scan_stop:5 1481
 1482 112 25
 1483 27 812
 1484 1482 1483
-Lambada._scan_go:7 1484
+Lambada._scan_go:6 1484
 1485 :b 1045
-1486 Bool.match Lambada._scan_stop:6
-1487 1486 Lambada._scan_go:7
+1486 Bool.match Lambada._scan_stop:5
+1487 1486 Lambada._scan_go:6
 1488 1485 1487
 1489 27 1488
 1490 :c 1489
@@ -1697,15 +1697,15 @@ Lambada._scan_go:7 1484
 1498 26 1497
 1499 229 1498
 1500 1495 1499
-Lambada._mk_scanner:8 1500
-1501 Lambada._mk_scanner:8 △
+Lambada._mk_scanner:7 1500
+1501 Lambada._mk_scanner:7 △
 1502 1501 Char.is_digit
-Lambada._scan_digits:9 1502
+Lambada._scan_digits:8 1502
 1503 Parser.map Nat.from_string__fastest
 1504 Parser.seq_pair Parser.one
-1505 1504 Lambada._scan_digits:9
+1505 1504 Lambada._scan_digits:8
 1506 1503 1505
-Lambada.parse_nat:10 1506
+Lambada.parse_nat:9 1506
 1507 75 1422
 1508 85 1507
 1509 123 1508
@@ -2018,8 +2018,8 @@ Lambada.Token_const_str 1784
 1788 192 1787
 Lambada.Token_const_nat 1788
 1789 1047 1396
-Lambada._is_dot:12 1789
-Lambada._lh_next:13 1270
+Lambada._is_dot:11 1789
+Lambada._lh_next:12 1270
 1790 144 △
 1791 26 1406
 1792 :s 1791
@@ -2028,33 +2028,33 @@ Lambada._lh_next:13 1270
 1795 188 1794
 1796 193 1795
 1797 1790 1796
-Lambada._lh_promote:14 1797
-1798 triage Lambada._lh_next:13
-1799 :k Lambada._lh_promote:14
+Lambada._lh_promote:13 1797
+1798 triage Lambada._lh_next:12
+1799 :k Lambada._lh_promote:13
 1800 1798 1799
 1801 1800 △
 1802 :b 1801
-1803 1802 Lambada._is_dot:12
+1803 1802 Lambada._is_dot:11
 1804 1790 1803
-Lambada._lh_elim:15 1804
-1805 :c Lambada._lh_elim:15
+Lambada._lh_elim:14 1804
+1805 :c Lambada._lh_elim:14
 1806 26 1805
 1807 :c 1806
-1808 1807 Lambada._lh_elim:15
+1808 1807 Lambada._lh_elim:14
 1809 222 1808
-Lambada._local_head:16 1809
+Lambada._local_head:15 1809
 1810 Bool.match Lambada.Token_identifier
 1811 1810 Lambada.Token_identifier_adt
 1812 :b 1811
 1813 :b Lambada.is_uppercase_char
-1814 1813 Lambada._local_head:16
+1814 1813 Lambada._local_head:15
 1815 1812 1814
 1816 :s 1815
 1817 1816 :i
 Lambada.token_identifier 1817
-1818 Lambada._mk_scanner:8 true
+1818 Lambada._mk_scanner:7 true
 1819 1818 Lambada.is_identifier_char
-Lambada._scan_identifier:17 1819
+Lambada._scan_identifier:16 1819
 1820 :b Lambada.token_identifier
 1821 :b 1820
 1822 1821 △
@@ -2062,9 +2062,9 @@ Lambada._scan_identifier:17 1819
 1824 138 1823
 1825 27 1824
 1826 :c 1825
-1827 1826 Lambada._scan_identifier:17
+1827 1826 Lambada._scan_identifier:16
 1828 222 1827
-Lambada._parse_identifier_token:18 1828
+Lambada._parse_identifier_token:17 1828
 1829 726 119
 1830 :c 1829
 1831 :b 1830
@@ -2114,7 +2114,7 @@ Lambada.parse_char_map 1834
 1874 Lambada.parse_char_map 1873
 Lambada.parse_special_char 1874
 1875 equal_const 792
-Lambada._is_quot:20 1875
+Lambada._is_quot:19 1875
 1876 Map.set 792
 1877 1876 792
 1878 1839 793
@@ -2130,14 +2130,14 @@ Lambada._is_quot:20 1875
 1888 1878 1887
 1889 1877 1888
 1890 Lambada.parse_char_map 1889
-Lambada._parse_escaped_char:21 1890
-1891 Fn.p_or Lambada._is_quot:20
+Lambada._parse_escaped_char:20 1890
+1891 Fn.p_or Lambada._is_quot:19
 1892 equal_const 793
 1893 1891 1892
 1894 Fn.p_not 1893
 1895 1818 1894
-Lambada._scan_str_chars:22 1895
-1896 Parser.compose_dep Lambada._scan_str_chars:22
+Lambada._scan_str_chars:21 1895
+1896 Parser.compose_dep Lambada._scan_str_chars:21
 1897 :b 1896
 1898 22 List.concat
 1899 138 1898
@@ -2149,7 +2149,7 @@ Lambada._scan_str_chars:22 1895
 1905 1904 Nat.succ
 1906 138 1905
 1907 Parser.seq 1906
-1908 1907 Lambada._parse_escaped_char:21
+1908 1907 Lambada._parse_escaped_char:20
 1909 :c 1908
 1910 1903 1909
 1911 192 1910
@@ -2159,7 +2159,7 @@ Lambada._scan_str_chars:22 1895
 1915 193 1914
 1916 1912 1915
 1917 :b 1916
-1918 1917 Lambada._is_quot:20
+1918 1917 Lambada._is_quot:19
 1919 :c 1918
 1920 26 1919
 1921 440 1920
@@ -2171,38 +2171,38 @@ Lambada._scan_str_chars:22 1895
 1927 188 1926
 1928 1897 1927
 1929 fix 1928
-Lambada._parse_str_body:23 1929
+Lambada._parse_str_body:22 1929
 1930 Pair.match Lambada.Token_const_str
 1931 Parser.map 1930
 1932 Parser.seq_snd Parser.one
-1933 Parser.seq_fst Lambada._parse_str_body:23
-1934 Parser.satisfy Lambada._is_quot:20
+1933 Parser.seq_fst Lambada._parse_str_body:22
+1934 Parser.satisfy Lambada._is_quot:19
 1935 1933 1934
 1936 1932 1935
 1937 1931 1936
 Lambada.parse_str 1937
 1938 equal_const 1052
-Lambada._is_quot:24 1938
+Lambada._is_quot:23 1938
 1939 Parser.map Lambada.Token_const_nat
 1940 Parser.seq_fst Parser.one
-1941 Parser.satisfy Lambada._is_quot:24
+1941 Parser.satisfy Lambada._is_quot:23
 1942 1940 1941
 1943 1932 1942
 1944 1939 1943
 Lambada.parse_char 1944
-1945 1939 Lambada.parse_nat:10
+1945 1939 Lambada.parse_nat:9
 Lambada.parse_nat 1945
 1946 :c Pair.fst
 1947 798 1946
 1948 228 1947
 1949 :c 1948
 1950 26 1949
-Lambada._first_matching:25 1950
-1951 1045 Lambada._parse_identifier_token:18
+Lambada._first_matching:24 1950
+1951 1045 Lambada._parse_identifier_token:17
 1952 Parser.map Lambada.Token_special_char
 1953 1952 Lambada.parse_special_char
-1954 Lambada._first_matching:25 1953
-1955 1480 Lambada._parse_identifier_token:18
+1954 Lambada._first_matching:24 1953
+1955 1480 Lambada._parse_identifier_token:17
 1956 △ 1955
 1957 △ Lambada.is_digit_char
 1958 1957 Lambada.parse_nat
@@ -2219,7 +2219,7 @@ Lambada._first_matching:25 1950
 1969 1956 1968
 1970 1954 1969
 1971 1951 1970
-Lambada._parse_token_dispatch:26 1971
+Lambada._parse_token_dispatch:25 1971
 1972 1046 25
 1973 Bool.match 25
 1974 1973 136
@@ -2231,35 +2231,35 @@ Lambada._parse_token_dispatch:26 1971
 1980 26 1979
 1981 229 1980
 1982 1978 1981
-Lambada._skip_comment:27 1982
+Lambada._skip_comment:26 1982
 1983 equal_const 1055
-Lambada._is_hash:28 1983
+Lambada._is_hash:27 1983
 1984 1440 25
 1985 223 1984
 1986 27 1985
 1987 27 1986
 1988 :c 1987
-1989 27 Lambada._parse_token_dispatch:26
+1989 27 Lambada._parse_token_dispatch:25
 1990 :s 1989
 1991 1990 △
 1992 1988 1991
-Lambada._tok_token:29 1992
-1993 1045 Lambada._tok_token:29
+Lambada._tok_token:28 1992
+1993 1045 Lambada._tok_token:28
 1994 112 1309
-1995 Bool.match Lambada._tok_token:29
+1995 Bool.match Lambada._tok_token:28
 1996 :c 441
-1997 1996 Lambada._skip_comment:27
+1997 1996 Lambada._skip_comment:26
 1998 192 1997
 1999 1995 1998
 2000 :b 1999
-2001 2000 Lambada._is_hash:28
+2001 2000 Lambada._is_hash:27
 2002 402 2001
 2003 1994 2002
 2004 :s 2003
 2005 2004 Lambada.is_whitespace_char
 2006 1993 2005
-Lambada._tok_dispatch:30 2006
-2007 26 Lambada._tok_dispatch:30
+Lambada._tok_dispatch:29 2006
+2007 26 Lambada._tok_dispatch:29
 2008 :s 2007
 2009 2008 :i
 2010 26 2009
@@ -2369,7 +2369,7 @@ Lambada.Syntax_adt_Dispatch 2098
 2101 26 2100
 2102 :c 2101
 Lambada.Syntax_spanned_Dispatch 2102
-Lambada._one_then:34 222
+Lambada._one_then:33 222
 2103 :b Lambada.Token_identifier_Dispatch
 2104 :b Parser.map
 2105 2104 Lambada.Syntax_abs
@@ -2390,11 +2390,11 @@ Lambada.parse_abs_tail 2110
 Lambada.parse_schar 2118
 2119 Lambada.Token_identifier_Dispatch △
 2120 2119 Parser.fail
-2121 Lambada._one_then:34 2120
+2121 Lambada._one_then:33 2120
 Lambada.parse_identifier 2121
 2122 Lambada.Token_identifier_adt_Dispatch △
 2123 2122 Parser.fail
-2124 Lambada._one_then:34 2123
+2124 Lambada._one_then:33 2123
 Lambada.parse_identifier_adt 2124
 2125 Lambada.parse_schar Lambada.Schar_paren_close_Dispatch
 Lambada.parse_paren_close 2125
@@ -2559,11 +2559,11 @@ Lambada.parse__expr 2253
 2271 2255 2270
 2272 :c 2271
 2273 26 2272
-Lambada._expr_tail:35 2273
+Lambada._expr_tail:34 2273
 2274 469 Lambada.parse__expr
 2275 :s 2274
 2276 :b 229
-2277 192 Lambada._expr_tail:35
+2277 192 Lambada._expr_tail:34
 2278 254 2277
 2279 :c 2278
 2280 :b 1996
@@ -2584,10 +2584,10 @@ Lambada._expr_tail:35 2273
 2295 :c 2294
 2296 2295 1359
 2297 2275 2296
-Lambada._parse_expr_body:36 2297
-2298 fix Lambada._parse_expr_body:36
-2299 Lambada._parse_expr_body:36 2298
-2300 Lambada._parse_expr_body:36 2299
+Lambada._parse_expr_body:35 2297
+2298 fix Lambada._parse_expr_body:35
+2299 Lambada._parse_expr_body:35 2298
+2300 Lambada._parse_expr_body:35 2299
 Lambada.parse_expr 2300
 2301 Parser.many Lambada.parse_expr
 Lambada.parse_exprs 2301
@@ -2601,44 +2601,44 @@ Lambada.Native_assignment 1781
 Lambada.Native_expr 1785
 2305 Dlist.cons 52
 2306 2305 54
-Lambada._dT:63 2306
-Lambada._dListEmpty:64 Lambada._dT:63
+Lambada._dT:62 2306
+Lambada._dListEmpty:63 Lambada._dT:62
 2307 2305 1416
-Lambada._dTrue:65 2307
-Lambada._dConsFalse:66 Lambada._dTrue:65
+Lambada._dTrue:64 2307
+Lambada._dConsFalse:65 Lambada._dTrue:64
 2308 825 55
 2309 1402 2308
 2310 Dlist.from_list 2309
-Lambada._dConsTrue:67 2310
+Lambada._dConsTrue:66 2310
 2311 2305 75
-Lambada._dI:68 2311
+Lambada._dI:67 2311
 2312 Dlist.cons 97
-2313 Dlist.snoc Lambada._dConsFalse:66
+2313 Dlist.snoc Lambada._dConsFalse:65
 2314 2313 97
 2315 2312 2314
-Lambada._dSegConsFalse:69 2315
-2316 Dlist.snoc Lambada._dConsTrue:67
+Lambada._dSegConsFalse:68 2315
+2316 Dlist.snoc Lambada._dConsTrue:66
 2317 2316 97
 2318 2312 2317
-Lambada._dSegConsTrue:70 2318
-2319 Dlist.append Lambada._dI:68
-2320 2312 Lambada._dT:63
+Lambada._dSegConsTrue:69 2318
+2319 Dlist.append Lambada._dI:67
+2320 2312 Lambada._dT:62
 2321 2319 2320
 2322 Dlist.snoc 2321
 2323 2322 680
 2324 2312 2323
-Lambada._dSegSeed:71 2324
-2325 570 Lambada._dListEmpty:64
+Lambada._dSegSeed:70 2324
+2325 570 Lambada._dListEmpty:63
 2326 List.match 2325
 2327 :b 2326
 2328 :b 2327
-2329 :b Lambada._dSegConsFalse:69
+2329 :b Lambada._dSegConsFalse:68
 2330 :b 2329
 2331 2330 1449
 2332 269 2331
 2333 402 2332
 2334 :s 2333
-2335 :b Lambada._dSegConsTrue:70
+2335 :b Lambada._dSegConsTrue:69
 2336 :b 2335
 2337 2336 1449
 2338 269 2337
@@ -2649,7 +2649,7 @@ Lambada._dSegSeed:71 2324
 2343 228 35
 2344 :c 2343
 2345 :b 2344
-2346 34 Lambada._dSegSeed:71
+2346 34 Lambada._dSegSeed:70
 2347 2345 2346
 2348 26 2347
 2349 622 2348
@@ -2663,17 +2663,17 @@ Lambada._dSegSeed:71 2324
 2357 2328 2356
 2358 174 2357
 2359 187 2358
-Lambada._dag_nat:72 2359
+Lambada._dag_nat:71 2359
 2360 1045 5
 2361 2360 equal_const
-Lambada._char_rec:73 2361
+Lambada._char_rec:72 2361
 2362 35 1450
 2363 1409 2362
 2364 757 2363
 2365 470 2364
 2366 174 2365
 2367 :c 2366
-2368 469 Lambada._dag_nat:72
+2368 469 Lambada._dag_nat:71
 2369 27 2368
 2370 :s 2369
 2371 :b 866
@@ -2685,7 +2685,7 @@ Lambada._char_rec:73 2361
 2377 :b 2376
 2378 :b 1448
 2379 :b 810
-2380 :b Lambada._dT:63
+2380 :b Lambada._dT:62
 2381 :b 2380
 2382 :b 2381
 2383 :b Lambada.newline
@@ -2703,7 +2703,7 @@ Lambada._char_rec:73 2361
 2395 141 2394
 2396 26 2395
 2397 :c 2396
-2398 2397 Lambada._char_rec:73
+2398 2397 Lambada._char_rec:72
 2399 2377 2398
 2400 785 2399
 2401 480 2400
@@ -2725,19 +2725,19 @@ Lambada._char_rec:73 2361
 2417 1418 2416
 2418 2370 2417
 2419 2367 2418
-Lambada._dag_str_step:74 2419
-Lambada._ename:75 Nat.to_bits_dstring
+Lambada._dag_str_step:73 2419
+Lambada._ename:74 Nat.to_bits_dstring
 2420 :c 1443
 2421 :b 2420
 2422 :b 1404
-2423 :c Lambada._dag_nat:72
+2423 :c Lambada._dag_nat:71
 2424 750 2423
 2425 2422 2424
 2426 2421 2425
-Lambada._equote_nat:76 2426
+Lambada._equote_nat:75 2426
 2427 :s 1443
 2428 :b 2427
-2429 :b Lambada._ename:75
+2429 :b Lambada._ename:74
 2430 2429 Nat.succ
 2431 469 2430
 2432 27 2431
@@ -2745,7 +2745,7 @@ Lambada._equote_nat:76 2426
 2434 :b 2433
 2435 193 781
 2436 112 2435
-2437 273 Lambada._dag_str_step:74
+2437 273 Lambada._dag_str_step:73
 2438 26 2437
 2439 :s 2438
 2440 21 2346
@@ -2760,13 +2760,13 @@ Lambada._equote_nat:76 2426
 2449 2436 2448
 2450 2434 2449
 2451 2428 2450
-Lambada._equote_str:77 2451
-2452 469 Lambada._equote_nat:76
+Lambada._equote_str:76 2451
+2452 469 Lambada._equote_nat:75
 2453 :c 2452
 2454 475 1
 2455 2453 2454
 Lambada.quote_nat 2455
-2456 469 Lambada._equote_str:77
+2456 469 Lambada._equote_str:76
 2457 :c 2456
 2458 2457 2454
 Lambada.quote_str 2458
@@ -2785,27 +2785,27 @@ Lambada.quote_str 2458
 2471 2470 2465
 2472 2468 2471
 2473 2463 2472
-Lambada._span_suffix:78 2473
+Lambada._span_suffix:77 2473
 2474 469 Dlist.from_list
 2475 :c 2474
 2476 192 1442
 2477 2475 2476
-Lambada._emk_leaf:79 2477
+Lambada._emk_leaf:78 2477
 2478 1402 799
-2479 Lambada._emk_leaf:79 2478
-Lambada._eI:80 2479
+2479 Lambada._emk_leaf:78 2478
+Lambada._eI:79 2479
 2480 1402 1423
-2481 Lambada._emk_leaf:79 2480
-Lambada._eK:81 2481
+2481 Lambada._emk_leaf:78 2480
+Lambada._eK:80 2481
 2482 1402 824
-2483 Lambada._emk_leaf:79 2482
-Lambada._eB:82 2483
+2483 Lambada._emk_leaf:78 2482
+Lambada._eB:81 2483
 2484 1402 826
-2485 Lambada._emk_leaf:79 2484
-Lambada._eC:83 2485
+2485 Lambada._emk_leaf:78 2484
+Lambada._eC:82 2485
 2486 1402 700
-2487 Lambada._emk_leaf:79 2486
-Lambada._eS:84 2487
+2487 Lambada._emk_leaf:78 2486
+Lambada._eS:83 2487
 2488 34 Nat.succ
 2489 141 2488
 2490 141 2489
@@ -2822,16 +2822,16 @@ Lambada._eS:84 2487
 2501 2496 2500
 2502 2492 2501
 2503 806 2502
-Lambada._eapp:85 2503
-2504 Lambada._eapp:85 Lambada._eC:83
-2505 2504 Lambada._eI:80
-Lambada._eT:86 2505
-2506 2504 Lambada._eC:83
-Lambada._eR:87 2506
-2507 469 Lambada._emk_leaf:79
+Lambada._eapp:84 2503
+2504 Lambada._eapp:84 Lambada._eC:82
+2505 2504 Lambada._eI:79
+Lambada._eT:85 2505
+2506 2504 Lambada._eC:82
+Lambada._eR:86 2506
+2507 469 Lambada._emk_leaf:78
 2508 :c 2507
 2509 2508 2454
-Lambada._kdleaf:88 2509
+Lambada._kdleaf:87 2509
 2510 470 34
 2511 174 2510
 2512 27 2511
@@ -2843,15 +2843,15 @@ Lambada._kdleaf:88 2509
 2518 188 2517
 2519 2513 2518
 2520 1401 2519
-Lambada._ealias:89 2520
+Lambada._ealias:88 2520
 2521 574 Pair.snd
 2522 :c 2521
 2523 :b 2522
 2524 :b 2523
-2525 :c Lambada._ealias:89
+2525 :c Lambada._ealias:88
 2526 :b 2525
 2527 :b 2526
-2528 2527 Lambada._span_suffix:78
+2528 2527 Lambada._span_suffix:77
 2529 622 2528
 2530 190 2529
 2531 26 2530
@@ -2859,18 +2859,18 @@ Lambada._ealias:89 2520
 2533 2532 1
 2534 193 2533
 2535 2524 2534
-Lambada._espan:90 2535
-2536 Lambada._kdleaf:88 2478
-Lambada._kdI:91 2536
-2537 Lambada._kdleaf:88 2480
-Lambada._kdK:92 2537
-2538 Lambada._kdleaf:88 2482
-Lambada._kdB:93 2538
-2539 Lambada._kdleaf:88 2484
-Lambada._kdC:94 2539
-2540 Lambada._kdleaf:88 2486
-Lambada._kdS:95 2540
-2541 :b Lambada._eapp:85
+Lambada._espan:89 2535
+2536 Lambada._kdleaf:87 2478
+Lambada._kdI:90 2536
+2537 Lambada._kdleaf:87 2480
+Lambada._kdK:91 2537
+2538 Lambada._kdleaf:87 2482
+Lambada._kdB:92 2538
+2539 Lambada._kdleaf:87 2484
+Lambada._kdC:93 2539
+2540 Lambada._kdleaf:87 2486
+Lambada._kdS:94 2540
+2541 :b Lambada._eapp:84
 2542 2541 Pair.fst
 2543 27 2542
 2544 :c 2543
@@ -2879,75 +2879,75 @@ Lambada._kdS:95 2540
 2547 26 2546
 2548 :c 2547
 2549 2548 2454
-Lambada._kea:96 2549
-2550 Lambada._kea:96 Lambada._kdC:94
-2551 2550 Lambada._kdI:91
-Lambada._kdT:97 2551
-2552 2550 Lambada._kdC:94
-Lambada._kdR:98 2552
-2553 △ Lambada._eI:80
-2554 2 Lambada._eI:80
+Lambada._kea:95 2549
+2550 Lambada._kea:95 Lambada._kdC:93
+2551 2550 Lambada._kdI:90
+Lambada._kdT:96 2551
+2552 2550 Lambada._kdC:93
+Lambada._kdR:97 2552
+2553 △ Lambada._eI:79
+2554 2 Lambada._eI:79
 2555 2553 2554
 2556 692 2555
-Lambada._kvar0:99 2556
+Lambada._kvar0:98 2556
 2557 522 Pair.snd
 2558 List.match 2557
 2559 2558 830
-Lambada._k_is_var:101 2559
+Lambada._k_is_var:100 2559
 2560 191 1432
 2561 189 2560
-Lambada._kc0F:102 2561
-2562 Lambada._kea:96 Lambada._kdB:93
+Lambada._kc0F:101 2561
+2562 Lambada._kea:95 Lambada._kdB:92
 2563 783 2562
 2564 160 2563
 2565 191 2564
 2566 189 2565
-Lambada._kc0TB:103 2566
-2567 triage Lambada._kc0TB:103
+Lambada._kc0TB:102 2566
+2567 triage Lambada._kc0TB:102
 2568 2567 1701
 2569 2568 △
 2570 :b 2569
 2571 :b 2570
-2572 2571 Lambada._k_is_var:101
+2572 2571 Lambada._k_is_var:100
 2573 26 2572
 2574 :s 2573
 2575 2574 :i
 2576 26 2575
 2577 190 2576
 2578 188 2577
-Lambada._kc0T:105 2578
-2579 193 Lambada._kea:96
+Lambada._kc0T:104 2578
+2579 193 Lambada._kea:95
 2580 triage 2579
 2581 2580 △
-2582 triage Lambada._kc0F:102
-2583 :k Lambada._kc0T:105
+2582 triage Lambada._kc0F:101
+2583 :k Lambada._kc0T:104
 2584 2582 2583
 2585 2584 △
 2586 2581 2585
-Lambada._kc0E:106 2586
+Lambada._kc0E:105 2586
 2587 440 1433
 2588 774 2587
 2589 839 2588
-Lambada._kcFF:107 2589
+Lambada._kcFF:106 2589
 2590 141 1433
 2591 174 2590
 2592 :c 2591
-2593 :c Lambada._kc0E:106
-2594 2593 Lambada._kdB:93
+2593 :c Lambada._kc0E:105
+2594 2593 Lambada._kdB:92
 2595 26 2594
 2596 :c 2595
-2597 2596 Lambada._kc0E:106
+2597 2596 Lambada._kc0E:105
 2598 2592 2597
 2599 440 2598
 2600 774 2599
 2601 839 2600
-Lambada._kcFTB:108 2601
-2602 triage Lambada._kcFTB:108
+Lambada._kcFTB:107 2601
+2602 triage Lambada._kcFTB:107
 2603 2602 1702
 2604 2603 △
 2605 :b 2604
 2606 :b 2605
-2607 2606 Lambada._k_is_var:101
+2607 2606 Lambada._k_is_var:100
 2608 26 2607
 2609 :s 2608
 2610 2609 :i
@@ -2955,7 +2955,7 @@ Lambada._kcFTB:108 2601
 2612 160 2611
 2613 191 2612
 2614 189 2613
-Lambada._kcFT:110 2614
+Lambada._kcFT:109 2614
 2615 272 33
 2616 26 2615
 2617 160 2616
@@ -2963,52 +2963,52 @@ Lambada._kcFT:110 2614
 2619 189 2618
 2620 triage 2619
 2621 2620 △
-2622 triage Lambada._kcFF:107
-2623 :k Lambada._kcFT:110
+2622 triage Lambada._kcFF:106
+2623 :k Lambada._kcFT:109
 2624 2622 2623
 2625 2624 △
 2626 2621 2625
-Lambada._kcFE:111 2626
-2627 27 Lambada._kc0E:106
+Lambada._kcFE:110 2626
+2627 27 Lambada._kc0E:105
 2628 :c 2627
-2629 Lambada._kea:96 Lambada._kdR:98
+2629 Lambada._kea:95 Lambada._kdR:97
 2630 2628 2629
 2631 26 2630
 2632 160 2631
 2633 26 2632
 2634 :c 2633
-2635 2634 Lambada._kc0E:106
+2635 2634 Lambada._kc0E:105
 2636 194 2635
-Lambada._kcTnR:112 2636
-2637 Lambada._kea:96 Lambada._kdT:97
+Lambada._kcTnR:111 2636
+2637 Lambada._kea:95 Lambada._kdT:96
 2638 192 2637
 2639 :k 2638
 2640 :k 2639
-Lambada._kcTnT:113 2640
-2641 2593 Lambada._kdC:94
+Lambada._kcTnT:112 2640
+2641 2593 Lambada._kdC:93
 2642 26 2641
 2643 :c 2642
-2644 2643 Lambada._kc0E:106
+2644 2643 Lambada._kc0E:105
 2645 2592 2644
 2646 440 2645
 2647 774 2646
 2648 839 2647
-Lambada._kcTFC:114 2648
-2649 2593 Lambada._kdT:97
+Lambada._kcTFC:113 2648
+2649 2593 Lambada._kdT:96
 2650 26 2649
 2651 :c 2650
-2652 2651 Lambada._kc0E:106
+2652 2651 Lambada._kc0E:105
 2653 193 2652
 2654 192 2653
 2655 192 2654
-Lambada._kcTFT:115 2655
-2656 triage Lambada._kcTFC:114
-2657 :k Lambada._kcTFT:115
+Lambada._kcTFT:114 2655
+2656 triage Lambada._kcTFC:113
+2657 :k Lambada._kcTFT:114
 2658 2656 2657
 2659 2658 △
 2660 :b 2659
 2661 :b 2660
-2662 2661 Lambada._k_is_var:101
+2662 2661 Lambada._k_is_var:100
 2663 26 2662
 2664 :c 2663
 2665 160 2664
@@ -3016,23 +3016,23 @@ Lambada._kcTFT:115 2655
 2667 187 2666
 2668 190 2667
 2669 188 2668
-Lambada._kcTF:116 2669
-2670 2593 Lambada._kdS:95
+Lambada._kcTF:115 2669
+2670 2593 Lambada._kdS:94
 2671 26 2670
 2672 :c 2671
-2673 2672 Lambada._kc0E:106
+2673 2672 Lambada._kc0E:105
 2674 2592 2673
 2675 440 2674
 2676 774 2675
 2677 839 2676
-Lambada._kcTS:117 2677
-2678 triage Lambada._kcTnR:112
-2679 :k Lambada._kcTnT:113
+Lambada._kcTS:116 2677
+2678 triage Lambada._kcTnR:111
+2679 :k Lambada._kcTnT:112
 2680 2678 2679
 2681 2680 △
 2682 :b 2681
 2683 :b 2682
-2684 2683 Lambada._k_is_var:101
+2684 2683 Lambada._k_is_var:100
 2685 26 2684
 2686 :s 2685
 2687 2686 :i
@@ -3040,27 +3040,27 @@ Lambada._kcTS:117 2677
 2689 187 2688
 2690 triage 2689
 2691 2690 △
-2692 triage Lambada._kcTF:116
-2693 :k Lambada._kcTS:117
+2692 triage Lambada._kcTF:115
+2693 :k Lambada._kcTS:116
 2694 2692 2693
 2695 2694 △
 2696 2691 2695
-Lambada._kcTE:118 2696
-2697 160 Lambada._kc0E:106
+Lambada._kcTE:117 2696
+2697 160 Lambada._kc0E:105
 2698 26 2697
 2699 :c 2698
-2700 2699 Lambada._kc0E:106
+2700 2699 Lambada._kc0E:105
 2701 194 2700
 2702 triage 2701
 2703 2702 △
-2704 :c Lambada._kcFE:111
+2704 :c Lambada._kcFE:110
 2705 triage 2704
-2706 :c Lambada._kcTE:118
+2706 :c Lambada._kcTE:117
 2707 :k 2706
 2708 2705 2707
 2709 2708 △
 2710 2703 2709
-Lambada._kcE:119 2710
+Lambada._kcE:118 2710
 2711 22 Bool.or
 2712 141 2711
 2713 26 2712
@@ -3072,14 +3072,14 @@ Lambada._kcE:119 2710
 2719 216 2718
 2720 26 2719
 2721 fix 2720
-Lambada._kor:120 2721
-2722 :c Lambada._kea:96
+Lambada._kor:119 2721
+2722 :c Lambada._kea:95
 2723 193 2722
 2724 triage 2723
 2725 2724 △
 2726 174 1434
 2727 :s 2726
-2728 :b Lambada._kc0E:106
+2728 :b Lambada._kc0E:105
 2729 :b 2728
 2730 2729 △
 2731 160 2730
@@ -3087,13 +3087,13 @@ Lambada._kor:120 2721
 2733 160 2732
 2734 26 2733
 2735 :c 2734
-2736 2735 Lambada._kc0E:106
+2736 2735 Lambada._kc0E:105
 2737 2727 2736
 2738 2725 2737
-Lambada._kapE2c:121 2738
-2739 37 Lambada._kapE2c:121
-Lambada._kapEc:122 2739
-2740 :b Lambada._kor:120
+Lambada._kapE2c:120 2738
+2739 37 Lambada._kapE2c:120
+Lambada._kapEc:121 2739
+2740 :b Lambada._kor:119
 2741 :b 2740
 2742 2741 △
 2743 26 2742
@@ -3104,7 +3104,7 @@ Lambada._kapEc:122 2739
 2748 174 2747
 2749 27 2748
 2750 :s 2749
-2751 :b Lambada._kcE:119
+2751 :b Lambada._kcE:118
 2752 :b 2751
 2753 2752 △
 2754 26 2753
@@ -3117,53 +3117,53 @@ Lambada._kapEc:122 2739
 2761 160 2760
 2762 26 2761
 2763 :c 2762
-2764 2763 Lambada._kcE:119
+2764 2763 Lambada._kcE:118
 2765 2750 2764
 2766 37 2765
-Lambada._kapEo:123 2766
-2767 :c Lambada._kapEc:122
+Lambada._kapEo:122 2766
+2767 :c Lambada._kapEc:121
 2768 triage 2767
 2769 2768 △
-2770 :c Lambada._kapEo:123
+2770 :c Lambada._kapEo:122
 2771 26 2770
 2772 160 2771
 2773 2769 2772
-Lambada._kapE1:124 2773
-2774 37 Lambada._kapE1:124
-Lambada._kapE:125 2774
-Lambada._kapp:126 Lambada._kapE:125
-2775 2593 Lambada._kdK:92
+Lambada._kapE1:123 2773
+2774 37 Lambada._kapE1:123
+Lambada._kapE:124 2774
+Lambada._kapp:125 Lambada._kapE:124
+2775 2593 Lambada._kdK:91
 2776 26 2775
 2777 :c 2776
-2778 2777 Lambada._kc0E:106
+2778 2777 Lambada._kc0E:105
 2779 784 2778
-Lambada._kabsF:127 2779
-2780 Lambada._kea:96 Lambada._kdK:92
+Lambada._kabsF:126 2779
+2780 Lambada._kea:95 Lambada._kdK:91
 2781 192 2780
 2782 triage 2781
 2783 2782 △
-2784 triage Lambada._kabsF:127
+2784 triage Lambada._kabsF:126
 2785 2784 5
 2786 2785 △
 2787 2783 2786
-Lambada._kabsE1:129 2787
-2788 37 Lambada._kabsE1:129
-Lambada._kabsE:130 2788
-Lambada._kabs:131 Lambada._kabsE:130
+Lambada._kabsE1:128 2787
+2788 37 Lambada._kabsE1:128
+Lambada._kabsE:129 2788
+Lambada._kabs:130 Lambada._kabsE:129
 2789 1477 5
-Lambada._khigh:132 2789
-2790 Bool.match Lambada._char_rec:73
+Lambada._khigh:131 2789
+2790 Bool.match Lambada._char_rec:72
 2791 2790 equal_const
 2792 :b 2791
-2793 2792 Lambada._khigh:132
+2793 2792 Lambada._khigh:131
 2794 :s 2793
 2795 2794 :i
 2796 List.map 2795
-Lambada._krec:133 2796
-Lambada._krr_go:134 1282
+Lambada._krec:132 2796
+Lambada._krr_go:133 1282
 2797 triage 830
 2798 2797 △
-2799 :k Lambada._krr_go:134
+2799 :k Lambada._krr_go:133
 2800 2797 2799
 2801 2800 △
 2802 :b 2801
@@ -3171,28 +3171,28 @@ Lambada._krr_go:134 1282
 2804 2803 33
 2805 26 2804
 2806 2798 2805
-Lambada._krr2:136 2806
+Lambada._krr2:135 2806
 2807 1790 146
 2808 192 2807
 2809 triage 2808
 2810 2809 △
-2811 :c Lambada._krr2:136
+2811 :c Lambada._krr2:135
 2812 26 2811
 2813 2810 2812
-Lambada._krrE:137 2813
+Lambada._krrE:136 2813
 2814 37 927
-Lambada._klkW:138 2814
-2815 :b Lambada._klkW:138
+Lambada._klkW:137 2814
+2815 :b Lambada._klkW:137
 2816 :b 2815
 2817 :b 2816
 2818 2817 1270
-Lambada._klkMiss:139 2818
-2819 192 Lambada._kdleaf:88
+Lambada._klkMiss:138 2818
+2819 192 Lambada._kdleaf:87
 2820 192 2819
 2821 triage 2820
 2822 2821 △
-2823 triage Lambada._klkMiss:139
-2824 :k Lambada._kvar0:99
+2823 triage Lambada._klkMiss:138
+2824 :k Lambada._kvar0:98
 2825 :k 2824
 2826 :k 2825
 2827 :k 2826
@@ -3200,23 +3200,23 @@ Lambada._klkMiss:139 2818
 2829 2828 △
 2830 :b 2829
 2831 :b 2830
-2832 26 Lambada._krrE:137
+2832 26 Lambada._krrE:136
 2833 :c 2832
-2834 2833 Lambada._krrE:137
+2834 2833 Lambada._krrE:136
 2835 2831 2834
 2836 26 2835
 2837 190 2836
 2838 188 2837
 2839 2822 2838
-Lambada._klkE:140 2839
-2840 26 Lambada._klkE:140
+Lambada._klkE:139 2839
+2840 26 Lambada._klkE:139
 2841 :c 2840
-2842 2841 Lambada._klkE:140
+2842 2841 Lambada._klkE:139
 2843 2816 2842
-Lambada._klkMiss0:141 2843
+Lambada._klkMiss0:140 2843
 2844 triage 2819
 2845 2844 △
-2846 triage Lambada._klkMiss0:141
+2846 triage Lambada._klkMiss0:140
 2847 2846 2826
 2848 2847 △
 2849 :b 2848
@@ -3226,26 +3226,26 @@ Lambada._klkMiss0:141 2843
 2853 190 2852
 2854 188 2853
 2855 2845 2854
-Lambada._klkE0:142 2855
-2856 :c Lambada._klkE0:142
-Lambada._klookup:143 2856
+Lambada._klkE0:141 2855
+2856 :c Lambada._klkE0:141
+Lambada._klookup:142 2856
 2857 1402 55
-2858 Lambada._kdleaf:88 2857
+2858 Lambada._kdleaf:87 2857
 2859 1 2858
-Lambada._knilT:144 2859
+Lambada._knilT:143 2859
 2860 78 55
 2861 121 2860
 2862 63 2861
 2863 91 2862
 2864 85 2863
 2865 1429 2864
-2866 Lambada._kdleaf:88 2865
+2866 Lambada._kdleaf:87 2865
 2867 1 2866
-Lambada._knilMapSet:145 2867
-2868 :b Lambada._kapp:126
+Lambada._knilMapSet:144 2867
+2868 :b Lambada._kapp:125
 2869 :b 2868
 2870 :b 2869
-2871 Lambada._kapp:126 Lambada._knilT:144
+2871 Lambada._kapp:125 Lambada._knilT:143
 2872 :b 2871
 2873 :b 2872
 2874 :b 2873
@@ -3255,11 +3255,11 @@ Lambada._knilMapSet:145 2867
 2878 273 2877
 2879 26 2878
 2880 :c 2879
-2881 2880 Lambada._knilT:144
+2881 2880 Lambada._knilT:143
 2882 26 2881
 2883 :c 2882
-Lambada._klow_list:146 2883
-2884 Lambada._kapp:126 Lambada._knilMapSet:145
+Lambada._klow_list:145 2883
+2884 Lambada._kapp:125 Lambada._knilMapSet:144
 2885 :b 2884
 2886 :b 2885
 2887 :b 2886
@@ -3275,40 +3275,40 @@ Lambada._klow_list:146 2883
 2897 273 2896
 2898 26 2897
 2899 :c 2898
-2900 2899 Lambada._knilT:144
+2900 2899 Lambada._knilT:143
 2901 26 2900
 2902 :c 2901
-Lambada._klow_map:147 2902
-2903 :b Lambada._kabs:131
+Lambada._klow_map:146 2902
+2903 :b Lambada._kabs:130
 2904 :b 2903
 2905 :b 2904
 2906 :b 2905
 2907 26 703
 2908 :c 2907
 2909 :b 2908
-2910 21 Lambada._krec:133
+2910 21 Lambada._krec:132
 2911 2909 2910
 2912 2906 2911
-Lambada._klow_abs:148 2912
+Lambada._klow_abs:147 2912
 2913 2870 167
 2914 190 2913
 2915 174 2914
 2916 27 2915
 2917 173 2916
-Lambada._klow_app:149 2917
+Lambada._klow_app:148 2917
 2918 754 167
 2919 160 2918
 2920 26 2919
 2921 :c 2920
 2922 :b 2921
 2923 :b 2922
-2924 751 Lambada._espan:90
+2924 751 Lambada._espan:89
 2925 2923 2924
-Lambada._klow_span:150 2925
-2926 192 Lambada._klookup:143
+Lambada._klow_span:149 2925
+2926 192 Lambada._klookup:142
 2927 33 2926
 2928 :c 2927
-2929 :k Lambada._knilT:144
+2929 :k Lambada._knilT:143
 2930 :k 2929
 2931 2928 2930
 2932 :c 2931
@@ -3322,13 +3322,13 @@ Lambada._klow_span:150 2925
 2940 192 2939
 2941 2937 2940
 2942 :c 2941
-2943 2942 Lambada._klow_list:146
+2943 2942 Lambada._klow_list:145
 2944 :c 2943
-2945 2944 Lambada._klow_map:147
+2945 2944 Lambada._klow_map:146
 2946 :c 2945
-2947 2946 Lambada._klow_abs:148
+2947 2946 Lambada._klow_abs:147
 2948 :c 2947
-2949 2948 Lambada._klow_app:149
+2949 2948 Lambada._klow_app:148
 2950 :c 2949
 2951 △ Lambada.fail
 2952 1 Lambada.fail
@@ -3342,41 +3342,41 @@ Lambada._klow_span:150 2925
 2960 :c 2959
 2961 2960 2957
 2962 :c 2961
-2963 2962 Lambada._klow_span:150
+2963 2962 Lambada._klow_span:149
 2964 :c 2963
-Lambada._klower_open:151 2964
-2965 self_apply Lambada._klower_open:151
-Lambada._klower:152 2965
-2966 227 Lambada._klower:152
+Lambada._klower_open:150 2964
+2965 self_apply Lambada._klower_open:150
+Lambada._klower:151 2965
+2966 227 Lambada._klower:151
 2967 523 2966
 2968 522 2967
-Lambada._syntax_to_native:153 2968
-2969 Lambada._eapp:85 Lambada._eB:82
+Lambada._syntax_to_native:152 2968
+2969 Lambada._eapp:84 Lambada._eB:81
 2970 790 2969
-Lambada._ebn:154 2970
-2971 Nat.match Lambada._eI:80
+Lambada._ebn:153 2970
+2971 Nat.match Lambada._eI:79
 2972 :b 2971
-2973 :c Lambada._ebn:154
-2974 2973 Lambada._eC:83
+2973 :c Lambada._ebn:153
+2974 2973 Lambada._eC:82
 2975 2541 2974
 2976 :s 2975
 2977 2972 2976
 2978 fix 2977
-Lambada._ector_dchain:155 2978
+Lambada._ector_dchain:154 2978
 2979 497 Nat.pred
 2980 :c 2979
 2981 470 2980
 2982 26 2981
 2983 :s 2982
-2984 Lambada._eapp:85 Lambada._eK:81
+2984 Lambada._eapp:84 Lambada._eK:80
 2985 790 2984
 2986 27 2985
 2987 :c 2986
-2988 2969 Lambada._eK:81
-2989 Lambada._eapp:85 2988
+2988 2969 Lambada._eK:80
+2989 Lambada._eapp:84 2988
 2990 790 2989
 2991 :c 2990
-2992 2991 Lambada._eK:81
+2992 2991 Lambada._eK:80
 2993 2971 2992
 2994 2987 2993
 2995 2983 2994
@@ -3384,7 +3384,7 @@ Lambada._ector_dchain:155 2978
 2997 Nat.match 2996
 2998 27 Fn.pow
 2999 :c 2998
-3000 2973 Lambada._eK:81
+3000 2973 Lambada._eK:80
 3001 2541 3000
 3002 2999 3001
 3003 174 3002
@@ -3395,16 +3395,16 @@ Lambada._ector_dchain:155 2978
 3008 141 3007
 3009 26 3008
 3010 :c 3009
-3011 :b Lambada._ebn:154
+3011 :b Lambada._ebn:153
 3012 3011 Nat.succ
 3013 :c 3012
-3014 3013 Lambada._eK:81
+3014 3013 Lambada._eK:80
 3015 2541 3014
 3016 3010 3015
 3017 190 3016
 3018 26 3017
 3019 :c 3018
-3020 3019 Lambada._ector_dchain:155
+3020 3019 Lambada._ector_dchain:154
 3021 3005 3020
 3022 :k 3021
 3023 2997 3022
@@ -3412,31 +3412,31 @@ Lambada._ector_dchain:155 2978
 3025 26 3024
 3026 190 3025
 3027 188 3026
-Lambada._ector:156 3027
-Lambada._edrop:158 2993
-3028 2969 Lambada._eC:83
-3029 Lambada._eapp:85 3028
-Lambada._ebc:159 3029
-Lambada._kS1:160 1510
-Lambada._kS2:161 1700
-Lambada._kS3:162 385
-Lambada._kS4:163 1730
+Lambada._ector:155 3027
+Lambada._edrop:157 2993
+3028 2969 Lambada._eC:82
+3029 Lambada._eapp:84 3028
+Lambada._ebc:158 3029
+Lambada._kS1:159 1510
+Lambada._kS2:160 1700
+Lambada._kS3:161 385
+Lambada._kS4:162 1730
 3030 1068 2304
 3031 469 3030
 3032 27 3031
 3033 27 3032
 3034 :c 3033
-3035 469 Lambada._edrop:158
+3035 469 Lambada._edrop:157
 3036 :s 3035
 3037 :b 3036
 3038 :b 3037
-3039 △ Lambada._kS2:161
+3039 △ Lambada._kS2:160
 3040 :b 3039
 3041 :b 3040
-3042 :k Lambada._eT:86
+3042 :k Lambada._eT:85
 3043 Nat.match 3042
-3044 2969 Lambada._eT:86
-3045 Lambada._eapp:85 3044
+3044 2969 Lambada._eT:85
+3045 Lambada._eapp:84 3044
 3046 :k 3045
 3047 3043 3046
 3048 :c 3047
@@ -3444,28 +3444,28 @@ Lambada._kS4:163 1730
 3050 :k 3049
 3051 33 3050
 3052 :c 3051
-3053 Lambada._eapp:85 Lambada._eS:84
+3053 Lambada._eapp:84 Lambada._eS:83
 3054 :b 3053
-3055 3054 Lambada._ebc:159
+3055 3054 Lambada._ebc:158
 3056 2541 3055
 3057 3041 3056
 3058 193 3057
 3059 3052 3058
 3060 :c 3059
-3061 △ Lambada._kS4:163
+3061 △ Lambada._kS4:162
 3062 :b 3061
 3063 :b 3062
 3064 :b 3063
-3065 :k Lambada._ebc:159
+3065 :k Lambada._ebc:158
 3066 Nat.match 3065
-3067 Lambada._eapp:85 Lambada._eR:87
+3067 Lambada._eapp:84 Lambada._eR:86
 3068 2541 3067
 3069 27 3068
 3070 :c 3069
-3071 2969 Lambada._eB:82
-3072 Lambada._eapp:85 3071
+3071 2969 Lambada._eB:81
+3072 Lambada._eapp:84 3071
 3073 :b 3072
-3074 3073 Lambada._ebc:159
+3074 3073 Lambada._ebc:158
 3075 3070 3074
 3076 :k 3075
 3077 3066 3076
@@ -3477,11 +3477,11 @@ Lambada._kS4:163 1730
 3083 :c 3082
 3084 :c 3068
 3085 :b 3084
-3086 2969 Lambada._eS:84
-3087 Lambada._eapp:85 3086
+3086 2969 Lambada._eS:83
+3087 Lambada._eapp:84 3086
 3088 :b 3087
 3089 2969 3028
-3090 Lambada._eapp:85 3089
+3090 Lambada._eapp:84 3089
 3091 3088 3090
 3092 3085 3091
 3093 3063 3092
@@ -3491,28 +3491,28 @@ Lambada._kS4:163 1730
 3097 3038 3096
 3098 3034 3097
 3099 Bool.match 3098
-3100 △ Lambada._kS3:162
-3101 3100 Lambada._eT:86
+3100 △ Lambada._kS3:161
+3101 3100 Lambada._eT:85
 3102 :k 3101
 3103 33 3102
 3104 :c 3103
 3105 :b 2504
-3106 3105 Lambada._ebc:159
+3106 3105 Lambada._ebc:158
 3107 3062 3106
 3108 3104 3107
 3109 :c 3108
 3110 :b 3100
 3111 :c 3056
-3112 3111 Lambada._eI:80
+3112 3111 Lambada._eI:79
 3113 3110 3112
 3114 3109 3113
 3115 :c 3114
-3116 :b Lambada._ebc:159
+3116 :b Lambada._ebc:158
 3117 3116 3090
 3118 3054 3117
 3119 2541 3118
 3120 :c 3119
-3121 3120 Lambada._eI:80
+3121 3120 Lambada._eI:79
 3122 3062 3121
 3123 3115 3122
 3124 :k 3123
@@ -3526,8 +3526,8 @@ Lambada._kS4:163 1730
 3132 779 3131
 3133 558 3132
 3134 :c 3133
-3135 △ Lambada._kS1:160
-3136 3135 Lambada._eI:80
+3135 △ Lambada._kS1:159
+3136 3135 Lambada._eI:79
 3137 3134 3136
 3138 750 3137
 3139 26 3138
@@ -3538,12 +3538,12 @@ Lambada._kS4:163 1730
 3144 174 3143
 3145 187 3144
 3146 3140 3145
-Lambada._edispatch:164 3146
+Lambada._edispatch:163 3146
 3147 :c Lambada.Native_assignment
 3148 :b 3147
 3149 :b 3148
 3150 :b 3149
-3151 :c Lambada._ector:156
+3151 :c Lambada._ector:155
 3152 141 3151
 3153 26 3152
 3154 :c 3153
@@ -3570,13 +3570,13 @@ Lambada._edispatch:164 3146
 3175 :c 3174
 3176 :b 3175
 3177 :b 3176
-3178 :c Lambada._edispatch:164
+3178 :c Lambada._edispatch:163
 3179 3177 3178
 3180 622 3179
 3181 550 3180
 3182 3162 3181
-Lambada._syntax_emit_adt_variant:166 3182
-3183 160 Lambada._syntax_emit_adt_variant:166
+Lambada._syntax_emit_adt_variant:165 3182
+3183 160 Lambada._syntax_emit_adt_variant:165
 3184 141 3183
 3185 26 3184
 3186 :c 3185
@@ -3593,30 +3593,30 @@ Lambada._syntax_emit_adt_variant:166 3182
 3197 3196 :i
 3198 1054 3197
 3199 :k 3198
-Lambada._syntax_emit_adt:167 3199
+Lambada._syntax_emit_adt:166 3199
 3200 :b Lambada.Native_expr
 3201 3200 2557
 3202 21 3201
 3203 227 3202
-Lambada._native_expr_of:168 3203
-3204 Lambada._emk_leaf:79 2857
+Lambada._native_expr_of:167 3203
+3204 Lambada._emk_leaf:78 2857
 3205 Lambada.Native_expr 3204
 3206 △ 3205
 3207 3206 △
-Lambada._native_null:169 3207
+Lambada._native_null:168 3207
 3208 :b Lambada.Syntax_spanned_Dispatch
 3209 3208 322
 3210 27 3209
 3211 :c 3210
 3212 27 Lambada.Native_assignment
 3213 :c 3212
-3214 3213 Lambada._syntax_to_native:153
+3214 3213 Lambada._syntax_to_native:152
 3215 22 3214
 3216 272 3215
 3217 22 3216
 3218 Lambada.Syntax_assignment_Dispatch 3217
 3219 :b 3218
-3220 27 Lambada._syntax_emit_adt:167
+3220 27 Lambada._syntax_emit_adt:166
 3221 :c 3220
 3222 List.mapi △
 3223 3221 3222
@@ -3630,48 +3630,48 @@ Lambada._native_null:169 3207
 3231 174 3230
 3232 187 3231
 3233 fix 3232
-Lambada._native_def_of_spanned:170 3233
-3234 3200 Lambada._emk_leaf:79
+Lambada._native_def_of_spanned:169 3233
+3234 3200 Lambada._emk_leaf:78
 3235 21 3234
 3236 227 3235
 3237 33 3236
 3238 :c 3237
-3239 3238 Lambada._native_null:169
+3239 3238 Lambada._native_null:168
 3240 :c 3239
-3241 3200 Lambada._equote_nat:76
+3241 3200 Lambada._equote_nat:75
 3242 21 3241
 3243 227 3242
 3244 3240 3243
 3245 :c 3244
-3246 3200 Lambada._equote_str:77
+3246 3200 Lambada._equote_str:76
 3247 21 3246
 3248 227 3247
 3249 3245 3248
 3250 :c 3249
-3251 :b Lambada._native_expr_of:168
-3252 :c Lambada._klow_list:146
-3253 3252 Lambada._klower_open:151
+3251 :b Lambada._native_expr_of:167
+3252 :c Lambada._klow_list:145
+3253 3252 Lambada._klower_open:150
 3254 227 3253
 3255 3251 3254
 3256 3250 3255
 3257 :c 3256
-3258 :c Lambada._klow_map:147
-3259 3258 Lambada._klower_open:151
+3258 :c Lambada._klow_map:146
+3259 3258 Lambada._klower_open:150
 3260 227 3259
 3261 3251 3260
 3262 3257 3261
 3263 :c 3262
 3264 :b 3251
-3265 26 Lambada._klow_abs:148
+3265 26 Lambada._klow_abs:147
 3266 :c 3265
-3267 3266 Lambada._klower_open:151
+3267 3266 Lambada._klower_open:150
 3268 272 3267
 3269 3264 3268
 3270 3263 3269
 3271 :c 3270
-3272 26 Lambada._klow_app:149
+3272 26 Lambada._klow_app:148
 3273 :c 3272
-3274 3273 Lambada._klower_open:151
+3274 3273 Lambada._klower_open:150
 3275 272 3274
 3276 3264 3275
 3277 3271 3276
@@ -3684,17 +3684,17 @@ Lambada._native_def_of_spanned:170 3233
 3284 :b 3283
 3285 :b 3284
 3286 :b 3264
-3287 160 Lambada._klow_span:150
+3287 160 Lambada._klow_span:149
 3288 26 3287
 3289 :c 3288
-3290 3289 Lambada._klower_open:151
+3290 3289 Lambada._klower_open:150
 3291 550 3290
 3292 3286 3291
 3293 3285 3292
 3294 190 3293
 3295 26 3294
 3296 :c 3295
-3297 3296 Lambada._native_def_of_spanned:170
+3297 3296 Lambada._native_def_of_spanned:169
 3298 3282 3297
 Lambada.syntax_to_native 3298
 3299 1057 △
@@ -3931,7 +3931,7 @@ Lambada.syntax_prelude 3524
 3526 3525 Lambada.syntax_prelude
 Lambada.native_prelude 3526
 3527 21 3525
-Lambada._compiler_lower:171 3527
+Lambada._compiler_lower:170 3527
 3528 27 Dlist.from_list
 3529 27 3528
 3530 :c 3529
@@ -3951,12 +3951,12 @@ Lambada.compiler_emit_dag 3540
 3542 Dlist.from_list 3541
 3543 :b 3542
 3544 3543 Lambada.compiler_emit_dag
-Lambada._compiler_emit_dag:172 3544
+Lambada._compiler_emit_dag:171 3544
 3545 Option.get_or △
 3546 :b 3545
-3547 Option.map Lambada._compiler_emit_dag:172
+3547 Option.map Lambada._compiler_emit_dag:171
 3548 :b 3547
-3549 Option.bind Lambada._compiler_lower:171
+3549 Option.bind Lambada._compiler_lower:170
 3550 :b 3549
 3551 Option.bind Lambada.compiler_parse
 3552 :b 3551
