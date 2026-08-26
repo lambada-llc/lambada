@@ -54,13 +54,52 @@ function unitsAt(text: string, points: number): number {
   return i;
 }
 
+// A statement can compile to a hundred thousand lines, and the pointer moves
+// far more often than a compilation changes, so what a reading needs is
+// extracted once per compilation and remembered against its lines — the
+// array is stable for as long as the answer it came in is.
+const referenceSpans = new WeakMap<readonly string[], readonly Span[]>();
+const definedNames = new WeakMap<readonly string[], ReadonlySet<string>>();
+
 /**
- * The reference at `pos`, read off the compiled spans: the innermost span
- * alias covering the position whose base is a name somebody writes and that
- * the line aliases to itself — which is exactly how the compiler emits an
- * identifier's occurrence. A bound variable emits no such alias — it lowers
- * into combinators and its name is gone — so what this finds is always a use
- * of a definition, never a lambda's own parameter.
+ * The identifier occurrences a compilation recorded: every span alias that
+ * aliases an offerable name to itself, which is exactly how the compiler
+ * emits an identifier's use. A bound variable emits no such alias — it
+ * lowers into combinators and its name is gone — so these are always uses of
+ * definitions, never a lambda's own parameter.
+ */
+function occurrences(dagLines: readonly string[]): readonly Span[] {
+  let spans = referenceSpans.get(dagLines);
+  if (!spans) {
+    const found: Span[] = [];
+    for (const line of dagLines) {
+      const { name, from } = dagLine(line);
+      const span = spanned(name);
+      if (span && from.length === 1 && from[0] === span.base && isOfferable(span.base))
+        found.push(span);
+    }
+    referenceSpans.set(dagLines, (spans = found));
+  }
+  return spans;
+}
+
+/** The names a compilation defines — its 2-word lines that are not spans. */
+function defines(dagLines: readonly string[]): ReadonlySet<string> {
+  let names = definedNames.get(dagLines);
+  if (!names) {
+    const found = new Set<string>();
+    for (const line of dagLines) {
+      const { name, from } = dagLine(line);
+      if (from.length === 1 && !spanned(name)) found.add(name);
+    }
+    definedNames.set(dagLines, (names = found));
+  }
+  return names;
+}
+
+/**
+ * The reference at `pos`, read off the compiled spans: the innermost
+ * occurrence covering the position.
  *
  * Nothing without a compilation: the spans are the compiler's answer, and
  * guessing from the tokens would happily send a shadowed or bound name to a
@@ -80,11 +119,7 @@ export function referenceAt(state: EditorState, pos: number): Reference | null {
   // on either side of it — which containment with both ends included says.
   const point = pointsAt(statement.text, at);
   let best: Span | null = null;
-  for (const line of known.dagLines) {
-    const { name, from } = dagLine(line);
-    const span = spanned(name);
-    if (!span || from.length !== 1 || from[0] !== span.base) continue;
-    if (!isOfferable(span.base)) continue;
+  for (const span of occurrences(known.dagLines)) {
     if (span.from > point || point > span.to) continue;
     if (!best || span.to - span.from < best.to - best.from) best = span;
   }
@@ -134,10 +169,7 @@ export function definitionOf(
     if (statement.to >= reference.from) break;
     const known = compilations.get(statement.text);
     if (known?.status !== 'ok') continue;
-    for (const line of known.dagLines) {
-      const { name, from } = dagLine(line);
-      if (from.length === 1 && name === reference.name) found = statement;
-    }
+    if (defines(known.dagLines).has(reference.name)) found = statement;
   }
   if (found) {
     const written = writtenAt(state, found, reference.name);
