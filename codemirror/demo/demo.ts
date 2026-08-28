@@ -19,6 +19,10 @@ import { sample } from './sample';
 // because the keys are on by default.
 const nodeKeys = document.querySelector<HTMLInputElement>('#node-keys')!;
 
+// Put the cursor in a name — a lambda's parameter, a shadowed definition —
+// and watch what lights up. Checked because the highlighting is on by default.
+const highlightSymbols = document.querySelector<HTMLInputElement>('#highlight-symbols')!;
+
 // Off writes `compile: false`, which takes the marks with it — the point of
 // nesting them under `compile` is that they cannot be had separately.
 const compile = document.querySelector<HTMLInputElement>('#compile')!;
@@ -72,6 +76,7 @@ const loadTheme = document.querySelector<HTMLInputElement>('#load-theme')!;
 function currentConfig(): LambadaConfig {
   const config: LambadaConfig = {};
   if (!nodeKeys.checked) config.nodeKeys = false;
+  if (!highlightSymbols.checked) config.highlightSymbols = false;
   if (!compile.checked) {
     config.compile = false;
     return config;
@@ -234,6 +239,7 @@ function render() {
 
 for (const control of [
   nodeKeys,
+  highlightSymbols,
   compile,
   diagnostics,
   completions,

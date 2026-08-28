@@ -27,6 +27,15 @@ Any theme fills them in; the demo loads
 [cm6-themes](https://github.com/craftzdog/cm6-themes) and has a switch for
 turning it off to see the difference.
 
+## Occurrence highlighting
+
+Resting the cursor in a name highlights its occurrences — scope-aware, and
+with or without compilation.
+
+``` ts
+lambada({ highlightSymbols: false })              // none
+```
+
 ## Compilation
 
 `lambada()` compiles each statement and marks it — green when it compiled, red

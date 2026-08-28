@@ -337,6 +337,20 @@
       </div>
       <div class="group">
         <label>
+          <input id="highlight-symbols" type="checkbox" checked />
+          Highlight occurrences at the
+          <span class="keep-together">cursor <button
+            class="info"
+            type="button"
+            aria-label="Why this option is here"
+          >ⓘ<span class="tip">
+              Scope-aware, and works with compiling off too;
+              <code>highlightSymbols: false</code> for none.
+            </span></button></span>
+        </label>
+      </div>
+      <div class="group">
+        <label>
           <input id="compile" type="checkbox" checked />
           Compile each statement and mark
           <span class="keep-together">it <button
