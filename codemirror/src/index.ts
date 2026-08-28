@@ -10,6 +10,7 @@ import { lambadaLanguage } from './language';
 import { defaultNodeKeys, insertNode, nodeKeymap } from './node-keys';
 import { lambadaStatements } from './statements';
 import { statementStatus } from './status';
+import { symbolHighlights, symbolRanges } from './symbols';
 import { dagOf } from './dag';
 
 export {
@@ -21,6 +22,7 @@ export {
   defaultPreview,
   referenceAt,
   definitionOf,
+  symbolRanges,
 };
 export type { Statement } from './statements';
 export type { Compilation } from './compilation';
@@ -37,6 +39,14 @@ export interface LambadaConfig {
    */
   nodeKeys?: boolean | readonly string[];
   /**
+   * Highlight the occurrences of the symbol at the cursor — the symbol, not
+   * the word: a lambda's parameter lights up its own uses and nothing else,
+   * and a name only the uses that resolve to the same definition. Default:
+   * true. It reads the tokens rather than the compilation, which is why it
+   * sits beside `compile` instead of inside it.
+   */
+  highlightSymbols?: boolean;
+  /**
    * Compile each statement, on a worker. `true`, the default, uses the
    * compiler this package ships; `false` compiles nothing, leaving the editing
    * support on its own.
@@ -50,6 +60,7 @@ export interface LambadaConfig {
 
 export function lambada({
   nodeKeys = true,
+  highlightSymbols = true,
   compile = true,
 }: LambadaConfig = {}): LanguageSupport {
   const keys = nodeKeys === true ? defaultNodeKeys : nodeKeys || [];
@@ -59,6 +70,7 @@ export function lambada({
   return new LanguageSupport(lambadaLanguage, [
     nodeKeymap(keys),
     lambadaStatements,
+    highlightSymbols ? symbolHighlights() : [],
     config
       ? [
           compilation(config),

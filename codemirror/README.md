@@ -27,6 +27,23 @@ Any theme fills them in; the demo loads
 [cm6-themes](https://github.com/craftzdog/cm6-themes) and has a switch for
 turning it off to see the difference.
 
+## Same symbol, not same word
+
+Put the cursor in a name and its occurrences light up — the *symbol's*, not
+the word's: a lambda's parameter lights up its own uses and nothing else, and
+a name lights up only the uses that resolve to the same definition, a
+redefinition starting a new symbol of the same spelling.
+
+``` ts
+lambada({ highlightSymbols: false })              // do not highlight occurrences
+```
+
+This reads the tokens rather than the compilation — LambAda has no keywords,
+and its scoping is carried entirely by brackets, separators and `\` — so it
+works while a statement is still compiling, and in an editor configured with
+`compile: false`. An explicit selection is left to CodeMirror's own selection
+matching, which highlights text; the cursor highlights meaning.
+
 ## Compilation
 
 `lambada()` compiles each statement and marks it — green when it compiled, red
