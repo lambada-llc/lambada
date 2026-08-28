@@ -27,22 +27,21 @@ Any theme fills them in; the demo loads
 [cm6-themes](https://github.com/craftzdog/cm6-themes) and has a switch for
 turning it off to see the difference.
 
-## Same symbol, not same word
+## Occurrences
 
-Put the cursor in a name and its occurrences light up — the *symbol's*, not
-the word's: a lambda's parameter lights up its own uses and nothing else, and
-a name lights up only the uses that resolve to the same definition, a
-redefinition starting a new symbol of the same spelling.
+Put the cursor in a name and every occurrence that means the same thing
+lights up. The editor understands scope: on a lambda's parameter, that is the
+parameter's own uses; on a definition, or on any use of one, it is the
+definition together with the uses it governs — redefining a name starts a
+fresh group, exactly as it starts a fresh meaning.
 
 ``` ts
 lambada({ highlightSymbols: false })              // do not highlight occurrences
 ```
 
-This reads the tokens rather than the compilation — LambAda has no keywords,
-and its scoping is carried entirely by brackets, separators and `\` — so it
-works while a statement is still compiling, and in an editor configured with
-`compile: false`. An explicit selection is left to CodeMirror's own selection
-matching, which highlights text; the cursor highlights meaning.
+Selecting text still searches for the text, as CodeMirror always has; the
+resting cursor is what finds meaning. None of this needs a compilation, so an
+editor configured with `compile: false` highlights all the same.
 
 ## Compilation
 
