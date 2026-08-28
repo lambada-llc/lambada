@@ -1,7 +1,7 @@
 import { StateField, type EditorState } from '@codemirror/state';
 
 import { lambadaCompilations } from './compilation';
-import { dagLine, type DagLine } from './dag';
+import { dagLine, spanned, type DagLine } from './dag';
 import { isIdentifier } from './language';
 import { lambadaStatements, type Statement } from './statements';
 
@@ -72,8 +72,9 @@ export function scopeAt(
     for (const line of known.dagLines) {
       const { name, from } = dagLine(line);
       // One name is a definition; two is one of the applications the compiler
-      // makes on the way, which nothing wrote.
-      if (from.length === 1) scope.set(name, statement.text);
+      // makes on the way, which nothing wrote — and a span alias is neither,
+      // an annotation on a name rather than a name.
+      if (from.length === 1 && !spanned(name)) scope.set(name, statement.text);
     }
   }
   return scope;
@@ -135,17 +136,21 @@ function analyze(
     }
 
     // Each line defines its first name in terms of the ones after it, so a
-    // name is in scope from the line below the one that introduced it.
+    // name is in scope from the line below the one that introduced it. A
+    // spanned name stands for its base wherever it appears: the alias line
+    // that introduces one annotates rather than defines, and a reference
+    // through one is a reference to the base.
     const problems: Problem[] = [];
     const missing = (name: string) => {
-      if (inScope(name) || problems.some((p) => p.symbol === name)) return;
-      problems.push({ symbol: name, message: `${name} is not defined` });
+      const symbol = spanned(name)?.base ?? name;
+      if (inScope(symbol) || problems.some((p) => p.symbol === symbol)) return;
+      problems.push({ symbol, message: `${symbol} is not defined` });
     };
     for (const line of known.dagLines) {
       const { name, from } = dagLine(line);
       if (from.length) {
         for (const used of from) missing(used);
-        defined.add(name);
+        if (!spanned(name)) defined.add(name);
       } else if (name) {
         missing(name);
       }

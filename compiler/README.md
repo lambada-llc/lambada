@@ -1,8 +1,13 @@
 ## Source
 
-`compile.dag` and `compile_to_dag.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
+`compile_to_dag.dag` and `compile_to_dag_with_spans.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
 by [arboretum's build](https://github.com/lambada-llc/arboretum/blob/main/build.sh), which extracts them
-from the library it just compiled and writes them here.
+from the library it just compiled and writes them here. The spanned variant
+emits the same DAG plus `X::s,e Y` alias lines recording where each node was
+written — what the [codemirror package](../codemirror/) resolves go to
+definition on.
+
+`compile.sh` needs `curl` (it fetches the latest tree calculus runtime), `perl` and GNU `parallel`; `bin/lambada.js` needs only Node.js.
 
 ## Examples
 

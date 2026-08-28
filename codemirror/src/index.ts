@@ -3,6 +3,7 @@ import { LanguageSupport } from '@codemirror/language';
 import { compilation, lambadaCompilations } from './compilation';
 import { completions } from './completions';
 import { resolve, type CompileConfig } from './config';
+import { definitionOf, gotoDefinition, referenceAt } from './definitions';
 import { diagnostics } from './diagnostics';
 import { defaultPreview, previews } from './previews';
 import { lambadaLanguage } from './language';
@@ -18,11 +19,15 @@ export {
   insertNode,
   dagOf,
   defaultPreview,
+  referenceAt,
+  definitionOf,
 };
 export type { Statement } from './statements';
 export type { Compilation } from './compilation';
 export type { Preview } from './previews';
 export type { Tree } from './tree';
+export type { Definition, Reference } from './definitions';
+export type { GotoDefinitionConfig } from './config';
 
 export interface LambadaConfig {
   /**
@@ -61,6 +66,7 @@ export function lambada({
           config.showDiagnostics ? diagnostics(config) : [],
           config.showPreviews ? previews(config) : [],
           config.showCompletions ? completions(config) : [],
+          config.goto ? gotoDefinition(config) : [],
         ]
       : [],
   ]);

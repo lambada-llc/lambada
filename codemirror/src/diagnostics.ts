@@ -1,10 +1,10 @@
-import { syntaxTree } from '@codemirror/language';
 import type { EditorState, Extension } from '@codemirror/state';
 import { linter, type Diagnostic } from '@codemirror/lint';
 
 import type { Problem } from './analysis';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
+import { writtenAt } from './definitions';
 import type { Statement } from './statements';
 import { legible } from './tooltips';
 
@@ -45,32 +45,11 @@ function locate(
   statement: Statement,
   problem: Problem,
 ): Diagnostic {
-  const at = problem.symbol ? find(state, statement, problem.symbol) : null;
+  const at = problem.symbol ? writtenAt(state, statement, problem.symbol) : null;
   return {
     from: at ? at.from : statement.from,
     to: at ? at.to : statement.to,
     severity: 'error',
     message: problem.message,
   };
-}
-
-/** The first place the name is written in this statement, if it is. */
-function find(
-  state: EditorState,
-  statement: Statement,
-  symbol: string,
-): { from: number; to: number } | null {
-  let found: { from: number; to: number } | null = null;
-  syntaxTree(state).iterate({
-    from: statement.from,
-    to: statement.to,
-    enter(node) {
-      if (found) return false;
-      if (node.name !== 'Identifier' && node.name !== 'Binder') return;
-      if (state.doc.sliceString(node.from, node.to) === symbol)
-        found = { from: node.from, to: node.to };
-      return;
-    },
-  });
-  return found;
 }
