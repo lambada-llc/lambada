@@ -27,21 +27,14 @@ Any theme fills them in; the demo loads
 [cm6-themes](https://github.com/craftzdog/cm6-themes) and has a switch for
 turning it off to see the difference.
 
-## Occurrences
+## Occurrence highlighting
 
-Put the cursor in a name and every occurrence that means the same thing
-lights up. The editor understands scope: on a lambda's parameter, that is the
-parameter's own uses; on a definition, or on any use of one, it is the
-definition together with the uses it governs — redefining a name starts a
-fresh group, exactly as it starts a fresh meaning.
+Resting the cursor in a name highlights its occurrences — scope-aware, and
+with or without compilation.
 
 ``` ts
-lambada({ highlightSymbols: false })              // do not highlight occurrences
+lambada({ highlightSymbols: false })              // none
 ```
-
-Selecting text still searches for the text, as CodeMirror always has; the
-resting cursor is what finds meaning. None of this needs a compilation, so an
-editor configured with `compile: false` highlights all the same.
 
 ## Compilation
 

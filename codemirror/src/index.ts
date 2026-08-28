@@ -39,10 +39,9 @@ export interface LambadaConfig {
    */
   nodeKeys?: boolean | readonly string[];
   /**
-   * Highlight every occurrence of the symbol at the cursor: a lambda's
-   * parameter its own uses, a definition the uses it governs. Default: true.
-   * Scope is read off the tokens with no compilation involved, which is why
-   * this sits beside `compile` rather than inside it.
+   * Highlight the occurrences of the name at the cursor, scope-aware.
+   * Default: true. Read off the tokens with no compilation involved, which
+   * is why this sits beside `compile` rather than inside it.
    */
   highlightSymbols?: boolean;
   /**
