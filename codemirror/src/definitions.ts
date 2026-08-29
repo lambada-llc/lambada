@@ -9,12 +9,15 @@ import {
   Decoration,
   EditorView,
   keymap,
+  showTooltip,
   type Command,
   type DecorationSet,
+  type Tooltip,
 } from '@codemirror/view';
 
 import { type Statement } from './statements';
 import { definitionSite, symbolAt, type Range } from './symbols';
+import { legible } from './tooltips';
 
 // Go to definition, resolved by the same scope walk that highlights
 // occurrences (see symbols.ts): a bound use jumps to its binder, a use of a
@@ -157,9 +160,64 @@ const theme = EditorView.baseTheme({
   '.cm-jump': { textDecoration: 'underline', cursor: 'pointer' },
 });
 
+// ── the chip ────────────────────────────────────────────────────────────────
+
 /**
- * Go to definition: the modifier-click, the underline that offers it, and a
- * key that jumps at the cursor.
+ * A pointer that cannot hover cannot take the modifier gesture either, and
+ * has no F12: where the primary pointer is a finger, the offer is a small
+ * tappable chip by the cursor instead — same resolution, same gate.
+ * iPads answer `hover: none` until a trackpad arrives, at which point the
+ * modifier gesture works and the chip retires itself.
+ */
+const finger = () =>
+  typeof matchMedia !== 'undefined' &&
+  matchMedia('(hover: none), (pointer: coarse)').matches;
+
+const chipTheme = [
+  legible('.cm-definition-chip'),
+  EditorView.baseTheme({
+    '.cm-tooltip.cm-definition-chip': {
+      border: '1px solid #8884',
+      borderRadius: '4px',
+      padding: '2px 8px',
+      font: 'inherit',
+      cursor: 'pointer',
+    },
+  }),
+];
+
+function chipAt(
+  state: EditorState,
+  scope: ReadonlySet<string>,
+  goto: ResolvedGoto,
+): Tooltip | null {
+  if (!finger()) return null;
+  const cursor = state.selection.main;
+  if (!cursor.empty) return null;
+  const jump = jumpAt(state, scope, goto, cursor.head);
+  if (!jump) return null;
+  return {
+    pos: jump.at.from,
+    above: true,
+    create: (view) => {
+      const dom = document.createElement('button');
+      dom.type = 'button';
+      dom.className = 'cm-definition-chip';
+      dom.textContent = 'definition \u2197';
+      // Taken on the press, and not the editor's: left to bubble, the tap
+      // would move the cursor first and the chip out from under itself.
+      dom.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        jump.go(view);
+      });
+      return { dom };
+    },
+  };
+}
+
+/**
+ * Go to definition: the modifier-click, the underline that offers it, a key
+ * that jumps at the cursor — and, where the pointer is a finger, the chip.
  */
 export function gotoDefinition(
   goto: ResolvedGoto,
@@ -182,9 +240,18 @@ export function gotoDefinition(
     return true;
   };
 
+  const chip = StateField.define<Tooltip | null>({
+    create: (state) => chipAt(state, scope, goto),
+    update: (value, tr) =>
+      tr.docChanged || tr.selection ? chipAt(tr.state, scope, goto) : value,
+    provide: (field) => showTooltip.from(field),
+  });
+
   return [
     jumpable,
     theme,
+    chip,
+    chipTheme,
     keymap.of(goto.keys.map((key) => ({ key, run: jumpAtCursor }))),
     EditorView.domEventHandlers({
       mousedown(event, view) {

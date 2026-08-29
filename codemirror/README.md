@@ -48,6 +48,9 @@ one it has nowhere to send. It is asked before a jump is offered — the
 underline under the pointer while the modifier is held — so only names with
 somewhere to go invite the click, and it should be cheap.
 
+On a touch screen, where nothing hovers and no key is F12, resting the
+cursor in a name shows the jump as a small chip instead.
+
 ``` ts
 lambada({ gotoDefinition: false })                // no jumps
 lambada({ gotoDefinition:                         // where environment names live
