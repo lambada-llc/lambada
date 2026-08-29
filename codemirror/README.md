@@ -36,6 +36,24 @@ with or without compilation.
 lambada({ highlightSymbols: false })              // none
 ```
 
+## Go to definition
+
+Ctrl-click a name (Cmd on a Mac), or press F12 on it: a bound use jumps to
+its binder, a use of a definition to the statement that defines it — resolved
+by the same scope walk as the highlighting, so this too works with or without
+compilation. A name the *environment* defines is somewhere this package
+cannot see — a page, a file, a repository — so the host says: `external` is
+asked for the action that goes to a name's definition, and returns null for
+one it has nowhere to send. It is asked before a jump is offered — the
+underline under the pointer while the modifier is held — so only names with
+somewhere to go invite the click, and it should be cheap.
+
+``` ts
+lambada({ gotoDefinition: false })                // no jumps
+lambada({ gotoDefinition:                         // where environment names live
+    { external: (name) => ... } })
+```
+
 ## Compilation
 
 `lambada()` compiles each statement and marks it — green when it compiled, red
@@ -56,25 +74,7 @@ lambada({ compile: { previewResults: false } })   // do not evaluate anything
 lambada({ compile: { previewResults: show } })    // what to show for a value
 lambada({ compile: { compiler, timeout } })       // a compiler of your own
 lambada({ compile: { environment } })             // what is in scope to begin with
-lambada({ compile: { gotoDefinition: false } })   // do not offer jumps
-lambada({ compile: { gotoDefinition:              // where environment names live
-    { external: (name) => ... } } })
 ```
-
-Ctrl-click a name (Cmd on a Mac), or press F12 on it, to jump to its
-definition. A name a statement above defines is jumped to in place. A name the
-*environment* defines is somewhere this package cannot see — a page, a file, a
-repository — so the host says: `external` is asked for the action that goes to
-a name's definition, and returns null for one it has nowhere to send. It is
-asked before a jump is offered — the underline under the pointer while the
-modifier is held — so only names with somewhere to go invite the click, and it
-should be cheap.
-
-What a click refers to is read off the compilation, not guessed from the text:
-the compiler this package ships annotates what it emits with source spans, so
-a shadowed name goes to the definition that counts and a lambda's own
-parameter goes nowhere. That is also why the option lives inside `compile` —
-without a compilation there is nothing to resolve.
 
 Completions arrive as language data, so a host with more to offer — a standard
 library, snippets — adds a source of its own and both appear.
