@@ -18,7 +18,7 @@ import { lambadaStatements, type Statement } from './statements';
 // from the statements that follow. The walk below is that much understanding
 // and no more.
 
-interface Range {
+export interface Range {
   from: number;
   to: number;
 }
@@ -29,7 +29,7 @@ interface Token extends Range {
 }
 
 /** A binder and every use that resolves to it, binder first. */
-interface Binding {
+export interface Binding {
   name: string;
   ranges: Range[];
 }
@@ -127,11 +127,15 @@ export function statementSymbols(
         break;
       case 'Identifier': {
         if (adt && frames.length === 1) {
-          // The declaration's own names: constructors are definitions, and a
+          // The declaration's own names: constructors are definitions — each
+          // brings its dispatcher along, written at the same place, since
+          // `F_Dispatch` is defined by writing `F` and nowhere else — and a
           // constructor's field names belong to nothing at all.
           const written = { name: token.text, from: token.from, to: token.to };
-          if (uppercase(token.text)) defines.push(written);
-          else bindings.push({ name: token.text, ranges: [written] });
+          if (uppercase(token.text)) {
+            defines.push(written);
+            defines.push({ ...written, name: `${token.text}_Dispatch` });
+          } else bindings.push({ name: token.text, ranges: [written] });
           break;
         }
         const binder = [...live].reverse().find((b) => b.name === token.text);
@@ -194,24 +198,53 @@ function globalRanges(
   return ranges;
 }
 
-/** The ranges of the symbol written at `pos`, or none. */
-export function symbolRanges(state: EditorState, pos: number): readonly Range[] {
+/** The symbol written at `pos`: a binding, or a name with the statement that
+ * defines it — null where no statement above does. `at` is the token the
+ * position sits in. */
+export type Sym =
+  | { kind: 'binding'; binding: Binding; at: Range }
+  | { kind: 'global'; name: string; governing: Statement | null; at: Range };
+
+export function symbolAt(state: EditorState, pos: number): Sym | null {
   const statements = state.field(lambadaStatements);
   const statement = statements.find((s) => s.from <= pos && pos <= s.to);
-  if (!statement) return [];
+  if (!statement) return null;
   const symbols = statementSymbols(state, statement);
 
-  for (const binding of symbols.bindings)
-    if (binding.ranges.some((range) => within(pos, range))) return binding.ranges;
+  for (const binding of symbols.bindings) {
+    const at = binding.ranges.find((range) => within(pos, range));
+    if (at) return { kind: 'binding', binding, at };
+  }
   for (const d of symbols.defines)
-    if (within(pos, d)) return globalRanges(state, statements, d.name, statement);
+    if (within(pos, d)) return { kind: 'global', name: d.name, governing: statement, at: d };
   for (const use of symbols.free)
     if (within(pos, use))
-      return globalRanges(
-        state, statements, use.name,
-        definerAbove(state, statements, statement, use.name),
-      );
-  return [];
+      return {
+        kind: 'global',
+        name: use.name,
+        governing: definerAbove(state, statements, statement, use.name),
+        at: use,
+      };
+  return null;
+}
+
+/** Where `statement` writes its definition of `name`. */
+export function definitionSite(
+  state: EditorState,
+  statement: Statement,
+  name: string,
+): Range | null {
+  return statementSymbols(state, statement).defines.find((d) => d.name === name) ?? null;
+}
+
+/** The ranges of the symbol written at `pos`, or none. */
+export function symbolRanges(state: EditorState, pos: number): readonly Range[] {
+  const symbol = symbolAt(state, pos);
+  if (!symbol) return [];
+  if (symbol.kind === 'binding') return symbol.binding.ranges;
+  return globalRanges(
+    state, state.field(lambadaStatements), symbol.name, symbol.governing,
+  );
 }
 
 const occurrence = Decoration.mark({ class: 'cm-occurrence' });
