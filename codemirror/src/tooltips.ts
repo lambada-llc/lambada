@@ -11,6 +11,12 @@ import { EditorView } from '@codemirror/view';
  * the page's, and a base theme is what a host that does style these still wins
  * over.
  *
+ * A selector for a tooltip *root* has to name both of its classes —
+ * `.cm-tooltip.cm-thing` — or a theme's own `.cm-tooltip` background outranks
+ * it and the colours end up from two different palettes; see the
+ * completion-info selector, and the chip's. A child of a tooltip
+ * (the completion list) escapes that by covering what is behind it.
+ *
  * One theme per call rather than one for all of them, so that an extension left
  * out takes its colours with it.
  */

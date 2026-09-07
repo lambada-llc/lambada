@@ -174,7 +174,8 @@ const finger = () =>
   matchMedia('(hover: none), (pointer: coarse)').matches;
 
 const chipTheme = [
-  legible('.cm-definition-chip'),
+  // Both classes, or a theme's `.cm-tooltip` background wins — see [legible].
+  legible('.cm-tooltip.cm-definition-chip'),
   EditorView.baseTheme({
     '.cm-tooltip.cm-definition-chip': {
       border: '1px solid #8884',
