@@ -11,6 +11,7 @@
 // program is the tree calculus runtime's job, not ours.
 
 const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
+const { Worker, isMainThread, workerData } = require('worker_threads');
 const { basename, dirname, relative, resolve } = require('path');
 const { lamb_base, sources, chunks, namespace, test_symbol, source_symbol } = require('./project.js');
 
@@ -94,49 +95,101 @@ function clean(root) {
   })(resolve(root));
 }
 
-function compile({ runtime, root, compiler, cache_dir, cwd }) {
-  const { DagModule, LEAF, box, transformer } = runtime;
-  const compile_chunk = transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
+/** Compile one source into the `.<name>.dag` module beside it. */
+function compile_source(runtime, compile_chunk, { root, cwd }, source_path) {
+  const { DagModule, LEAF, box } = runtime;
+  const relative_path = relative(cwd, source_path);
+  const source = readFileSync(source_path, 'utf8');
+
+  let dag = '';
+  const test_lines = [];
+  const pieces = chunks(source);
+  for (const chunk of pieces) {
+    const compiled = compile_chunk(chunk.text);
+    if (!compiled.trim()) throw new Error(`${relative_path}: compiler returned nothing for:\n${chunk.text}`);
+    // A bare expression compiles to a trailing one-word line; a definition
+    // does not, which is what tells the two apart.
+    for (const line of compiled.split('\n')) {
+      const words = line.trim().split(/\s+/).filter(Boolean);
+      if (words.length === 1) test_lines.push(chunk.code_line);
+    }
+    dag += compiled.endsWith('\n') ? compiled : compiled + '\n';
+  }
+  process.stderr.write(`  ${relative_path} (${pieces.length} chunks)\n`);
+
+  const module = normalize_leaf(
+    DagModule.parse(dag, { absorb_internal_aliases: false }), box, LEAF);
+  name_tests(runtime, module, root, source_path, test_lines);
+  module.qualify(namespace(root, source_path));
+
+  // Which source this was, in the state it was in. The name is the whole
+  // point, so what it names can be the leaf; it rides through linking and
+  // canonicalization like any other symbol, and tells the expect test that
+  // the lines it is about to write results under are still the lines the
+  // tests were named after.
+  module.lines.push([box(source_symbol(root, source_path, source)), box(LEAF)]);
+
+  const name = lamb_base(basename(source_path));
+  writeFileSync(resolve(dirname(source_path), `.${name}.dag`), module.toString());
+}
+
+/** Compile `paths`, one compiler for all of them. */
+function compile_sources({ runtime, root, compiler, cache_dir, cwd, paths }) {
+  const compile_chunk = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
     cache_dir,
   });
-
-  clean(root);
-
-  for (const source_path of sources(resolve(root))) {
-    const relative_path = relative(cwd, source_path);
-    const source = readFileSync(source_path, 'utf8');
-
-    let dag = '';
-    const test_lines = [];
-    const pieces = chunks(source);
-    for (const chunk of pieces) {
-      const compiled = compile_chunk(chunk.text);
-      if (!compiled.trim()) throw new Error(`${relative_path}: compiler returned nothing for:\n${chunk.text}`);
-      // A bare expression compiles to a trailing one-word line; a definition
-      // does not, which is what tells the two apart.
-      for (const line of compiled.split('\n')) {
-        const words = line.trim().split(/\s+/).filter(Boolean);
-        if (words.length === 1) test_lines.push(chunk.code_line);
-      }
-      dag += compiled.endsWith('\n') ? compiled : compiled + '\n';
-    }
-    process.stderr.write(`  ${relative_path} (${pieces.length} chunks)\n`);
-
-    const module = normalize_leaf(
-      DagModule.parse(dag, { absorb_internal_aliases: false }), box, LEAF);
-    name_tests(runtime, module, root, source_path, test_lines);
-    module.qualify(namespace(root, source_path));
-
-    // Which source this was, in the state it was in. The name is the whole
-    // point, so what it names can be the leaf; it rides through linking and
-    // canonicalization like any other symbol, and tells the expect test that
-    // the lines it is about to write results under are still the lines the
-    // tests were named after.
-    module.lines.push([box(source_symbol(root, source_path, source)), box(LEAF)]);
-
-    const name = lamb_base(basename(source_path));
-    writeFileSync(resolve(dirname(source_path), `.${name}.dag`), module.toString());
+  for (const source_path of paths) {
+    compile_source(runtime, compile_chunk, { root, cwd }, source_path);
   }
+}
+
+/**
+ * Deal `paths` into `jobs` shares of roughly equal work.
+ *
+ * Work is chunks rather than sources — one source holds sixty and another two —
+ * so the longest go first and each lands wherever the least is waiting.
+ */
+function shares(paths, jobs) {
+  const weighed = paths
+    .map(path => ({ path, chunks: chunks(readFileSync(path, 'utf8')).length }))
+    .sort((a, b) => b.chunks - a.chunks);
+  const out = Array.from({ length: jobs }, () => ({ paths: [], chunks: 0 }));
+  for (const { path, chunks: n } of weighed) {
+    const lightest = out.reduce((a, b) => (b.chunks < a.chunks ? b : a));
+    lightest.paths.push(path);
+    lightest.chunks += n;
+  }
+  return out.filter(share => share.paths.length).map(share => share.paths);
+}
+
+async function compile(options) {
+  const { root, jobs = 1, tree_calculus } = options;
+  clean(root);
+  const paths = sources(resolve(root));
+
+  if (jobs <= 1 || paths.length < 2) return compile_sources({ ...options, paths });
+
+  // A source is a unit of work on its own — its chunks compile, and the module
+  // they make is written beside it — so sharding sources is all the parallelism
+  // needs. Each worker holds its own compiler; what they memoize goes to the
+  // one cache, so a chunk two sources share is still compiled once across a
+  // later build.
+  const { runtime, ...shared } = options;
+  await Promise.all(shares(paths, jobs).map(share => new Promise((ok, fail) => {
+    const worker = new Worker(__filename, {
+      workerData: { compile: { ...shared, paths: share, tree_calculus } },
+      stderr: false,
+    });
+    worker.on('error', fail);
+    worker.on('exit', code => code === 0 ? ok() : fail(new Error(`compile worker exited with ${code}`)));
+  })));
+}
+
+// Declared last, below everything it reaches: this file is its own worker
+// entry, and a `const` above would still be in its dead zone on that thread.
+if (!isMainThread && workerData && workerData.compile) {
+  const { tree_calculus, ...rest } = workerData.compile;
+  compile_sources({ runtime: require('./runtime.js').load(tree_calculus), ...rest });
 }
 
 module.exports = { compile };
