@@ -31,6 +31,9 @@ Options:
   --cache <dir>         Where to memoize compiled chunks. Compiling is a pure
                         function of the chunk and the compiler, so a rebuild only
                         pays for what actually changed. Defaults to .cache/lambada.
+  --jobs <n>            Compile this many sources at once, each in a thread with
+                        a reducer of its own. Defaults to 1: memory scales with
+                        the count, and a reducer on a heavy source is not small.
   --compiler <file>     The compiler to use, as a .dag. Defaults to the one
                         shipped in compiler/.
   --tree-calculus <path>
@@ -56,6 +59,7 @@ function parse_args(argv) {
     };
     if (arg === '--root') options.root = value();
     else if (arg === '--cache') options.cache = value();
+    else if (arg === '--jobs') options.jobs = Number(value());
     else if (arg === '--compiler') options.compiler = value();
     else if (arg === '--tree-calculus') options.tree_calculus = value();
     else if (arg.startsWith('--')) throw new Error(`unrecognized option ${arg}`);
@@ -64,7 +68,7 @@ function parse_args(argv) {
   return { command, positional, options };
 }
 
-function main(argv) {
+async function main(argv) {
   if (!argv.length || argv[0] === '-h' || argv[0] === '--help') {
     console.log(USAGE);
     return;
@@ -81,12 +85,14 @@ function main(argv) {
 
   switch (command) {
     case 'compile':
-      require('./compile.js').compile({
+      await require('./compile.js').compile({
         runtime,
         root,
         compiler: options.compiler ?? COMPILER,
         cache_dir: resolve(options.cache ?? '.cache/lambada'),
         cwd: process.cwd(),
+        jobs: options.jobs ?? 1,
+        tree_calculus: options.tree_calculus,
       });
       break;
 
@@ -98,9 +104,7 @@ function main(argv) {
   }
 }
 
-try {
-  main(process.argv.slice(2));
-} catch (error) {
+main(process.argv.slice(2)).catch(error => {
   console.error(`lambada: ${error.message}`);
   process.exit(1);
-}
+});
