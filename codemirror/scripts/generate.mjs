@@ -34,6 +34,10 @@ if (/^\s*(import|export)\s/m.test(worker)) {
   );
 }
 
+// The lean compiler. The span-aware variant beside it annotates its output
+// with source positions; the editor resolves names by scope instead
+// (symbols.ts) and has no use for them, so it does not pay for them — a host
+// that wants positions passes compile_to_dag_with_spans via `compiler`.
 const compiler = read(resolve(here, '../../compiler/compile_to_dag.dag'));
 
 mkdirSync(out, { recursive: true });

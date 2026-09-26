@@ -27,6 +27,36 @@ Any theme fills them in; the demo loads
 [cm6-themes](https://github.com/craftzdog/cm6-themes) and has a switch for
 turning it off to see the difference.
 
+## Occurrence highlighting
+
+Resting the cursor in a name highlights its occurrences — scope-aware, and
+with or without compilation.
+
+``` ts
+lambada({ highlightSymbols: false })              // none
+```
+
+## Go to definition
+
+Ctrl-click a name (Cmd on a Mac), or press F12 on it: a bound use jumps to
+its binder, a use of a definition to the statement that defines it — resolved
+by the same scope walk as the highlighting, so this too works with or without
+compilation. A name the *environment* defines is somewhere this package
+cannot see — a page, a file, a repository — so the host says: `external` is
+asked for the action that goes to a name's definition, and returns null for
+one it has nowhere to send. It is asked before a jump is offered — the
+underline under the pointer while the modifier is held — so only names with
+somewhere to go invite the click, and it should be cheap.
+
+On a touch screen, where nothing hovers and no key is F12, resting the
+cursor in a name shows the jump as a small chip instead.
+
+``` ts
+lambada({ gotoDefinition: false })                // no jumps
+lambada({ gotoDefinition:                         // where environment names live
+    { external: (name) => ... } })
+```
+
 ## Compilation
 
 `lambada()` compiles each statement and marks it — green when it compiled, red

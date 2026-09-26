@@ -35,6 +35,31 @@ export function dagLine(text: string): DagLine {
   return { text, name, from: second ? [first, second] : first ? [first] : [] };
 }
 
+/** A name's span suffix, decoded. */
+export interface Span {
+  base: string;
+  /** Character range into the compiled statement's text, end-exclusive, in code points. */
+  from: number;
+  to: number;
+}
+
+const SPAN = /^(.*)::(\d+),(\d+)$/;
+
+/**
+ * The compiler's span-aware variant annotates what it emits with source
+ * ranges, as one uniform rule: an alias line `B::s,e B` says `B` was written
+ * at [s, e) of the statement it compiled, and references go through the
+ * alias. This decodes such a name; an ordinary name is null. `::` cannot
+ * occur in an identifier, so a spanned name never collides with one a
+ * program writes — which is also what tells these alias lines apart from the
+ * definitions a statement exports: a span *annotates* a name, it defines
+ * nothing, and everything that reads compiled lines reads them through this.
+ */
+export function spanned(name: string): Span | null {
+  const m = SPAN.exec(name);
+  return m && { base: m[1], from: Number(m[2]), to: Number(m[3]) };
+}
+
 export const dagLines = (document: string): readonly DagLine[] =>
   document.split(/\r?\n/).map(dagLine);
 

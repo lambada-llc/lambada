@@ -31,7 +31,7 @@ Check out [the tree calculus playground](https://treecalcul.us/live/) and [websi
 For anything larger, [`bin/lambada.js`](./bin/) builds a whole directory of sources at once: symbols are namespaced by where they live and dependencies between files are resolved automatically, with no import statements, and every bare top-level expression is an expect test whose result is written back into the source.
 
 ## Disclaimer
-As of today, specifying and developing LambAda with the formal rigor deserving of a programming language has not been a priority! The project's mission is purely pragmatic: To  us write and read programs in calculi, but makes no stability or correctness guarantees. Details and precise feature sets have changed many times and will continue to do so. For instance, we currently use [Scott encoding](https://en.wikipedia.org/wiki/Mogensen%E2%80%93Scott_encoding) to desugar algebraic data type definitions, but would like to support using trees directly in the future.
+As of today, specifying and developing LambAda with the formal rigor deserving of a programming language has not been a priority! The project's mission is purely pragmatic: to let us write and read programs in calculi. It makes no stability or correctness guarantees. Details and precise feature sets have changed many times and will continue to do so. For instance, we currently use [Scott encoding](https://en.wikipedia.org/wiki/Mogensen%E2%80%93Scott_encoding) to desugar algebraic data type definitions, but would like to support using trees directly in the future.
 
 ## Motivation
 Consider small [calculi](https://github.com/barry-jay-personal/blog/blob/main/2024-12-12-calculus-calculi.md), from λ-calculus and combinatory logic all the way to tree calculi.
@@ -51,14 +51,15 @@ What is notable is that, being reflective, tree calculus can all by itself conve
 - Anything following `#` is a comment.
 - Lambda abstractions `\variable body` desugar via [abstraction elimination](https://en.wikipedia.org/wiki/Combinatory_logic#Completeness_of_the_S-K_basis). For tree calculus in particular, [this repo](https://github.com/lambada-llc/tree-calculus/tree/main/implementation/typescript/src/abstraction-elimination) benchmarks a number of elimination strategies.
 - Lists `[ α, β, ... ]` desugar to `(△ α (△ β (△ ...)))` where the empty list `[]` desugars to `△`.
-- Boolean convention: `△` is false and `△ △` is true, though no names (such as `false` or `true`) are predefined. This is only relevant for:
+  `;` is another spelling of the separator, and a trailing separator is allowed — in records too.
+- Boolean convention: `△` is false and `△ △` is true, though no names (such as `false` or `true`) are predefined. This convention only matters for the number, character and string constants below.
 - Natural numbers `123` desugar to lists of booleans representing their binary encoding, with the least significant bit (LSB) as first element of the list.
 - Character constants `'🤡'` desugar like their corresponding unicode code point (as a natural number) would. 
 - String constants `"foo"` desugar like a list of their corresponding unicode code points would.
   A backslash escapes the next character, as in JSON but only as far as JSON's simple cases go: `\"`, `\\`, `\n`, `\t`, `\r`.
   Any other character after a backslash is an error, and a string may still span lines by containing a line break as it is written.
   Character constants take the character verbatim, so `'\'` and `'''` need no escape.
-- Records `{ k: v, ... }` desugar to `Map.set k v ...` where the empty list `{}` desugars to `△`.
+- Records `{ k: v, ... }` desugar to `Map.set k v ...` where the empty record `{}` desugars to `△`.
   The `: v` part is optional, `v` is assumed to be `△` when omitted. This is useful for defining sets.
   Note that `k` may be any value. Using string constants results in JSON-like notation.
 - Expressions can be assigned to names using `=`, which hides any potential previous meaning of that same name to all code that follows. Those names may not start with an uppercase ASCII character, because those are reserved for:
