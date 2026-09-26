@@ -14,18 +14,33 @@ const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
 const { basename, dirname, relative, resolve } = require('path');
 const { lamb_base, sources, chunks, namespace, test_symbol, source_symbol } = require('./project.js');
 
-// The compiler names the leaf `__ENV△` in its output, as a reference to the
-// binding compile.sh puts in front of everything it emits. Nothing downstream
-// needs to know that: the leaf has a spelling of its own.
+// The compiler refers to the leaf as `__ENV△` rather than `△`, and never
+// defines it. That is deliberate: `△` is an ordinary name, so a source may bind
+// it — `△ = lift △ id` is a perfectly good definition — and were the compiler's
+// own prelude to spell the leaf `△`, every leaf in it below such a binding
+// would quietly become whatever the source bound.
 const COMPILER_LEAF = '__ENV△';
 
-function normalize_leaf(dag) {
-  return dag.split('\n').flatMap(line => {
-    const words = line.split(/\s+/).filter(Boolean);
-    if (!words.length) return [line];
-    if (words[0] === COMPILER_LEAF) return []; // the binding itself, now redundant
-    return [words.map((word, i) => i > 0 && word === COMPILER_LEAF ? '△' : word).join(' ')];
-  }).join('\n');
+/**
+ * Give the leaf its ordinary spelling, so the name stays the compiler's own
+ * business and no module ships a reference only it understands.
+ *
+ * By substituting the box rather than renaming it: it is the box, not the
+ * spelling, that gives a node its identity, so renaming would leave two objects
+ * calling themselves `△` where the module means one, and everything built on
+ * the leaf would stop being shared.
+ *
+ * Nothing defines `__ENV△`, so parsing gave it exactly one box for the whole
+ * module. Any box spelling `△` that heads no definition is already that same
+ * free reference to the leaf, so reuse one if the module has it.
+ */
+function normalize_leaf(module, box, leaf) {
+  const alias = module.lines.flat().find(b => b.symbol === COMPILER_LEAF);
+  if (!alias) return module;
+  const heads = new Set(module.lines.filter(line => line.length > 1).map(line => line[0]));
+  const target = module.lines.flat().find(b => b.symbol === leaf && !heads.has(b)) ?? box(leaf);
+  module.lines = module.lines.map(line => line.map(b => (b === alias ? target : b)));
+  return module;
 }
 
 /**
@@ -107,7 +122,8 @@ function compile({ runtime, root, compiler, cache_dir, cwd }) {
     }
     process.stderr.write(`  ${relative_path} (${pieces.length} chunks)\n`);
 
-    const module = DagModule.parse(normalize_leaf(dag), { absorb_internal_aliases: false });
+    const module = normalize_leaf(
+      DagModule.parse(dag, { absorb_internal_aliases: false }), box, LEAF);
     name_tests(runtime, module, root, source_path, test_lines);
     module.qualify(namespace(root, source_path));
 
