@@ -45,12 +45,14 @@ $ ./lambada.js <command> [options]
 | --- | --- |
 | `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. |
 | `expect-test <bundle>` | Evaluate the tests in a linked, canonicalized bundle and record each result in the source it came from. |
+| `emit [file]` | One source as the compiler emits it — the prelude, then each chunk — on standard output, nothing named or qualified. Reads stdin without a file. For a snippet to run against a library, or to see what the compiler makes of a file. |
 
 | Option | |
 | --- | --- |
 | `--root <dir>` | Where the sources live. Defaults to `src`. |
 | `--cache <dir>` | Where to memoize compiled chunks. Compiling is a pure function of the chunk and the compiler, so a rebuild only pays for what actually changed, and changing the compiler correctly invalidates everything. Defaults to `.cache/lambada`. |
 | `--compiler <file>` | The compiler to use, as a `.dag`. Defaults to the one shipped in [`compiler/`](../compiler/). |
+| `--prelude <file>` | The combinator definitions a compiled chunk refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |
 | `--tree-calculus <path>` | A [tree-calculus](https://github.com/lambada-llc/tree-calculus) checkout to use, instead of downloading the published runtime. Also settable as `$LAMBADA_TREE_CALCULUS`. |
 
 Compiling produces one [DAG module](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#dag-modules) per source. Putting those together into one program is [`dag.js`](https://github.com/lambada-llc/tree-calculus/tree/main/bin)'s job, so a full build is:
