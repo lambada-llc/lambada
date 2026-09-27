@@ -15,21 +15,6 @@ const { Worker, isMainThread, workerData } = require('worker_threads');
 const { basename, dirname, relative, resolve } = require('path');
 const { lamb_base, sources, chunks, namespace, test_symbol, source_symbol } = require('./project.js');
 
-// The compiler refers to the leaf as `__ENV△` rather than `△`, and never
-// defines it. That is deliberate: `△` is an ordinary name, so a source may bind
-// it — `△ = lift △ id` is a perfectly good definition — and were the compiler
-// to spell the leaf `△`, every leaf below such a binding would quietly become
-// whatever the source bound.
-//
-// So the module says what the name means, on its own first line. Being first is
-// the whole of it: there `△` is still the leaf, whatever a source binds it to
-// further down, and every reference the compiler emitted resolves to that one
-// definition. Nothing outside the module has to know the name, because the
-// module no longer leaves it to anyone else to bind.
-//
-// Qualification makes it private without being told to — its local part opens
-// with `_`, so it gets a `:N` of its own and no module offers it to another.
-const COMPILER_LEAF = '__ENV△';
 
 /**
  * Turn each bare top-level expression into a named test.
@@ -83,7 +68,7 @@ function clean(root) {
 }
 
 /** Compile one source into the `.<name>.dag` module beside it. */
-function compile_source(runtime, compile_chunk, { root, cwd }, source_path) {
+function compile_source(runtime, compile_chunk, { root, cwd, prelude }, source_path) {
   const { DagModule, LEAF, box } = runtime;
   const relative_path = relative(cwd, source_path);
   const source = readFileSync(source_path, 'utf8');
@@ -104,8 +89,9 @@ function compile_source(runtime, compile_chunk, { root, cwd }, source_path) {
   }
   process.stderr.write(`  ${relative_path} (${pieces.length} chunks)\n`);
 
-  const module = DagModule.parse(
-    `${COMPILER_LEAF} ${LEAF}\n${dag}`, { absorb_internal_aliases: false });
+  // The prelude first: a chunk refers to the combinator labels and leaves
+  // defining them to whoever assembles the module, which is this.
+  const module = DagModule.parse(prelude + dag, { absorb_internal_aliases: false });
   name_tests(runtime, module, root, source_path, test_lines);
   module.qualify(namespace(root, source_path));
 
@@ -121,12 +107,13 @@ function compile_source(runtime, compile_chunk, { root, cwd }, source_path) {
 }
 
 /** Compile `paths`, one compiler for all of them. */
-function compile_sources({ runtime, root, compiler, cache_dir, cwd, paths }) {
+function compile_sources({ runtime, root, compiler, prelude: prelude_path, cache_dir, cwd, paths }) {
   const compile_chunk = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
     cache_dir,
   });
+  const prelude = readFileSync(prelude_path, 'utf8');
   for (const source_path of paths) {
-    compile_source(runtime, compile_chunk, { root, cwd }, source_path);
+    compile_source(runtime, compile_chunk, { root, cwd, prelude }, source_path);
   }
 }
 

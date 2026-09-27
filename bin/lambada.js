@@ -13,6 +13,7 @@ const { resolve } = require('path');
 const { load } = require('./runtime.js');
 
 const COMPILER = resolve(__dirname, '../compiler/compile_to_dag.dag');
+const PRELUDE = resolve(__dirname, '../compiler/prelude.dag');
 
 const USAGE = `Usage: lambada <command> [options]
 
@@ -36,6 +37,10 @@ Options:
                         the count, and a reducer on a heavy source is not small.
   --compiler <file>     The compiler to use, as a .dag. Defaults to the one
                         shipped in compiler/.
+  --prelude <file>      The combinator definitions a compiled chunk refers to,
+                        as .dag lines, put at the top of each module. Belongs to
+                        the compiler that emits those references; defaults to the
+                        one shipped beside it.
   --tree-calculus <path>
                         A tree-calculus checkout to use, instead of downloading
                         the published runtime. Also settable as
@@ -61,6 +66,7 @@ function parse_args(argv) {
     else if (arg === '--cache') options.cache = value();
     else if (arg === '--jobs') options.jobs = Number(value());
     else if (arg === '--compiler') options.compiler = value();
+    else if (arg === '--prelude') options.prelude = value();
     else if (arg === '--tree-calculus') options.tree_calculus = value();
     else if (arg.startsWith('--')) throw new Error(`unrecognized option ${arg}`);
     else positional.push(arg);
@@ -89,6 +95,7 @@ async function main(argv) {
         runtime,
         root,
         compiler: options.compiler ?? COMPILER,
+        prelude: options.prelude ?? PRELUDE,
         cache_dir: resolve(options.cache ?? '.cache/lambada'),
         cwd: process.cwd(),
         jobs: options.jobs ?? 1,

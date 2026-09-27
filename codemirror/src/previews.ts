@@ -25,10 +25,6 @@ interface Expression {
   dag: string;
 }
 
-// The compiler emits references to `__ENV△` and expects it to be the leaf.
-// Nothing in the DAG format binds it, so anything evaluated has to say so.
-const leafBinding = dagLine('__ENV△ △');
-
 const isBare = (line: DagLine) => line.from.length === 0;
 
 /**
@@ -48,7 +44,9 @@ const isBare = (line: DagLine) => line.from.length === 0;
  * program is smaller to send and to read, which is the part that is.
  */
 function expressionsIn(state: EditorState, config: Resolved): readonly Expression[] {
-  const context: DagLine[] = [leafBinding, ...config.environment];
+  // The prelude first: a compiled chunk refers to the combinator labels and
+  // leaves defining them to whoever assembles what gets evaluated.
+  const context: DagLine[] = [...config.prelude, ...config.environment];
   const found: Expression[] = [];
 
   for (const { statement, state: status } of state.field(config.analyses)) {
