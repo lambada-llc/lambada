@@ -7,7 +7,7 @@ emits the same DAG plus `X::s,e Y` alias lines recording where each node was
 written — what the [codemirror package](../codemirror/) resolves go to
 definition on.
 
-`compile.sh` needs `curl` (it fetches the latest tree calculus runtime), `perl` and GNU `parallel`; `bin/lambada.js` needs only Node.js.
+`compile.sh` needs `curl` (it fetches the latest tree calculus runtime) and Node.js; it is a thin wrapper over `bin/lambada.js emit`, which needs only Node.js.
 
 ## Examples
 

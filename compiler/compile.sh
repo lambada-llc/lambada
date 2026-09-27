@@ -3,30 +3,22 @@
 set -euo pipefail
 
 # Usage: cat definitions.lamb | ./compile.sh expression > whatever.dag
+#
+# Compiles the definitions and the expression, links them, and writes the DAG
+# of the expression's value. `lambada emit` does the compiling; the runtime's
+# CLI does the linking, and is what runs the result afterwards.
 
-compiler="$(dirname "$0")/compile_to_dag.dag"
-prelude="$(dirname "$0")/prelude.dag"
-tc="$(dirname "$0")/tree-calculus.js"
+here="$(dirname "$0")"
+# Compiled chunks are memoized beside this script; the runtime is fetched there too.
+emit() { node "$here/../bin/lambada.js" emit --cache "$here/.cache/lambada"; }
+tc="$here/tree-calculus.js"
 >&2 echo Downloading latest version of the Tree Calculus runtime...
 tctmp=$(mktemp)
 (curl --silent https://raw.githubusercontent.com/lambada-llc/tree-calculus/refs/heads/main/bin/main.js > "$tctmp" && mv "$tctmp" "$tc") ||
   (echo Failed. && test -f "$tc" && echo Found preexisting runtime, using that.) >&2
 
-function compile_chunk {
-  >&2 echo -n .
-  node "$tc" -file -dag "$compiler" -string "$1"
-}
-export compiler
-export tc
-export -f compile_chunk
-
-(
-  >&2 echo -n Compiling chunks
-  # A compiled chunk refers to the prelude's combinators; the module opens with it.
-  cat "$prelude"
-  perl -pe 's/^([^\s].*)$/\x0$1/' | parallel --null --keep-order compile_chunk | grep ' ';
-  compile_chunk "$1"
-  >&2 echo
-  >&2 echo Linking...
-) | node "$tc" -dag -
-
+# The definitions' own bare expressions are dropped: a one-word line ends the
+# document, and the expression asked for is what it should end on.
+{ emit | grep ' '
+  printf '%s\n' "$1" | emit
+} | node "$tc" -dag -

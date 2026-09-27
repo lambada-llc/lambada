@@ -26,6 +26,11 @@ Commands:
                                 Evaluate the tests in a linked, canonicalized
                                 bundle and record each result as a '# = …'
                                 comment below the expression it belongs to.
+  emit [file]                   One source as the compiler emits it — the
+                                prelude, then each chunk — on standard output,
+                                nothing named or qualified. Reads stdin without
+                                a file. For a snippet to run against a library,
+                                or to see what the compiler makes of a file.
 
 Options:
   --root <dir>          Where the sources live. Defaults to src.
@@ -46,7 +51,7 @@ Options:
                         the published runtime. Also settable as
                         $LAMBADA_TREE_CALCULUS.
 
-Between the two commands, link and canonicalize the modules with dag.js:
+Between compile and expect-test, link and canonicalize the modules with dag.js:
 
   lambada compile
   dag.js link $(find src -name '.*.dag' | sort) | dag.js canonicalize > bundle.dag
@@ -81,7 +86,7 @@ async function main(argv) {
   }
 
   const { command, positional, options } = parse_args(argv);
-  if (!['compile', 'expect-test'].includes(command)) {
+  if (!['compile', 'expect-test', 'emit'].includes(command)) {
     throw new Error(`unrecognized command ${command}`);
   }
 
@@ -102,6 +107,20 @@ async function main(argv) {
         tree_calculus: options.tree_calculus,
       });
       break;
+
+    case 'emit': {
+      const file = positional[0] ?? '-';
+      const source = require('fs').readFileSync(file === '-' ? 0 : file, 'utf8');
+      process.stdout.write(require('./compile.js').emit({
+        runtime,
+        compiler: options.compiler ?? COMPILER,
+        prelude: options.prelude ?? PRELUDE,
+        cache_dir: resolve(options.cache ?? '.cache/lambada'),
+        source,
+        where: file,
+      }));
+      break;
+    }
 
     case 'expect-test': {
       if (!positional.length) throw new Error('expect-test needs a bundle to evaluate');

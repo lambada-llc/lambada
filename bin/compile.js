@@ -67,31 +67,36 @@ function clean(root) {
   })(resolve(root));
 }
 
+/** Each chunk of `source` compiled, in order, each ending in a newline. */
+function compiled_chunks(compile_chunk, source, where) {
+  return chunks(source).map(chunk => {
+    const compiled = compile_chunk(chunk.text);
+    if (!compiled.trim()) throw new Error(`${where}: compiler returned nothing for:\n${chunk.text}`);
+    return { chunk, compiled: compiled.endsWith('\n') ? compiled : compiled + '\n' };
+  });
+}
+
 /** Compile one source into the `.<name>.dag` module beside it. */
 function compile_source(runtime, compile_chunk, { root, cwd, prelude }, source_path) {
   const { DagModule, LEAF, box } = runtime;
   const relative_path = relative(cwd, source_path);
   const source = readFileSync(source_path, 'utf8');
 
-  let dag = '';
+  const pieces = compiled_chunks(compile_chunk, source, relative_path);
+  // A bare expression compiles to a trailing one-word line; a definition does
+  // not, which is what tells the two apart.
   const test_lines = [];
-  const pieces = chunks(source);
-  for (const chunk of pieces) {
-    const compiled = compile_chunk(chunk.text);
-    if (!compiled.trim()) throw new Error(`${relative_path}: compiler returned nothing for:\n${chunk.text}`);
-    // A bare expression compiles to a trailing one-word line; a definition
-    // does not, which is what tells the two apart.
+  for (const { chunk, compiled } of pieces) {
     for (const line of compiled.split('\n')) {
-      const words = line.trim().split(/\s+/).filter(Boolean);
-      if (words.length === 1) test_lines.push(chunk.code_line);
+      if (line.trim().split(/\s+/).filter(Boolean).length === 1) test_lines.push(chunk.code_line);
     }
-    dag += compiled.endsWith('\n') ? compiled : compiled + '\n';
   }
   process.stderr.write(`  ${relative_path} (${pieces.length} chunks)\n`);
 
   // The prelude first: a chunk refers to the combinator labels and leaves
   // defining them to whoever assembles the module, which is this.
-  const module = DagModule.parse(prelude + dag, { absorb_internal_aliases: false });
+  const dag = prelude + pieces.map(piece => piece.compiled).join('');
+  const module = DagModule.parse(dag, { absorb_internal_aliases: false });
   name_tests(runtime, module, root, source_path, test_lines);
   module.qualify(namespace(root, source_path));
 
@@ -166,4 +171,18 @@ if (!isMainThread && workerData && workerData.compile) {
   compile_sources({ runtime: require('./runtime.js').load(tree_calculus), ...rest });
 }
 
-module.exports = { compile };
+/**
+ * One source as the compiler emits it: the prelude, then each chunk. Nothing
+ * is named or qualified — a bare expression stays the value the text ends on —
+ * which is what a snippet run against a library wants, and what a test of the
+ * compiler's own output pins.
+ */
+function emit({ runtime, compiler, prelude, cache_dir, source, where = 'emit' }) {
+  const compile_chunk = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
+    cache_dir,
+  });
+  return readFileSync(prelude, 'utf8')
+    + compiled_chunks(compile_chunk, source, where).map(piece => piece.compiled).join('');
+}
+
+module.exports = { compile, emit };

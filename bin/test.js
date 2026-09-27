@@ -15,6 +15,8 @@ const {
   is_lamb_file, lamb_base, lamb_source_path, sources,
   namespace, test_symbol, parse_test_symbol, chunks, fingerprint,
 } = require('./project.js');
+const { emit } = require('./compile.js');
+const { load } = require('./runtime.js');
 
 let failures = 0;
 function check(what, fn) {
@@ -77,4 +79,13 @@ check('chunks and fingerprints count code lines, not prose', () => {
 });
 
 console.log(failures ? `\n${failures} failed` : '\nall passed');
+check('emit is the prelude, then each chunk, nothing named', () => {
+  const compiler = resolve(__dirname, '../compiler/compile_to_dag.dag');
+  const prelude = resolve(__dirname, '../compiler/prelude.dag');
+  const out = emit({ runtime: load(), compiler, prelude, source: 'x = △\nx\n' });
+  const prelude_text = require('fs').readFileSync(prelude, 'utf8');
+  assert.ok(out.startsWith(prelude_text), 'the prelude comes first');
+  assert.strictEqual(out.slice(prelude_text.length), 'x △\nx\n', 'then the chunks, with a bare expression left bare');
+});
+
 process.exit(failures ? 1 : 0);
