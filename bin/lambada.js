@@ -37,9 +37,10 @@ Options:
   --cache <dir>         Where to memoize compiled chunks. Compiling is a pure
                         function of the chunk and the compiler, so a rebuild only
                         pays for what actually changed. Defaults to .cache/lambada.
-  --jobs <n>            Compile this many sources at once, each in a thread with
-                        a reducer of its own. Defaults to 1: memory scales with
-                        the count, and a reducer on a heavy source is not small.
+  --jobs <n>            Compile this many sources, or evaluate this many tests,
+                        at once, each in a thread with a reducer of its own.
+                        Defaults to 1: memory scales with the count, and a
+                        reducer on a heavy source or test is not small.
   --compiler <file>     The compiler to use, as a .dag. Defaults to the one
                         shipped in compiler/.
   --prelude <file>      The combinator definitions a compiled chunk refers to,
@@ -124,7 +125,13 @@ async function main(argv) {
 
     case 'expect-test': {
       if (!positional.length) throw new Error('expect-test needs a bundle to evaluate');
-      require('./expect-test.js').expect_test({ runtime, root, bundle_path: positional[0] });
+      await require('./expect-test.js').expect_test({
+        runtime,
+        root,
+        bundle_path: positional[0],
+        jobs: options.jobs ?? 1,
+        tree_calculus: options.tree_calculus,
+      });
       break;
     }
   }

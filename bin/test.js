@@ -1,28 +1,28 @@
 #!/usr/bin/env node
 'use strict';
 
-// Tests for the conventions in project.js. Run with `node bin/test.js`.
+// Tests for the build tool. Run with `node bin/test.js`.
 //
 // These are the rules that turn a path into a name and a name back into a
 // path, so what they mostly assert is that the two directions agree — and that
 // whatever extensions a project puts on a source file change none of it.
 
 const assert = require('assert');
-const { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync } = require('fs');
+const { mkdtempSync, mkdirSync, readFileSync, writeFileSync, symlinkSync, rmSync } = require('fs');
 const { tmpdir } = require('os');
 const { join, resolve } = require('path');
 const {
   is_lamb_file, lamb_base, lamb_source_path, sources,
   namespace, test_symbol, parse_test_symbol, chunks, fingerprint,
 } = require('./project.js');
-const { emit } = require('./compile.js');
+const { compile, emit } = require('./compile.js');
+const { expect_test } = require('./expect-test.js');
 const { load } = require('./runtime.js');
 
-let failures = 0;
-function check(what, fn) {
-  try { fn(); console.log(`PASS ${what}`); }
-  catch (error) { failures++; console.log(`FAIL ${what}: ${error.message}`); }
-}
+// Run in the order written, one at a time, so an async check finishes before
+// the next starts.
+const checks = [];
+function check(what, fn) { checks.push({ what, fn }); }
 
 check('a source is recognized by name, not by kind', () => {
   assert.ok(is_lamb_file('bool.lamb'));
@@ -78,7 +78,6 @@ check('chunks and fingerprints count code lines, not prose', () => {
   assert.equal(fingerprint(source), fingerprint('a = △\nb = a\n  c\n'));
 });
 
-console.log(failures ? `\n${failures} failed` : '\nall passed');
 check('emit is the prelude, then each chunk, nothing named', () => {
   const compiler = resolve(__dirname, '../compiler/compile_to_dag.dag');
   const prelude = resolve(__dirname, '../compiler/prelude.dag');
@@ -88,4 +87,41 @@ check('emit is the prelude, then each chunk, nothing named', () => {
   assert.strictEqual(out.slice(prelude_text.length), 'x △\nx\n', 'then the chunks, with a bare expression left bare');
 });
 
-process.exit(failures ? 1 : 0);
+check('a deleted test takes its result along, and a file written twice is refused', async () => {
+  const runtime = load();
+  const root = mkdtempSync(join(tmpdir(), 'lambada-test-'));
+  const source = join(root, 'a.lamb');
+  const run = async text => {
+    writeFileSync(source, text);
+    await compile({
+      runtime, root, cwd: root,
+      compiler: resolve(__dirname, '../compiler/compile_to_dag.dag'),
+      prelude: resolve(__dirname, '../compiler/prelude.dag'),
+    });
+    const bundle = join(root, 'bundle.dag');
+    const module = join(root, '.a.dag');
+    writeFileSync(bundle, runtime.DagModule
+      .parse(runtime.link([{ name: module, text: readFileSync(module, 'utf8') }]))
+      .canonicalize().toString());
+    await expect_test({ runtime, root, bundle_path: bundle });
+    return readFileSync(source, 'utf8');
+  };
+  try {
+    assert.strictEqual(await run('x = "hi"\nx\n'), 'x = "hi"\nx\n# = hi\n');
+    assert.strictEqual(await run('x = "hi"\n# = hi\n'), 'x = "hi"\n');
+    const file = bytes => `△ (△ "a.txt" "text/plain") "${bytes}"`;
+    await assert.rejects(run(`${file(1)}\n${file(2)}\n`), /a\.txt: written by a test in .* and one in/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+(async () => {
+  let failures = 0;
+  for (const { what, fn } of checks) {
+    try { await fn(); console.log(`PASS ${what}`); }
+    catch (error) { failures++; console.log(`FAIL ${what}: ${error.message}`); }
+  }
+  console.log(failures ? `\n${failures} failed` : '\nall passed');
+  process.exit(failures ? 1 : 0);
+})();
