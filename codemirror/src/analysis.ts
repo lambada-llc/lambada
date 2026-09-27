@@ -29,12 +29,9 @@ export interface Analysis {
 
 // The DAG format binds `△` to the leaf. It is a name a program writes.
 const leaf = '△';
-// The compiler calls that same leaf `__ENV△` in what it emits, and references
-// it in every compilation — so it has to be in scope, but nobody writes it.
-const compilersLeaf = '__ENV△';
 
 /**
- * What is in scope before the document starts: those two, plus whatever the
+ * What is in scope before the document starts: the leaf, plus whatever the
  * environment's DAG module defines. See
  * https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-modules
  *
@@ -42,7 +39,7 @@ const compilersLeaf = '__ENV△';
  * thousands of lines, and it does not change while a document is open.
  */
 export function initialScope(environment: readonly DagLine[]): ReadonlySet<string> {
-  const names = new Set([leaf, compilersLeaf]);
+  const names = new Set([leaf]);
   for (const { name, from } of environment) if (name && from.length) names.add(name);
   return names;
 }
@@ -82,11 +79,11 @@ export function scopeAt(
 
 /**
  * Whether a name is one anybody would write, as opposed to one the compiler
- * made up on the way. `:ct` and `0` are not identifiers at all — the rule is
- * the grammar's — and `__ENV△` is an identifier that only the compiler uses.
+ * made up on the way: `:ct` and `0` are not identifiers at all, and the rule for
+ * what is one is the grammar's.
  */
 export function isOfferable(name: string): boolean {
-  return name !== compilersLeaf && isIdentifier(name);
+  return isIdentifier(name);
 }
 
 /**

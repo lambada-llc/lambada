@@ -2,13 +2,20 @@ import type { StateField } from '@codemirror/state';
 
 import { analyses, initialScope, type Analysis } from './analysis';
 import { dagLines, type DagLine } from './dag';
-import { defaultCompiler } from './generated/compiler';
+import { defaultCompiler, defaultPrelude } from './generated/compiler';
 import { defaultPreview, type Preview } from './previews';
 import type { Tree } from './tree';
 
 export interface CompileConfig {
   /** The compiler, as a DAG. Defaults to the one this package ships. */
   compiler?: string;
+  /**
+   * The combinator definitions a compiled chunk refers to, as DAG lines. They
+   * belong to the compiler that emits those references, so a host passing its
+   * own `compiler` passes its prelude too. Defaults to the pair this package
+   * ships.
+   */
+  prelude?: string;
   /** How long one statement may take before its worker is killed. */
   timeout?: number;
   /** Mark each statement with how its compilation went. Default: true. */
@@ -48,6 +55,8 @@ export interface CompileConfig {
  */
 export interface Resolved {
   compiler: string;
+  /** The prelude's lines, read once: it goes in front of everything evaluated. */
+  prelude: readonly DagLine[];
   timeout: number;
   /** The environment's lines, read once: it is long and it never changes. */
   environment: readonly DagLine[];
@@ -71,6 +80,7 @@ export function resolve(compile: boolean | CompileConfig): Resolved | null {
   const scope = initialScope(environment);
   return {
     compiler: config.compiler ?? defaultCompiler,
+    prelude: dagLines(config.prelude ?? defaultPrelude),
     timeout: config.timeout ?? 10000,
     environment,
     initialScope: scope,
