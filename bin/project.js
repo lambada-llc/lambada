@@ -66,37 +66,6 @@ function sources(dir) {
 /** The lines a source is made of, as opposed to the blanks and comments between them. */
 const is_source_line = line => line !== '' && !line.startsWith('#');
 
-/**
- * Split a source into the units the compiler is applied to.
- *
- * A top-level line starts at column 0 and indented lines continue it; comments
- * and blank lines are dropped. `code_line` is the 1-based *code* line the chunk
- * ends on, which is where an expect test records its result. Counting code
- * lines rather than physical ones is what keeps a test's name fixed as the
- * build writes its own `# = …` comments into the file — and as the prose around
- * them changes.
- *
- * Chunking matters beyond tidiness: the compiler is a pure function, so
- * compiling a chunk at a time means an edit only costs what it actually changed.
- */
-function chunks(content) {
-  const found = [];
-  let current = null;
-  let code_line = 0;
-  for (const line of content.split('\n')) {
-    if (!is_source_line(line)) continue;
-    code_line++;
-    if (/^[ \t]/.test(line) && current) {
-      current.text += '\n' + line;
-      current.code_line = code_line;
-    } else {
-      current = { text: line, code_line };
-      found.push(current);
-    }
-  }
-  return found;
-}
-
 /** Physical line number of each code line, indexed 1-based by code line. */
 function physical_lines(content) {
   const physical = [0];
@@ -192,7 +161,6 @@ module.exports = {
   lamb_base,
   lamb_source_path,
   sources,
-  chunks,
   is_source_line,
   physical_lines,
   fingerprint,

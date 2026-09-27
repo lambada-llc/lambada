@@ -1,11 +1,18 @@
 ## Source
 
-`compile_to_dag.dag` and `compile_to_dag_with_spans.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
+`compile_file.dag`, `compile_to_dag.dag` and `compile_to_dag_with_spans.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
 by [arboretum's build](https://github.com/lambada-llc/arboretum/blob/main/build.sh), which extracts them
-from the library it just compiled and writes them here. The spanned variant
-emits the same DAG plus `X::s,e Y` alias lines recording where each node was
-written — what the [codemirror package](../codemirror/) resolves go to
-definition on.
+from the library it just compiled and writes them here.
+
+`compile_file` compiles a whole source: it splits it into statements by
+indentation, compiles each, and names each bare expression's value
+`:line.<n>` after the code line it ends on, which is what an expect test is
+named by. A statement it cannot compile it records as `:fail.<n>`.
+
+`compile_to_dag` compiles one statement, which is what an editor wants as the
+text changes. The spanned variant emits the same DAG plus `X::s,e Y` alias
+lines recording where each node was written — what the
+[codemirror package](../codemirror/) resolves go to definition on.
 
 `compile.sh` needs `curl` (it fetches the latest tree calculus runtime) and Node.js; it is a thin wrapper over `bin/lambada.js emit`, which needs only Node.js.
 
