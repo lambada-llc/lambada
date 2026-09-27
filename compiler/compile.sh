@@ -5,6 +5,7 @@ set -euo pipefail
 # Usage: cat definitions.lamb | ./compile.sh expression > whatever.dag
 
 compiler="$(dirname "$0")/compile_to_dag.dag"
+prelude="$(dirname "$0")/prelude.dag"
 tc="$(dirname "$0")/tree-calculus.js"
 >&2 echo Downloading latest version of the Tree Calculus runtime...
 tctmp=$(mktemp)
@@ -21,7 +22,8 @@ export -f compile_chunk
 
 (
   >&2 echo -n Compiling chunks
-  echo '__ENV△ △'
+  # A compiled chunk refers to the prelude's combinators; the module opens with it.
+  cat "$prelude"
   perl -pe 's/^([^\s].*)$/\x0$1/' | parallel --null --keep-order compile_chunk | grep ' ';
   compile_chunk "$1"
   >&2 echo
