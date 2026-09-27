@@ -2,10 +2,10 @@
 
 // Compiling a project of LambAda sources into DAG modules.
 //
-// The compiler is itself a tree (compiler/compile_to_dag.dag), applied to one
-// top-level chunk at a time. What comes out is a DAG naming the chunk's
-// definitions; namespacing it by where the source lives is what lets files refer
-// to each other without imports.
+// The compiler is itself a tree (compiler/compile_file.dag), applied to a whole
+// source. What comes out is a DAG naming the source's definitions; namespacing
+// it by where the source lives is what lets files refer to each other without
+// imports.
 //
 // One `.<name>.dag` module is written next to each source. Linking them into a
 // program is the tree calculus runtime's job, not ours.
@@ -13,37 +13,43 @@
 const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
 const { Worker, isMainThread, workerData } = require('worker_threads');
 const { basename, dirname, relative, resolve } = require('path');
-const { lamb_base, sources, chunks, namespace, test_symbol, source_symbol } = require('./project.js');
+const { lamb_base, sources, physical_lines, namespace, test_symbol, source_symbol } = require('./project.js');
 
+
+// The compiler names a bare expression's value after the code line its
+// statement ends on, and records a statement it could not compile the same way.
+const LINE = /^:line\.(\d+)$/;
+const FAIL = /^:fail\.(\d+) /gm;
 
 /**
  * Turn each bare top-level expression into a named test.
  *
- * A bare expression compiles to a one-word line — a value the module mentions
- * but does not bind. Naming it after the source line it ends on makes the result
- * addressable once everything is linked, which is how the expect test finds its
- * way back to the expression it belongs to.
+ * The compiler names each one `:line.<n>`, after the code line it ends on;
+ * naming it after its source as well makes the result addressable once
+ * everything is linked, which is how the expect test finds its way back to the
+ * expression it belongs to. The value line the file ends on goes: a module is
+ * all definitions.
  *
  * The result is rendered through `_to_string` if the source defines one. If it
  * does not, identity stands in: `:i` is the identity the compiler emits for its
  * own use, and binding through it costs nothing.
  */
-function name_tests(runtime, module, root, source_path, test_lines) {
+function name_tests(runtime, module, root, source_path) {
   const { box } = runtime;
   let to_string = null;
-  let index = 0;
   const lines = [];
 
   for (const line of module.lines) {
+    const test = LINE.exec(line[0].symbol);
     if (line.length === 2 && line[0].symbol === '_to_string') to_string = line[0];
-    if (line.length === 1) {
+    if (test && line.length === 2) {
       if (!to_string) {
         throw new Error(
           `${source_path}: cannot render test results, `
           + 'the compiler emitted no identity to fall back on');
       }
-      lines.push([box(test_symbol(root, source_path, test_lines[index++])), to_string, line[0]]);
-    } else {
+      lines.push([box(test_symbol(root, source_path, Number(test[1]))), to_string, line[1]]);
+    } else if (!test) {
       lines.push(line);
       if (!to_string && line.length === 2 && line[0].symbol === ':i') {
         to_string = box('_to_string');
@@ -67,37 +73,29 @@ function clean(root) {
   })(resolve(root));
 }
 
-/** Each chunk of `source` compiled, in order, each ending in a newline. */
-function compiled_chunks(compile_chunk, source, where) {
-  return chunks(source).map(chunk => {
-    const compiled = compile_chunk(chunk.text);
-    if (!compiled.trim()) throw new Error(`${where}: compiler returned nothing for:\n${chunk.text}`);
-    return { chunk, compiled: compiled.endsWith('\n') ? compiled : compiled + '\n' };
-  });
+/** `source` compiled, refusing it if any statement did not compile. */
+function compiled(compile_file, source, where) {
+  const out = compile_file(source);
+  const failed = [...out.matchAll(FAIL)].map(([, n]) => physical_lines(source)[Number(n)]);
+  if (failed.length) {
+    throw new Error(`${failed.map(line => `${where}:${line}`).join(', ')}: `
+      + `the statement ending here does not compile`);
+  }
+  return out;
 }
 
 /** Compile one source into the `.<name>.dag` module beside it. */
-function compile_source(runtime, compile_chunk, { root, cwd, prelude }, source_path) {
+function compile_source(runtime, compile_file, { root, cwd, prelude }, source_path) {
   const { DagModule, LEAF, box } = runtime;
   const relative_path = relative(cwd, source_path);
   const source = readFileSync(source_path, 'utf8');
+  process.stderr.write(`  ${relative_path}\n`);
 
-  const pieces = compiled_chunks(compile_chunk, source, relative_path);
-  // A bare expression compiles to a trailing one-word line; a definition does
-  // not, which is what tells the two apart.
-  const test_lines = [];
-  for (const { chunk, compiled } of pieces) {
-    for (const line of compiled.split('\n')) {
-      if (line.trim().split(/\s+/).filter(Boolean).length === 1) test_lines.push(chunk.code_line);
-    }
-  }
-  process.stderr.write(`  ${relative_path} (${pieces.length} chunks)\n`);
-
-  // The prelude first: a chunk refers to the combinator labels and leaves
-  // defining them to whoever assembles the module, which is this.
-  const dag = prelude + pieces.map(piece => piece.compiled).join('');
-  const module = DagModule.parse(dag, { absorb_internal_aliases: false });
-  name_tests(runtime, module, root, source_path, test_lines);
+  // The prelude first: compiled code refers to the combinator labels and
+  // leaves defining them to whoever assembles the module, which is this.
+  const module = DagModule.parse(prelude + compiled(compile_file, source, relative_path),
+    { absorb_internal_aliases: false });
+  name_tests(runtime, module, root, source_path);
   module.qualify(namespace(root, source_path));
 
   // Which source this was, in the state it was in. The name is the whole
@@ -113,30 +111,31 @@ function compile_source(runtime, compile_chunk, { root, cwd, prelude }, source_p
 
 /** Compile `paths`, one compiler for all of them. */
 function compile_sources({ runtime, root, compiler, prelude: prelude_path, cache_dir, cwd, paths }) {
-  const compile_chunk = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
+  const compile_file = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
     cache_dir,
   });
   const prelude = readFileSync(prelude_path, 'utf8');
   for (const source_path of paths) {
-    compile_source(runtime, compile_chunk, { root, cwd, prelude }, source_path);
+    compile_source(runtime, compile_file, { root, cwd, prelude }, source_path);
   }
 }
 
 /**
  * Deal `paths` into `jobs` shares of roughly equal work.
  *
- * Work is chunks rather than sources — one source holds sixty and another two —
- * so the longest go first and each lands wherever the least is waiting.
+ * Work is measured in characters rather than sources — one source is a hundred
+ * times another — so the longest go first and each lands wherever the least is
+ * waiting.
  */
 function shares(paths, jobs) {
   const weighed = paths
-    .map(path => ({ path, chunks: chunks(readFileSync(path, 'utf8')).length }))
-    .sort((a, b) => b.chunks - a.chunks);
-  const out = Array.from({ length: jobs }, () => ({ paths: [], chunks: 0 }));
-  for (const { path, chunks: n } of weighed) {
-    const lightest = out.reduce((a, b) => (b.chunks < a.chunks ? b : a));
+    .map(path => ({ path, size: readFileSync(path, 'utf8').length }))
+    .sort((a, b) => b.size - a.size);
+  const out = Array.from({ length: jobs }, () => ({ paths: [], size: 0 }));
+  for (const { path, size } of weighed) {
+    const lightest = out.reduce((a, b) => (b.size < a.size ? b : a));
     lightest.paths.push(path);
-    lightest.chunks += n;
+    lightest.size += size;
   }
   return out.filter(share => share.paths.length).map(share => share.paths);
 }
@@ -148,11 +147,10 @@ async function compile(options) {
 
   if (jobs <= 1 || paths.length < 2) return compile_sources({ ...options, paths });
 
-  // A source is a unit of work on its own — its chunks compile, and the module
-  // they make is written beside it — so sharding sources is all the parallelism
+  // A source is a unit of work on its own — it compiles, and the module it
+  // makes is written beside it — so sharding sources is all the parallelism
   // needs. Each worker holds its own compiler; what they memoize goes to the
-  // one cache, so a chunk two sources share is still compiled once across a
-  // later build.
+  // one cache, so a later build compiles only the sources that changed.
   const { runtime, ...shared } = options;
   await Promise.all(shares(paths, jobs).map(share => new Promise((ok, fail) => {
     const worker = new Worker(__filename, {
@@ -172,17 +170,16 @@ if (!isMainThread && workerData && workerData.compile) {
 }
 
 /**
- * One source as the compiler emits it: the prelude, then each chunk. Nothing
- * is named or qualified — a bare expression stays the value the text ends on —
- * which is what a snippet run against a library wants, and what a test of the
- * compiler's own output pins.
+ * One source as the compiler emits it, after the prelude. Nothing is named or
+ * qualified: it ends on its last bare expression's value, as the compiler names
+ * it, which is what a snippet run against a library wants, and what a test of
+ * the compiler's own output pins.
  */
 function emit({ runtime, compiler, prelude, cache_dir, source, where = 'emit' }) {
-  const compile_chunk = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
+  const compile_file = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
     cache_dir,
   });
-  return readFileSync(prelude, 'utf8')
-    + compiled_chunks(compile_chunk, source, where).map(piece => piece.compiled).join('');
+  return readFileSync(prelude, 'utf8') + compiled(compile_file, source, where);
 }
 
 module.exports = { compile, emit };

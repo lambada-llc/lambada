@@ -4687,321 +4687,321 @@ Serialize.from_dag_with_env 22476
 Serialize.from_dag 22480
 Serialize._to_string:3 String.to_source
 24194 908 1
-25769 12663 △
+26001 12663 △
 Set.empty △
-26047 :c Map.set
-26048 26047 △
-Set.add 26048
+26278 :c Map.set
+26279 26278 △
+Set.add 26279
 Set.remove Map.remove
-26049 18399 Map.get
-Set.member 26049
-26050 :b 9535
-26051 26050 Map.entries
-Set.entries 26051
-26052 List.foldr Set.add
-26053 26052 △
-Set.from_list 26053
-26054 27 26052
-26055 :c 26054
-26056 26055 Set.entries
-Set.union 26056
-26057 List.foldr Set.remove
-26058 27 26057
-26059 :c 26058
-26060 26059 Set.entries
-Set.diff 26060
-26061 :b Set.from_list
-26062 :b 26061
-26063 :c Set.member
-26064 7791 26063
-26065 :c 26064
-26066 :b 26065
-26067 26066 Set.entries
-26068 26062 26067
-Set.intersect 26068
-26069 12667 △
-26070 List.enclose 26069
-26071 26070 3205
-26072 26071 25769
-26073 27 26072
-26074 :c 26073
-26075 26074 Set.entries
-Set.to_source 26075
+26280 18399 Map.get
+Set.member 26280
+26281 :b 9535
+26282 26281 Map.entries
+Set.entries 26282
+26283 List.foldr Set.add
+26284 26283 △
+Set.from_list 26284
+26285 27 26283
+26286 :c 26285
+26287 26286 Set.entries
+Set.union 26287
+26288 List.foldr Set.remove
+26289 27 26288
+26290 :c 26289
+26291 26290 Set.entries
+Set.diff 26291
+26292 :b Set.from_list
+26293 :b 26292
+26294 :c Set.member
+26295 7791 26294
+26296 :c 26295
+26297 :b 26296
+26298 26297 Set.entries
+26299 26293 26298
+Set.intersect 26299
+26300 12667 △
+26301 List.enclose 26300
+26302 26301 3205
+26303 26302 26001
+26304 27 26303
+26305 :c 26304
+26306 26305 Set.entries
+Set.to_source 26306
 Set._to_string:1 Bool.to_source
-26094 Set.to_source String.to_source
-Set._to_string:2 26094
+26325 Set.to_source String.to_source
+Set._to_string:2 26325
 Set._to_string:3 Bool.to_source
 Set._to_string:4 Nat.to_source
 Snat._s:1 :s
-26135 353 27
-26136 27 26135
-26137 :s 26136
-26138 26137 373
-26139 1535 26138
-Snat._triage:2 26139
-26140 1076 Snat._triage:2
-Snat._functional_smallest:3 26140
-26141 fix__wait Snat._functional_smallest:3
-26142 :c 26141
-26143 26142 △
-Snat.size__125 26143
+26366 353 27
+26367 27 26366
+26368 :s 26367
+26369 26368 373
+26370 1535 26369
+Snat._triage:2 26370
+26371 1076 Snat._triage:2
+Snat._functional_smallest:3 26371
+26372 fix__wait Snat._functional_smallest:3
+26373 :c 26372
+26374 26373 △
+Snat.size__125 26374
 Snat._selfstem:4 51
 Snat._k:5 53
-26144 :b Snat._functional_smallest:3
-26145 △ Snat._k:5
-26146 △ 26145
-26147 26144 26146
-Snat._code:6 26147
-26148 △ Snat._code:6
-26149 26146 26148
-26150 :c 26149
-26151 26150 △
-Snat.size__118 26151
-26152 1535 2150
-26153 1076 26152
-Snat._chain_step:7 26153
-26154 :b Snat._chain_step:7
-26155 26154 26146
-Snat._chain_code:8 26155
-26156 △ Snat._chain_code:8
-26157 26146 26156
-26158 :c 26157
-26159 26158 △
-Snat.size__103 26159
+26375 :b Snat._functional_smallest:3
+26376 △ Snat._k:5
+26377 △ 26376
+26378 26375 26377
+Snat._code:6 26378
+26379 △ Snat._code:6
+26380 26377 26379
+26381 :c 26380
+26382 26381 △
+Snat.size__118 26382
+26383 1535 2150
+26384 1076 26383
+Snat._chain_step:7 26384
+26385 :b Snat._chain_step:7
+26386 26385 26377
+Snat._chain_code:8 26386
+26387 △ Snat._chain_code:8
+26388 26377 26387
+26389 :c 26388
+26390 26389 △
+Snat.size__103 26390
 Snat._to_string:9 Snat.to_string
 Snat._to_string:10 Bool.to_source
-26178 908 △
-26179 :s 26178
-26180 26179 △
-Snat._fork_self:11 26180
-26181 :s 24194
-26182 26181 1
-Snat._dup:12 26182
-26183 353 const
-26184 :c 26183
-26185 26184 Snat._dup:12
-26186 21 26185
-Snat._pack:13 26186
-26187 50 Snat._fork_self:11
-Snat._dispatch:14 26187
-26188 :b Snat._dispatch:14
-26189 :b 26188
-26190 26189 Snat._pack:13
-26191 353 26190
-26192 :c 26191
-26193 26192 5
-Snat._wn_size:15 26193
-26194 50 505
-Snat._flat:16 26194
-Snat._step_95:17 26153
-26195 Snat._wn_size:15 Snat._step_95:17
-Snat.size__wn_95 26195
-26196 :s Snat._flat:16
-26197 :b 26196
-26198 :b 26197
-26199 :s Snat._s:1
-26200 26199 const
-26201 1535 26200
-26202 26198 26201
-Snat._step_78:18 26202
-26203 Snat._wn_size:15 Snat._step_78:18
-Snat.size__wn_78 26203
+26409 908 △
+26410 :s 26409
+26411 26410 △
+Snat._fork_self:11 26411
+26412 :s 24194
+26413 26412 1
+Snat._dup:12 26413
+26414 353 const
+26415 :c 26414
+26416 26415 Snat._dup:12
+26417 21 26416
+Snat._pack:13 26417
+26418 50 Snat._fork_self:11
+Snat._dispatch:14 26418
+26419 :b Snat._dispatch:14
+26420 :b 26419
+26421 26420 Snat._pack:13
+26422 353 26421
+26423 :c 26422
+26424 26423 5
+Snat._wn_size:15 26424
+26425 50 505
+Snat._flat:16 26425
+Snat._step_95:17 26384
+26426 Snat._wn_size:15 Snat._step_95:17
+Snat.size__wn_95 26426
+26427 :s Snat._flat:16
+26428 :b 26427
+26429 :b 26428
+26430 :s Snat._s:1
+26431 26430 const
+26432 1535 26431
+26433 26429 26432
+Snat._step_78:18 26433
+26434 Snat._wn_size:15 Snat._step_78:18
+Snat.size__wn_78 26434
 Snat.size__smallest__wn Snat.size__wn_78
 Snat._to_string:19 String.to_source
 Snat._to_string:20 Bool.to_source
-26211 const Snat._step_95:17
-26212 Snat._s:1 26211
-26213 wait Snat._dup:12
-26214 26212 26213
-26215 △ 26214
-26216 26188 26215
-26217 :s 26216
-26218 26217 5
-Snat.size__111 26218
+26442 const Snat._step_95:17
+26443 Snat._s:1 26442
+26444 wait Snat._dup:12
+26445 26443 26444
+26446 △ 26445
+26447 26419 26446
+26448 :s 26447
+26449 26448 5
+Snat.size__111 26449
 Snat._to_string:21 Snat.to_string
 Snat._to_string:22 Bool.to_source
-26225 49 1
-26226 26225 △
-Snat._refork:23 26226
-26227 Snat._s:1 Snat._refork:23
-26228 26227 △
-26229 50 26228
-Snat._redispatch:24 26229
-26230 compose Snat._redispatch:24
-Snat._repack:25 26230
-26231 Snat._s:1 2
-26232 26231 id
-26233 50 26232
-Snat._flat_90:26 26233
-26234 :s Snat._flat_90:26
-26235 :b 26234
-26236 :b 26235
-26237 26236 26201
-Snat._step_90:27 26237
+26456 49 1
+26457 26456 △
+Snat._refork:23 26457
+26458 Snat._s:1 Snat._refork:23
+26459 26458 △
+26460 50 26459
+Snat._redispatch:24 26460
+26461 compose Snat._redispatch:24
+Snat._repack:25 26461
+26462 Snat._s:1 2
+26463 26462 id
+26464 50 26463
+Snat._flat_90:26 26464
+26465 :s Snat._flat_90:26
+26466 :b 26465
+26467 :b 26466
+26468 26467 26432
+Snat._step_90:27 26468
 Snat._dispatch_90:28 52
-26238 :b Snat._dispatch_90:28
-26239 const Snat._step_90:27
-26240 Snat._s:1 26239
-26241 26240 Snat._repack:25
-26242 △ 26241
-26243 26238 26242
-26244 :s 26243
-26245 26244 5
-Snat.size__90 26245
+26469 :b Snat._dispatch_90:28
+26470 const Snat._step_90:27
+26471 Snat._s:1 26470
+26472 26471 Snat._repack:25
+26473 △ 26472
+26474 26469 26473
+26475 :s 26474
+26476 26475 5
+Snat.size__90 26476
 Snat.size__smallest Snat.size__90
 Snat._to_string:29 Snat.to_string
 Snat._to_string:30 String.to_source
 Snat._to_string:31 Bool.to_source
-26259 173 11392
-26260 111 26259
-26261 128 26260
-26262 166 26261
-26263 173 26262
-26264 95 26263
-26265 Option.match 26264
-26266 26265 Certify.Size.render
-Snat._to_string:32 26266
+26490 173 11392
+26491 111 26490
+26492 128 26491
+26493 166 26492
+26494 173 26493
+26495 95 26494
+26496 Option.match 26495
+26497 26496 Certify.Size.render
+Snat._to_string:32 26497
 Snat._to_string:33 Bool.to_source
-26269 26184 Snat._fork_self:11
-Snat._loop:34 26269
+26500 26415 Snat._fork_self:11
+Snat._loop:34 26500
 Snat._tie:35 42
-26270 :s 908
-26271 26270 const
-Snat._tie_open:36 26271
-26272 370 60
-26273 26 26272
-26274 :c 26273
-26275 26274 const
-Snat._lagged_size:37 26275
-26276 7 1
-26277 7 26276
-Snat._b2:38 26277
-26278 21 26178
-26279 :s 26278
-26280 26279 23
-Snat._park:39 26280
-26281 373 Snat._b2:38
-26282 21 26281
-26283 21 26282
-Snat._lag2:40 26283
-26284 :c Snat._lag2:40
-26285 26284 Snat._park:39
-26286 303 26285
-Snat._step_100:41 26286
-26287 22 Snat._fork_self:11
-26288 26184 26287
-Snat._loop_counted:42 26288
-26289 Snat._lagged_size:37 Snat._tie:35
-26290 Snat._loop_counted:42 Snat._step_100:41
-26291 26289 26290
-Snat.size__wn_100 26291
-26292 1076 26285
-26293 303 26292
-Snat._step_104:43 26293
-26294 Snat._loop:34 Snat._step_104:43
-26295 26289 26294
-Snat.size__wn_104 26295
-26296 22 28
-26297 21 26296
-26298 21 26297
-Snat._recount:44 26298
-26299 Snat._s:1 Snat._recount:44
-26300 :b 26299
-26301 26300 const
-26302 21 26301
-26303 21 26302
-Snat._state_103:45 26303
-26304 :s Snat._state_103:45
-26305 26304 284
-Snat._step_103:46 26305
-26306 compose Snat._b2:38
-26307 373 26306
-26308 26270 26307
-Snat._tie_lagged:47 26308
-26309 Snat._lagged_size:37 Snat._tie_lagged:47
-26310 Snat._loop:34 Snat._step_103:46
-26311 26309 26310
-Snat.size__wn_103 26311
-26312 26300 26281
-26313 21 26312
-26314 21 26313
-Snat._state_106:48 26314
-26315 :s Snat._state_106:48
-26316 :c Snat._b2:38
-26317 26316 △
-26318 26315 26317
-Snat._step_106:49 26318
-26319 Snat._lagged_size:37 Snat._tie_open:36
-26320 Snat._loop:34 Snat._step_106:49
-26321 26319 26320
-Snat.size__wn_106 26321
-26322 :b 28
-26323 26322 const
-Snat._b2__left:50 26323
-26324 :b Snat._b2__left:50
-26325 26322 26324
-26326 26324 26325
-Snat._carved_states:51 26326
-26327 triage Snat.two
-26328 26327 △
-26329 21 26328
-26330 :s 26329
-26331 :s Snat._carved_states:51
-26332 26331 373
-26333 26330 26332
-Snat._carved:52 26333
-26334 1076 Snat._carved:52
-Snat._step_carved:53 26334
-26335 const Snat._tie_open:36
-26336 :c 26335
-26337 Snat._loop:34 Snat._step_carved:53
-26338 26336 26337
-26339 :s 26338
-26340 26339 524
-Snat.size__wn_108 26340
-26341 Snat._s:1 Snat._tie:35
-26342 :b 26341
-26343 26342 const
-26344 :c 26343
-26345 26344 26337
-26346 :c 26345
-26347 26346 △
-Snat.size__wn_113 26347
-26348 49 id
-26349 26348 const
-Snat._left:54 26349
-26350 26348 300
-Snat._right:55 26350
+26501 :s 908
+26502 26501 const
+Snat._tie_open:36 26502
+26503 370 60
+26504 26 26503
+26505 :c 26504
+26506 26505 const
+Snat._lagged_size:37 26506
+26507 7 1
+26508 7 26507
+Snat._b2:38 26508
+26509 21 26409
+26510 :s 26509
+26511 26510 23
+Snat._park:39 26511
+26512 373 Snat._b2:38
+26513 21 26512
+26514 21 26513
+Snat._lag2:40 26514
+26515 :c Snat._lag2:40
+26516 26515 Snat._park:39
+26517 303 26516
+Snat._step_100:41 26517
+26518 22 Snat._fork_self:11
+26519 26415 26518
+Snat._loop_counted:42 26519
+26520 Snat._lagged_size:37 Snat._tie:35
+26521 Snat._loop_counted:42 Snat._step_100:41
+26522 26520 26521
+Snat.size__wn_100 26522
+26523 1076 26516
+26524 303 26523
+Snat._step_104:43 26524
+26525 Snat._loop:34 Snat._step_104:43
+26526 26520 26525
+Snat.size__wn_104 26526
+26527 22 28
+26528 21 26527
+26529 21 26528
+Snat._recount:44 26529
+26530 Snat._s:1 Snat._recount:44
+26531 :b 26530
+26532 26531 const
+26533 21 26532
+26534 21 26533
+Snat._state_103:45 26534
+26535 :s Snat._state_103:45
+26536 26535 284
+Snat._step_103:46 26536
+26537 compose Snat._b2:38
+26538 373 26537
+26539 26501 26538
+Snat._tie_lagged:47 26539
+26540 Snat._lagged_size:37 Snat._tie_lagged:47
+26541 Snat._loop:34 Snat._step_103:46
+26542 26540 26541
+Snat.size__wn_103 26542
+26543 26531 26512
+26544 21 26543
+26545 21 26544
+Snat._state_106:48 26545
+26546 :s Snat._state_106:48
+26547 :c Snat._b2:38
+26548 26547 △
+26549 26546 26548
+Snat._step_106:49 26549
+26550 Snat._lagged_size:37 Snat._tie_open:36
+26551 Snat._loop:34 Snat._step_106:49
+26552 26550 26551
+Snat.size__wn_106 26552
+26553 :b 28
+26554 26553 const
+Snat._b2__left:50 26554
+26555 :b Snat._b2__left:50
+26556 26553 26555
+26557 26555 26556
+Snat._carved_states:51 26557
+26558 triage Snat.two
+26559 26558 △
+26560 21 26559
+26561 :s 26560
+26562 :s Snat._carved_states:51
+26563 26562 373
+26564 26561 26563
+Snat._carved:52 26564
+26565 1076 Snat._carved:52
+Snat._step_carved:53 26565
+26566 const Snat._tie_open:36
+26567 :c 26566
+26568 Snat._loop:34 Snat._step_carved:53
+26569 26567 26568
+26570 :s 26569
+26571 26570 524
+Snat.size__wn_108 26571
+26572 Snat._s:1 Snat._tie:35
+26573 :b 26572
+26574 26573 const
+26575 :c 26574
+26576 26575 26568
+26577 :c 26576
+26578 26577 △
+Snat.size__wn_113 26578
+26579 49 id
+26580 26579 const
+Snat._left:54 26580
+26581 26579 300
+Snat._right:55 26581
 Snat._to_string:56 Bool.to_source
-26361 :c 1549
-26362 :b 26361
-26363 26362 346
-26364 1547 26363
-26365 :c 26364
-26366 1076 26365
-Snat._size_body:57 26366
-26367 self_apply Snat._size_body:57
-26368 :c 26367
-26369 26368 △
-Snat.size__fastest 26369
-26370 365 Snat._size_body:57
-26371 :c 26370
-26372 26371 △
-Snat.size 26372
+26592 :c 1549
+26593 :b 26592
+26594 26593 346
+26595 1547 26594
+26596 :c 26595
+26597 1076 26596
+Snat._size_body:57 26597
+26598 self_apply Snat._size_body:57
+26599 :c 26598
+26600 26599 △
+Snat.size__fastest 26600
+26601 365 Snat._size_body:57
+26602 :c 26601
+26603 26602 △
+Snat.size 26603
 Snat._to_string:58 Bool.to_source
-Snat._to_string:59 26266
+Snat._to_string:59 26497
 Snat._to_string:60 Bool.to_source
-Snat._to_string:61 26266
+Snat._to_string:61 26497
 Snat._to_string:62 Bool.to_source
-Snat._to_string:63 26266
-Snat._to_string:64 26266
+Snat._to_string:63 26497
+Snat._to_string:64 26497
 Snat._to_string:65 Bool.to_source
 Snat._to_string:66 Snat.to_string
 Snat._to_string:1 Nat.to_source
 Snat._to_string:2 id
-26893 :c 1163
-26894 :b 26893
-26895 26894 equal
-26896 6059 26895
-String.replace_char 26896
+27124 :c 1163
+27125 :b 27124
+27126 27125 equal
+27127 6059 27126
+String.replace_char 27127
 String._to_string:1 String.to_source

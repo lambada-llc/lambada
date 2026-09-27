@@ -3645,24 +3645,26 @@ Lambada._compiler_lower:171 3242
 3248 1412 3247
 3249 33 3248
 3250 :c 3249
-3251 219 1425
-3252 303 3251
-3253 3250 3252
-Lambada.native_def_to_ddag 3253
-3254 List.foldr Lambada.native_def_to_ddag
-3255 3254 △
-Lambada.compiler_emit_dag 3255
-3256 Option.get_or △
-3257 :b 3256
-3258 Option.map Lambada.compiler_emit_dag
-3259 :b 3258
-3260 Option.bind Lambada._compiler_lower:171
-3261 :b 3260
-3262 Option.bind Lambada.compiler_parse
-3263 :b 3262
-3264 3263 Lambada.compiler_tokenize
-3265 3261 3264
-3266 3259 3265
-3267 3257 3266
-Lambada.compile_to_dag 3267
+3251 :b 3250
+3252 1412 219
+3253 3251 3252
+Lambada._native_to_ddag:172 3253
+3254 Lambada._native_to_ddag:172 1425
+Lambada.native_def_to_ddag 3254
+3255 List.foldr Lambada.native_def_to_ddag
+3256 3255 △
+Lambada.compiler_emit_dag 3256
+3257 Option.get_or △
+3258 :b 3257
+3259 Option.map Lambada.compiler_emit_dag
+3260 :b 3259
+3261 Option.bind Lambada._compiler_lower:171
+3262 :b 3261
+3263 Option.bind Lambada.compiler_parse
+3264 :b 3263
+3265 3264 Lambada.compiler_tokenize
+3266 3262 3265
+3267 3260 3266
+3268 3258 3267
+Lambada.compile_to_dag 3268
 Lambada.compile_to_dag

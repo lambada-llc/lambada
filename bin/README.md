@@ -45,15 +45,15 @@ $ ./lambada.js <command> [options]
 | --- | --- |
 | `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. |
 | `expect-test <bundle>` | Evaluate the tests in a linked, canonicalized bundle and record each result in the source it came from. With `$TREE_CALCULUS_CACHE` set, each result is kept under the fingerprint of its test's term, so a rerun evaluates only the tests whose terms changed. |
-| `emit [file]` | One source as the compiler emits it — the prelude, then each chunk — on standard output, nothing named or qualified. Reads stdin without a file. For a snippet to run against a library, or to see what the compiler makes of a file. |
+| `emit [file]` | One source as the compiler emits it, after the prelude, on standard output, nothing named or qualified. Reads stdin without a file. For a snippet to run against a library, or to see what the compiler makes of a file. |
 
 | Option | |
 | --- | --- |
 | `--root <dir>` | Where the sources live. Defaults to `src`. |
-| `--cache <dir>` | Where to memoize compiled chunks. Compiling is a pure function of the chunk and the compiler, so a rebuild only pays for what actually changed, and changing the compiler correctly invalidates everything. Defaults to `.cache/lambada`. |
+| `--cache <dir>` | Where to memoize compiled sources. Compiling is a pure function of the source and the compiler, so a rebuild only compiles the sources that changed, and changing the compiler correctly invalidates everything. Defaults to `.cache/lambada`. |
 | `--jobs <n>` | Compile this many sources, or evaluate this many tests, at once, each in a thread with a reducer of its own. Defaults to 1: memory scales with the count, and a reducer on a heavy source or test is not small. |
-| `--compiler <file>` | The compiler to use, as a `.dag`. Defaults to the one shipped in [`compiler/`](../compiler/). |
-| `--prelude <file>` | The combinator definitions a compiled chunk refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |
+| `--compiler <file>` | The compiler to use, as a `.dag`: a function from a whole source's text to its DAG, like `compile_file`. Defaults to the one shipped in [`compiler/`](../compiler/). |
+| `--prelude <file>` | The combinator definitions compiled code refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |
 | `--tree-calculus <path>` | A [tree-calculus](https://github.com/lambada-llc/tree-calculus) checkout to use, instead of downloading the published runtime. Also settable as `$LAMBADA_TREE_CALCULUS`. |
 
 Compiling produces one [DAG module](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#dag-modules) per source. Putting those together into one program is [`dag.js`](https://github.com/lambada-llc/tree-calculus/tree/main/bin)'s job, so a full build is:
@@ -71,8 +71,8 @@ See [arboretum](https://github.com/lambada-llc/arboretum) for a repository built
 | | |
 | --- | --- |
 | `lambada.js` | Command line entry point. |
-| `project.js` | What a directory of LambAda sources means: how a source splits into compilable chunks, and how a path becomes a namespace and back. |
-| `compile.js` | Applying the compiler to each chunk and namespacing the result. |
+| `project.js` | What a directory of LambAda sources means: how a path becomes a namespace and back, and which lines of a source are code. |
+| `compile.js` | Applying the compiler to each source and namespacing the result. |
 | `expect-test.js` | Evaluating tests and writing results back into sources. |
 | `runtime.js` | Locating the tree calculus runtime. |
 | `test.js` | Tests for the conventions in `project.js` (what CI runs). |

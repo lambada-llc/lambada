@@ -9,7 +9,7 @@ set -euo pipefail
 # CLI does the linking, and is what runs the result afterwards.
 
 here="$(dirname "$0")"
-# Compiled chunks are memoized beside this script; the runtime is fetched there too.
+# Compiled sources are memoized beside this script; the runtime is fetched there too.
 emit() { node "$here/../bin/lambada.js" emit --cache "$here/.cache/lambada"; }
 tc="$here/tree-calculus.js"
 >&2 echo Downloading latest version of the Tree Calculus runtime...

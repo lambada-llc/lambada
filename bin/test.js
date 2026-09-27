@@ -13,7 +13,7 @@ const { tmpdir } = require('os');
 const { join, resolve } = require('path');
 const {
   is_lamb_file, lamb_base, lamb_source_path, sources,
-  namespace, test_symbol, parse_test_symbol, chunks, fingerprint,
+  namespace, test_symbol, parse_test_symbol, fingerprint,
 } = require('./project.js');
 const { compile, emit } = require('./compile.js');
 const { expect_test } = require('./expect-test.js');
@@ -72,19 +72,24 @@ check('an absent source falls back to the bare spelling', () => {
   assert.equal(lamb_source_path('/nowhere/bool'), '/nowhere/bool.lamb');
 });
 
-check('chunks and fingerprints count code lines, not prose', () => {
-  const source = 'a = △\n\n# a comment\nb = a\n  c\n';
-  assert.deepEqual(chunks(source).map(c => c.code_line), [1, 3]);
-  assert.equal(fingerprint(source), fingerprint('a = △\nb = a\n  c\n'));
+check('fingerprints count code lines, not prose', () => {
+  assert.equal(fingerprint('a = △\n\n# a comment\nb = a\n  c\n'), fingerprint('a = △\nb = a\n  c\n'));
 });
 
-check('emit is the prelude, then each chunk, nothing named', () => {
-  const compiler = resolve(__dirname, '../compiler/compile_to_dag.dag');
-  const prelude = resolve(__dirname, '../compiler/prelude.dag');
-  const out = emit({ runtime: load(), compiler, prelude, source: 'x = △\nx\n' });
-  const prelude_text = require('fs').readFileSync(prelude, 'utf8');
+const compiler = resolve(__dirname, '../compiler/compile_file.dag');
+const prelude = resolve(__dirname, '../compiler/prelude.dag');
+
+check('emit is the prelude, then the file, ending on its value', () => {
+  const out = emit({ runtime: load(), compiler, prelude, source: 'x = △\n\n# prose\nx\n' });
+  const prelude_text = readFileSync(prelude, 'utf8');
   assert.ok(out.startsWith(prelude_text), 'the prelude comes first');
-  assert.strictEqual(out.slice(prelude_text.length), 'x △\nx\n', 'then the chunks, with a bare expression left bare');
+  assert.strictEqual(out.slice(prelude_text.length), 'x △\n:line.2 x\n:line.2\n',
+    'then the file, its bare expression named after the code line it ends on');
+});
+
+check('a statement that does not compile is named by its line', () => {
+  assert.throws(() => emit({ runtime: load(), compiler, prelude, source: 'x = △\n\n)\ny = x\n', where: 'f.lamb' }),
+    /^Error: f\.lamb:3: the statement ending here does not compile$/);
 });
 
 check('a deleted test takes its result along, and a file written twice is refused', async () => {
@@ -95,8 +100,7 @@ check('a deleted test takes its result along, and a file written twice is refuse
     writeFileSync(source, text);
     await compile({
       runtime, root, cwd: root,
-      compiler: resolve(__dirname, '../compiler/compile_to_dag.dag'),
-      prelude: resolve(__dirname, '../compiler/prelude.dag'),
+      compiler, prelude,
     });
     const bundle = join(root, 'bundle.dag');
     const module = join(root, '.a.dag');

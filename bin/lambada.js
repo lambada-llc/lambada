@@ -3,16 +3,16 @@
 
 // Build tool for projects written in LambAda. See README.md in this directory.
 //
-// Everything specific to LambAda lives here: how a `.lamb` source splits into
-// compilable chunks, how a file's location becomes a namespace, and what an
-// expect test looks like in a source file. Putting the resulting DAG modules
+// Everything specific to LambAda lives here: how a file's location becomes a
+// namespace, and what an expect test looks like in a source file. How a source
+// splits into statements is the compiler's own business. Putting the resulting DAG modules
 // together into a program is the tree calculus runtime's job — see
 // https://github.com/lambada-llc/tree-calculus/tree/main/bin
 
 const { resolve } = require('path');
 const { load } = require('./runtime.js');
 
-const COMPILER = resolve(__dirname, '../compiler/compile_to_dag.dag');
+const COMPILER = resolve(__dirname, '../compiler/compile_file.dag');
 const PRELUDE = resolve(__dirname, '../compiler/prelude.dag');
 
 const USAGE = `Usage: lambada <command> [options]
@@ -26,24 +26,26 @@ Commands:
                                 Evaluate the tests in a linked, canonicalized
                                 bundle and record each result as a '# = …'
                                 comment below the expression it belongs to.
-  emit [file]                   One source as the compiler emits it — the
-                                prelude, then each chunk — on standard output,
-                                nothing named or qualified. Reads stdin without
+  emit [file]                   One source as the compiler emits it, after the
+                                prelude, on standard output, nothing named or
+                                qualified. Reads stdin without
                                 a file. For a snippet to run against a library,
                                 or to see what the compiler makes of a file.
 
 Options:
   --root <dir>          Where the sources live. Defaults to src.
-  --cache <dir>         Where to memoize compiled chunks. Compiling is a pure
-                        function of the chunk and the compiler, so a rebuild only
-                        pays for what actually changed. Defaults to .cache/lambada.
+  --cache <dir>         Where to memoize compiled sources. Compiling is a pure
+                        function of the source and the compiler, so a rebuild
+                        only compiles the sources that changed. Defaults to
+                        .cache/lambada.
   --jobs <n>            Compile this many sources, or evaluate this many tests,
                         at once, each in a thread with a reducer of its own.
                         Defaults to 1: memory scales with the count, and a
                         reducer on a heavy source or test is not small.
-  --compiler <file>     The compiler to use, as a .dag. Defaults to the one
+  --compiler <file>     The compiler to use, as a .dag: a function from a
+                        whole source's text to its DAG. Defaults to the one
                         shipped in compiler/.
-  --prelude <file>      The combinator definitions a compiled chunk refers to,
+  --prelude <file>      The combinator definitions compiled code refers to,
                         as .dag lines, put at the top of each module. Belongs to
                         the compiler that emits those references; defaults to the
                         one shipped beside it.
