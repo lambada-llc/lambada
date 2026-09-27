@@ -74,16 +74,21 @@ function physical_lines(content) {
 }
 
 /**
- * What compiling a source depended on, and nothing else: its code lines.
+ * A source's code: its code lines, and nothing else.
  *
- * The build writes its own comments back into the file, so a fingerprint over
- * the whole text would go stale the moment a result is recorded. Comments and
- * blank lines are exactly what the compiler never saw — and what the code line
- * numbering already skips — so leaving them out identifies the source as the
- * compiler knew it, however the prose around it moves.
+ * Comments and blank lines are not code — the compiler skips them, and the
+ * code line numbering that names tests skips them too — so this is exactly
+ * what the compiler is given. It is also what compiling depended on: the build
+ * writes its own comments back into the file, and neither they nor the prose
+ * around them should make a source look changed.
  */
+function code(content) {
+  return content.split('\n').filter(is_source_line).join('\n');
+}
+
+/** Which state of a source a module was compiled from. */
 function fingerprint(content) {
-  return createHash('sha256').update(content.split('\n').filter(is_source_line).join('\n')).digest('hex');
+  return createHash('sha256').update(code(content)).digest('hex');
 }
 
 const sanitize = part => part.replace(/[^a-zA-Z0-9.]/g, '_');
@@ -163,6 +168,7 @@ module.exports = {
   sources,
   is_source_line,
   physical_lines,
+  code,
   fingerprint,
   namespace,
   test_symbol,

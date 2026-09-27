@@ -13,7 +13,7 @@
 const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
 const { Worker, isMainThread, workerData } = require('worker_threads');
 const { basename, dirname, relative, resolve } = require('path');
-const { lamb_base, sources, physical_lines, namespace, test_symbol, source_symbol } = require('./project.js');
+const { lamb_base, sources, code, physical_lines, namespace, test_symbol, source_symbol } = require('./project.js');
 
 
 // The compiler names a bare expression's value after the code line its
@@ -73,9 +73,16 @@ function clean(root) {
   })(resolve(root));
 }
 
-/** `source` compiled, refusing it if any statement did not compile. */
+/**
+ * `source` compiled, refusing it if any statement did not compile.
+ *
+ * The compiler is given the code alone. It would skip the comments itself, but
+ * only by reading them a character at a time, and a source can be megabytes of
+ * recorded results; and it is the code a cached compile should be keyed on,
+ * not the results the last build wrote below it.
+ */
 function compiled(compile_file, source, where) {
-  const out = compile_file(source);
+  const out = compile_file(code(source));
   const failed = [...out.matchAll(FAIL)].map(([, n]) => physical_lines(source)[Number(n)]);
   if (failed.length) {
     throw new Error(`${failed.map(line => `${where}:${line}`).join(', ')}: `
