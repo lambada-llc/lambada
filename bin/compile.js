@@ -17,32 +17,19 @@ const { lamb_base, sources, chunks, namespace, test_symbol, source_symbol } = re
 
 // The compiler refers to the leaf as `__ENV△` rather than `△`, and never
 // defines it. That is deliberate: `△` is an ordinary name, so a source may bind
-// it — `△ = lift △ id` is a perfectly good definition — and were the compiler's
-// own prelude to spell the leaf `△`, every leaf in it below such a binding
-// would quietly become whatever the source bound.
+// it — `△ = lift △ id` is a perfectly good definition — and were the compiler
+// to spell the leaf `△`, every leaf below such a binding would quietly become
+// whatever the source bound.
+//
+// So the module says what the name means, on its own first line. Being first is
+// the whole of it: there `△` is still the leaf, whatever a source binds it to
+// further down, and every reference the compiler emitted resolves to that one
+// definition. Nothing outside the module has to know the name, because the
+// module no longer leaves it to anyone else to bind.
+//
+// Qualification makes it private without being told to — its local part opens
+// with `_`, so it gets a `:N` of its own and no module offers it to another.
 const COMPILER_LEAF = '__ENV△';
-
-/**
- * Give the leaf its ordinary spelling, so the name stays the compiler's own
- * business and no module ships a reference only it understands.
- *
- * By substituting the box rather than renaming it: it is the box, not the
- * spelling, that gives a node its identity, so renaming would leave two objects
- * calling themselves `△` where the module means one, and everything built on
- * the leaf would stop being shared.
- *
- * Nothing defines `__ENV△`, so parsing gave it exactly one box for the whole
- * module. Any box spelling `△` that heads no definition is already that same
- * free reference to the leaf, so reuse one if the module has it.
- */
-function normalize_leaf(module, box, leaf) {
-  const alias = module.lines.flat().find(b => b.symbol === COMPILER_LEAF);
-  if (!alias) return module;
-  const heads = new Set(module.lines.filter(line => line.length > 1).map(line => line[0]));
-  const target = module.lines.flat().find(b => b.symbol === leaf && !heads.has(b)) ?? box(leaf);
-  module.lines = module.lines.map(line => line.map(b => (b === alias ? target : b)));
-  return module;
-}
 
 /**
  * Turn each bare top-level expression into a named test.
@@ -117,8 +104,8 @@ function compile_source(runtime, compile_chunk, { root, cwd }, source_path) {
   }
   process.stderr.write(`  ${relative_path} (${pieces.length} chunks)\n`);
 
-  const module = normalize_leaf(
-    DagModule.parse(dag, { absorb_internal_aliases: false }), box, LEAF);
+  const module = DagModule.parse(
+    `${COMPILER_LEAF} ${LEAF}\n${dag}`, { absorb_internal_aliases: false });
   name_tests(runtime, module, root, source_path, test_lines);
   module.qualify(namespace(root, source_path));
 
