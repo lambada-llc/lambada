@@ -3,38 +3,40 @@ import { StateField, type Text } from '@codemirror/state';
 export interface Statement {
   /** Offset of the first character of the statement's first line. */
   from: number;
-  /** Offset of the end of its last line that is not blank. */
+  /** Offset of the end of its last line of code. */
   to: number;
   /**
-   * The lines, blank ones dropped, joined with newlines. The first is trimmed
-   * and the rest keep their indentation, which is what tells a continuation
-   * apart from the line it continues.
+   * Its lines of code, joined with newlines. The first is trimmed and the rest
+   * keep their indentation, which is what tells a continuation apart from the
+   * line it continues.
    */
   text: string;
 }
 
 /**
- * Splits a document into statements. One runs from a line that is not blank up
- * to the last line indented under it.
- *
- * Indented means starting with a space — a tab does not continue a statement,
- * and neither does a blank line, though a line of only spaces does without
- * contributing anything.
+ * Splits a document into statements by the compiler's own layout rule (its
+ * `statements`), so what is marked as one statement is what the build compiles
+ * as one. A line starting at column 0 starts one, and the indented lines below
+ * it — by a space or a tab — continue it. Blank lines and comment lines are not code: they neither start a
+ * statement nor end one, and a statement of nothing but a comment is never
+ * sent to the compiler, which would answer it with nothing.
  */
 function splitStatements(doc: Text): readonly Statement[] {
-  const blank = (text: string) => text.trim() === '';
+  const isCode = (text: string) => text.trim() !== '' && !text.startsWith('#');
+  const isIndented = (text: string) => text.startsWith(' ') || text.startsWith('\t');
   const result: Statement[] = [];
 
   for (let n = 1; n <= doc.lines; ) {
-    while (n <= doc.lines && blank(doc.line(n).text)) n++;
+    while (n <= doc.lines && !isCode(doc.line(n).text)) n++;
     if (n > doc.lines) break;
 
     const first = doc.line(n++);
     const lines = [first.text.trim()];
     let last = first;
-    while (n <= doc.lines && doc.line(n).text.startsWith(' ')) {
-      const line = doc.line(n++);
-      if (blank(line.text)) continue;
+    for (; n <= doc.lines; n++) {
+      const line = doc.line(n);
+      if (!isCode(line.text)) continue;
+      if (!isIndented(line.text)) break;
       lines.push(line.text.trimEnd());
       last = line;
     }
