@@ -17,7 +17,7 @@ import {
 
 import { type Statement } from './statements';
 import { definitionSite, symbolAt, type Range } from './symbols';
-import { tappable } from './tooltips';
+import { legible } from './tooltips';
 
 // Go to definition, resolved by the same scope walk that highlights
 // occurrences (see symbols.ts): a bound use jumps to its binder, a use of a
@@ -173,7 +173,19 @@ const finger = () =>
   typeof matchMedia !== 'undefined' &&
   matchMedia('(hover: none), (pointer: coarse)').matches;
 
-const chipTheme = tappable('.cm-tooltip.cm-definition-chip');
+const chipTheme = [
+  // Both classes, or a theme's `.cm-tooltip` background wins — see [legible].
+  legible('.cm-tooltip.cm-definition-chip'),
+  EditorView.baseTheme({
+    '.cm-tooltip.cm-definition-chip': {
+      border: '1px solid #8884',
+      borderRadius: '4px',
+      padding: '2px 8px',
+      font: 'inherit',
+      cursor: 'pointer',
+    },
+  }),
+];
 
 function chipAt(
   state: EditorState,

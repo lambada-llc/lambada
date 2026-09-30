@@ -8,18 +8,14 @@ import {
 import {
   Decoration,
   EditorView,
-  keymap,
-  showTooltip,
   WidgetType,
   type DecorationSet,
-  type Tooltip,
 } from '@codemirror/view';
 
 import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
 import { dagLine, needed, type DagLine } from './dag';
-import { tappable } from './tooltips';
 import { treeOf, type Tree, type Value } from './tree';
 
 /** A statement that is an expression, and the whole program that produces it. */
@@ -89,10 +85,10 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
  * preview said, so a host that wants no marker, or a different one, is not
  * overruled.
  *
- * `copy` is the value as the reader takes it away, from the menu a right-click
- * or a long press on the preview opens — worked out only then, since it may be
- * far longer than what fits on the line. Without it, what is shown is what is
- * copied.
+ * A right-click or a long press on an inline preview expands it: more of the
+ * value, what it is made of, and the tree to copy. `copy` is the value as the
+ * host would have it taken away as well — worked out only then, since it may
+ * be far longer than what fits on the line.
  */
 type Inline = { type: 'inline'; formatted: string; copy?: () => string };
 export type Preview =
@@ -106,6 +102,9 @@ const width = 40;
  * used, so a small value can stand for more text than there is memory. */
 const copied = 1_000_000;
 
+/** How much of the value an expanded preview shows. */
+const excerpt = 400;
+
 /**
  * The default: the tree itself, `△ (△ △) △`, application to the left and cut
  * short past [width]. Nothing is read into it — that is the host's to know,
@@ -114,12 +113,11 @@ const copied = 1_000_000;
  *
  * The `=` is what keeps the value from reading as more of the program. It is
  * written here rather than by whatever draws the preview, so that a host can
- * write something else. What is copied is the tree alone, and all of it.
+ * write something else.
  */
 export const defaultPreview = (tree: Tree): Preview => ({
   type: 'inline',
   formatted: `= ${written(tree, width)}`,
-  copy: () => written(tree, copied),
 });
 
 /** `tree` as it is written, cut short past `limit` characters. */
@@ -153,14 +151,15 @@ function written(tree: Tree, limit: number): string {
 const evaluated = results<Value>('run');
 
 class InlinePreview extends WidgetType {
-  constructor(readonly preview: Inline) {
+  constructor(
+    readonly preview: Inline,
+    readonly dag: string,
+  ) {
     super();
   }
 
-  // The preview itself rather than its text: two values can be shown alike
-  // and copy differently. One program keeps one preview, see `shown`.
   eq(other: InlinePreview): boolean {
-    return other.preview === this.preview;
+    return other.preview === this.preview && other.dag === this.dag;
   }
 
   toDOM(view: EditorView): HTMLElement {
@@ -170,8 +169,6 @@ class InlinePreview extends WidgetType {
     wrap.className = 'cm-preview';
     wrap.setAttribute('aria-hidden', 'true');
     wrap.textContent = this.preview.formatted;
-    const { formatted, copy = () => formatted } = this.preview;
-    const at = () => view.posAtDOM(wrap);
     // A press lands the cursor where the preview stands, at the end of its
     // expression — the widget's to do rather than the editor's, which leaves
     // a press inside a widget alone and, on a touch screen, the tap's
@@ -179,93 +176,159 @@ class InlinePreview extends WidgetType {
     wrap.addEventListener('mousedown', (event) => {
       if (event.button !== 0) return;
       event.preventDefault();
-      view.dispatch({ selection: { anchor: at() } });
+      view.dispatch({ selection: { anchor: view.posAtDOM(wrap) } });
       view.focus();
     });
-    const offer = () => view.dispatch({ effects: setMenu.of(menuAt(at(), wrap, copy)) });
-    wrap.addEventListener('contextmenu', (event) => {
-      event.preventDefault();
-      offer();
-    });
-    held(wrap, offer);
+    secondary(wrap, () => view.dispatch({ effects: toggle.of(this.dag) }));
     return wrap;
   }
 }
 
 /**
- * Calls `then` when a finger rests on `dom`: the long press that is a touch
- * screen's right-click. Some browsers answer it with a `contextmenu` of their
- * own and some do not, and offering twice shows the one menu.
+ * Calls `then` on a right-click, or when a finger rests on `dom` — the long
+ * press that is a touch screen's right-click. Some browsers answer a long press
+ * with a `contextmenu` of their own and some do not; either way, one press is
+ * one call.
  */
-function held(dom: HTMLElement, then: () => void): void {
+function secondary(dom: HTMLElement, then: () => void): void {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let touching = false;
   let fired = false;
   const cancel = () => clearTimeout(timer);
-  dom.addEventListener('touchstart', () => {
+  const fire = () => {
     cancel();
+    if (touching && fired) return;
+    fired = true;
+    then();
+  };
+  dom.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+    fire();
+  });
+  dom.addEventListener('touchstart', () => {
+    touching = true;
     fired = false;
-    timer = setTimeout(() => {
-      fired = true;
-      then();
-    }, 500);
+    cancel();
+    timer = setTimeout(fire, 500);
   });
   // A finger that moves is scrolling, not holding.
   dom.addEventListener('touchmove', cancel);
-  dom.addEventListener('touchcancel', cancel);
-  // Letting go after the menu opened is not also a tap: without this, the
-  // press the browser makes of it moves the cursor, and the menu goes with it.
+  dom.addEventListener('touchcancel', () => {
+    cancel();
+    touching = false;
+  });
+  // Letting go after a long press is not also a tap: without this, the press
+  // the browser makes of it would move the cursor.
   dom.addEventListener('touchend', (event) => {
     cancel();
+    touching = false;
     if (fired) event.preventDefault();
   });
 }
 
-// ── the menu ────────────────────────────────────────────────────────────────
+// ── expanded ────────────────────────────────────────────────────────────────
 
-const setMenu = StateEffect.define<Tooltip | null>();
+/** Expands an expression's preview, or folds it back — by program, see
+ * `Expression`. */
+const toggle = StateEffect.define<string>();
 
-/**
- * What a preview offers: to copy its value. One item, so a button. Placed by
- * the preview rather than by its position in the text, which sits at the
- * preview's near edge and is out of sight when a long line has the editor
- * scrolled sideways, taking the menu with it.
- */
-function menuAt(pos: number, preview: HTMLElement, copy: () => string): Tooltip {
-  return {
-    pos,
-    above: true,
-    create: (view) => {
-      const dom = document.createElement('button');
-      dom.type = 'button';
-      dom.className = 'cm-preview-menu';
-      dom.textContent = 'copy result';
-      // Taken on the press, and not the editor's, which would move the cursor
-      // and the menu out from under it.
-      dom.addEventListener('pointerdown', (event) => {
-        event.preventDefault();
-        void navigator.clipboard.writeText(copy());
-        view.dispatch({ effects: setMenu.of(null) });
-      });
-      return { dom, getCoords: () => preview.getBoundingClientRect() };
-    },
-  };
+/** The tree's size written out, and as held: a shared subtree counts once per
+ * use in the first and once in the second. Children come before parents in a
+ * `Value`, so one pass sizes them all. */
+function sizes({ nodes, root }: Value): { total: bigint; distinct: number } {
+  const size: bigint[] = [];
+  for (let i = 0; i < nodes.length; i += 2)
+    size.push(1n + (size[nodes[i]] ?? 0n) + (size[nodes[i + 1]] ?? 0n));
+  return { total: size[root], distinct: nodes.length / 2 };
 }
 
-/** The menu, open until it is used or anything else happens. */
-const menu = StateField.define<Tooltip | null>({
-  create: () => null,
-  update(value, tr) {
-    for (const effect of tr.effects) if (effect.is(setMenu)) return effect.value;
-    return tr.docChanged || tr.selection ? null : value;
-  },
-  provide: (field) => showTooltip.from(field),
-});
+/** An expanded preview, under its expression: more of the value, what it is
+ * made of, and the copying. */
+class Details extends WidgetType {
+  constructor(
+    readonly shown: Shown<Inline>,
+    readonly dag: string,
+  ) {
+    super();
+  }
 
-const close = (view: EditorView): boolean => {
-  if (!view.state.field(menu)) return false;
-  view.dispatch({ effects: setMenu.of(null) });
-  return true;
-};
+  eq(other: Details): boolean {
+    return other.shown === this.shown && other.dag === this.dag;
+  }
+
+  get estimatedHeight(): number {
+    return 60;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const { preview, value } = this.shown;
+    const tree = () => written(treeOf(value), copied);
+    const { copy } = preview;
+    const text = (copy ?? tree)();
+
+    const excerpted = document.createElement('div');
+    excerpted.className = 'cm-preview-excerpt';
+    excerpted.textContent = text.length > excerpt ? `${text.slice(0, excerpt)}…` : text;
+
+    const button = (label: string, run: () => void) => {
+      const dom = document.createElement('button');
+      dom.type = 'button';
+      dom.textContent = label;
+      dom.addEventListener('click', run);
+      return dom;
+    };
+    const copying = (get: () => string) => () => void navigator.clipboard.writeText(get());
+    const { total, distinct } = sizes(value);
+    const facts = document.createElement('div');
+    facts.className = 'cm-preview-facts';
+    facts.append(
+      [
+        `${total.toLocaleString()} nodes`,
+        `${distinct.toLocaleString()} distinct`,
+        `${value.steps.toLocaleString()} steps`,
+      ].join(' · '),
+      ...(copy ? [button('copy value', copying(copy))] : []),
+      button('copy tree', copying(tree)),
+      button('×', () => view.dispatch({ effects: toggle.of(this.dag) })),
+    );
+
+    const wrap = document.createElement('div');
+    wrap.className = 'cm-preview-details';
+    wrap.append(excerpted, facts);
+    inView(wrap);
+    return wrap;
+  }
+}
+
+/**
+ * Keeps a block where the reader is looking: as wide as the editor shows, and
+ * there however far a long line has the code scrolled sideways.
+ *
+ * A block widget lives in `.cm-content`, which is as wide as the longest line,
+ * so every ancestor it has is too wide to size it by; what is visible is the
+ * scroller beside the gutter, and that has to be measured. Zero wide until it
+ * is — a guess must not reach the code's layout, and the observer delivers
+ * before the first paint.
+ */
+function inView(element: HTMLElement): void {
+  element.style.width = '0';
+  element.style.position = 'sticky';
+  const placed = new ResizeObserver(() => {
+    const scroller = element.closest('.cm-scroller');
+    if (!scroller) return;
+    placed.disconnect();
+    const gutters = scroller.querySelector('.cm-gutters');
+    const sizes = new ResizeObserver(() => {
+      if (!element.isConnected) return sizes.disconnect();
+      const gutter = gutters?.clientWidth ?? 0;
+      element.style.left = `${gutter}px`;
+      element.style.width = `${scroller.clientWidth - gutter}px`;
+    });
+    sizes.observe(scroller);
+    if (gutters) sizes.observe(gutters);
+  });
+  placed.observe(element);
+}
 
 // Keyed by the wrap rather than kept on the widget, because `destroy` is
 // handed the DOM: the editor can make a widget's DOM again after discarding
@@ -325,19 +388,52 @@ const theme = EditorView.baseTheme({
     // It is not part of the document, so it must not look selectable or
     // land in a copy of the text.
     userSelect: 'none',
-    // A long press is the menu's, not the browser's own callout.
+    // A long press expands the preview, rather than opening the browser's
+    // own callout.
     WebkitTouchCallout: 'none',
+  },
+  '.cm-preview-details': {
+    boxSizing: 'border-box',
+    padding: '.2rem 1ch .4rem',
+    fontSize: '90%',
+  },
+  '.cm-preview-excerpt': {
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-all',
+  },
+  '.cm-preview-facts': {
+    opacity: '0.7',
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    gap: '.4rem 1ch',
+  },
+  '.cm-preview-facts button': {
+    font: 'inherit',
+    color: 'inherit',
+    background: 'none',
+    border: '1px solid #8884',
+    borderRadius: '4px',
+    padding: '0 6px',
+    cursor: 'pointer',
   },
 });
 
+/** What was shown for a program, and the value it was shown for. */
+interface Shown<P extends Preview = Preview> {
+  preview: P;
+  value: Value;
+}
+
 /**
- * The decorations, and the previews they were built from — kept so a host's
- * element is not rebuilt on every keystroke, and kept here rather than beside
- * the extension so each editor has its own: an element can only be in one
- * document at a time.
+ * The decorations, the previews they were built from, and which of those are
+ * expanded — kept so a host's element is not rebuilt on every keystroke, and
+ * kept here rather than beside the extension so each editor has its own: an
+ * element can only be in one document at a time.
  */
 interface Previews {
-  shown: Map<string, Preview>;
+  shown: Map<string, Shown>;
+  expanded: Set<string>;
   decorations: DecorationSet;
 }
 
@@ -345,7 +441,8 @@ function build(
   state: EditorState,
   config: Resolved,
   expressions: readonly Expression[],
-  shown: Map<string, Preview>,
+  shown: Map<string, Shown>,
+  expanded: Set<string>,
 ): Previews {
   const builder = new RangeSetBuilder<Decoration>();
   const known = state.field(evaluated.field);
@@ -356,26 +453,38 @@ function build(
     // rebuilding a host's element: a program is its own answer, so a preview
     // once drawn for it stays true, and it outlives the moment between the
     // statements settling and the value being published again.
-    let value = shown.get(expression.dag);
-    if (!value) {
+    let entry = shown.get(expression.dag);
+    if (!entry) {
       const evaluation = known.get(expression.dag);
       if (evaluation?.status !== 'ok') continue;
-      shown.set(expression.dag, (value = config.preview(treeOf(evaluation))));
+      entry = { preview: config.preview(treeOf(evaluation)), value: evaluation };
+      shown.set(expression.dag, entry);
     }
-    builder.add(
-      expression.to,
-      expression.to,
-      value.type === 'inline'
-        ? Decoration.widget({ side: 1, widget: new InlinePreview(value) })
-        : Decoration.widget({
-            side: 1,
-            block: true,
-            widget: new BlockPreview(value.element, value.height_px),
-          }),
-    );
+    const { preview } = entry;
+    const at = (widget: Decoration) => builder.add(expression.to, expression.to, widget);
+    if (preview.type === 'block') {
+      at(
+        Decoration.widget({
+          side: 1,
+          block: true,
+          widget: new BlockPreview(preview.element, preview.height_px),
+        }),
+      );
+      continue;
+    }
+    at(Decoration.widget({ side: 1, widget: new InlinePreview(preview, expression.dag) }));
+    if (expanded.has(expression.dag))
+      at(
+        Decoration.widget({
+          side: 1,
+          block: true,
+          widget: new Details(entry as Shown<Inline>, expression.dag),
+        }),
+      );
   }
   for (const dag of shown.keys()) if (!live.has(dag)) shown.delete(dag);
-  return { shown, decorations: builder.finish() };
+  for (const dag of expanded) if (!live.has(dag)) expanded.delete(dag);
+  return { shown, expanded, decorations: builder.finish() };
 }
 
 export function previews(config: Resolved): Extension {
@@ -389,9 +498,13 @@ export function previews(config: Resolved): Extension {
   });
 
   const decorations = StateField.define<Previews>({
-    create: (state) => build(state, config, state.field(expressions), new Map()),
+    create: (state) =>
+      build(state, config, state.field(expressions), new Map(), new Set()),
     update: (value, tr) => {
       if (!tr.docChanged && !tr.effects.length) return value;
+      const expanded = new Set(value.expanded);
+      for (const effect of tr.effects)
+        if (effect.is(toggle) && !expanded.delete(effect.value)) expanded.add(effect.value);
       // A statement that is still compiling says nothing about what is below
       // it, so there is nothing to draw there — but what is already drawn was
       // true of the text a moment ago and will be true again in a few
@@ -399,18 +512,14 @@ export function previews(config: Resolved): Extension {
       // a preview that blinks on every keystroke is worse than one that is
       // briefly out of date.
       if (tr.state.field(config.analyses).some((a) => a.state === 'pending'))
-        return { shown: value.shown, decorations: value.decorations.map(tr.changes) };
-      return build(tr.state, config, tr.state.field(expressions), value.shown);
+        return { ...value, expanded, decorations: value.decorations.map(tr.changes) };
+      return build(tr.state, config, tr.state.field(expressions), value.shown, expanded);
     },
     provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
 
   return [
     theme,
-    menu,
-    tappable('.cm-tooltip.cm-preview-menu'),
-    keymap.of([{ key: 'Escape', run: close }]),
-    EditorView.domEventHandlers({ blur: (_event, view) => void close(view) }),
     evaluated.field,
     expressions,
     decorations,
