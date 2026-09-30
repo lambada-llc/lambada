@@ -1,5 +1,6 @@
 import {
   RangeSetBuilder,
+  StateEffect,
   StateField,
   type EditorState,
   type Extension,
@@ -7,14 +8,18 @@ import {
 import {
   Decoration,
   EditorView,
+  keymap,
+  showTooltip,
   WidgetType,
   type DecorationSet,
+  type Tooltip,
 } from '@codemirror/view';
 
 import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
 import { dagLine, needed, type DagLine } from './dag';
+import { tappable } from './tooltips';
 import { treeOf, type Tree, type Value } from './tree';
 
 /** A statement that is an expression, and the whole program that produces it. */
@@ -83,13 +88,23 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
  * in front of it: whatever marks it off from the code is part of what the
  * preview said, so a host that wants no marker, or a different one, is not
  * overruled.
+ *
+ * `copy` is the value as the reader takes it away, from the menu a right-click
+ * or a long press on the preview opens — worked out only then, since it may be
+ * far longer than what fits on the line. Without it, what is shown is what is
+ * copied.
  */
+type Inline = { type: 'inline'; formatted: string; copy?: () => string };
 export type Preview =
-  | { type: 'inline'; formatted: string }
+  | Inline
   | { type: 'block'; element: HTMLElement; height_px: number };
 
 /** How much tree fits at the end of a line of code. */
 const width = 40;
+
+/** How much tree is copied: a shared subtree is written out as often as it is
+ * used, so a small value can stand for more text than there is memory. */
+const copied = 1_000_000;
 
 /**
  * The default: the tree itself, `△ (△ △) △`, application to the left and cut
@@ -99,44 +114,37 @@ const width = 40;
  *
  * The `=` is what keeps the value from reading as more of the program. It is
  * written here rather than by whatever draws the preview, so that a host can
- * write something else.
+ * write something else. What is copied is the tree alone, and all of it.
  */
 export const defaultPreview = (tree: Tree): Preview => ({
   type: 'inline',
-  formatted: `= ${written(tree)}`,
+  formatted: `= ${written(tree, width)}`,
+  copy: () => written(tree, copied),
 });
 
-function written(tree: Tree): string {
-  const parts: string[] = [];
-  let length = 0;
-  // Thrown to end the walk once there is more tree than there is room for.
-  // What comes after cannot change what has already been written.
-  const enough = {};
-  const put = (text: string) => {
-    parts.push(text);
-    length += text.length;
-    if (length > width) throw enough;
-  };
-
-  // Depth costs a character before it recurses, so [width] bounds the stack.
-  const write = (node: Tree, nested: boolean): void => {
-    if (node.length === 0) return put('△');
-    if (nested) put('(');
-    put('△');
-    for (const child of node) {
-      put(' ');
-      write(child, true);
+/** `tree` as it is written, cut short past `limit` characters. */
+function written(tree: Tree, limit: number): string {
+  let text = '';
+  // What is left to write, next last: text, or a tree and whether it is nested.
+  // A list rather than the call stack, which a value as deep as a long string
+  // would overflow.
+  const pending: (string | readonly [Tree, boolean])[] = [[tree, false]];
+  while (pending.length && text.length <= limit) {
+    const next = pending.pop()!;
+    if (typeof next === 'string') {
+      text += next;
+      continue;
     }
-    if (nested) put(')');
-  };
-
-  try {
-    write(tree, false);
-  } catch (error) {
-    if (error !== enough) throw error;
-    return `${parts.join('').slice(0, width)}…`;
+    const [node, nested] = next;
+    if (node.length === 0) {
+      text += '△';
+      continue;
+    }
+    text += nested ? '(△' : '△';
+    if (nested) pending.push(')');
+    for (let i = node.length - 1; i >= 0; i--) pending.push([node[i], true], ' ');
   }
-  return parts.join('');
+  return text.length > limit ? `${text.slice(0, limit)}…` : text;
 }
 
 // A worker of its own. Evaluating is unbounded, and a program that will not
@@ -145,24 +153,119 @@ function written(tree: Tree): string {
 const evaluated = results<Value>('run');
 
 class InlinePreview extends WidgetType {
-  constructor(readonly text: string) {
+  constructor(readonly preview: Inline) {
     super();
   }
 
+  // The preview itself rather than its text: two values can be shown alike
+  // and copy differently. One program keeps one preview, see `shown`.
   eq(other: InlinePreview): boolean {
-    return other.text === this.text;
+    return other.preview === this.preview;
   }
 
-  toDOM(): HTMLElement {
+  toDOM(view: EditorView): HTMLElement {
     // A span, so it sits at the end of the line the expression is on rather
     // than pushing itself onto one of its own.
     const wrap = document.createElement('span');
     wrap.className = 'cm-preview';
     wrap.setAttribute('aria-hidden', 'true');
-    wrap.textContent = this.text;
+    wrap.textContent = this.preview.formatted;
+    const { formatted, copy = () => formatted } = this.preview;
+    const at = () => view.posAtDOM(wrap);
+    // A press lands the cursor where the preview stands, at the end of its
+    // expression — the widget's to do rather than the editor's, which leaves
+    // a press inside a widget alone and, on a touch screen, the tap's
+    // emulated press too.
+    wrap.addEventListener('mousedown', (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      view.dispatch({ selection: { anchor: at() } });
+      view.focus();
+    });
+    const offer = () => view.dispatch({ effects: setMenu.of(menuAt(at(), wrap, copy)) });
+    wrap.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      offer();
+    });
+    held(wrap, offer);
     return wrap;
   }
 }
+
+/**
+ * Calls `then` when a finger rests on `dom`: the long press that is a touch
+ * screen's right-click. Some browsers answer it with a `contextmenu` of their
+ * own and some do not, and offering twice shows the one menu.
+ */
+function held(dom: HTMLElement, then: () => void): void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let fired = false;
+  const cancel = () => clearTimeout(timer);
+  dom.addEventListener('touchstart', () => {
+    cancel();
+    fired = false;
+    timer = setTimeout(() => {
+      fired = true;
+      then();
+    }, 500);
+  });
+  // A finger that moves is scrolling, not holding.
+  dom.addEventListener('touchmove', cancel);
+  dom.addEventListener('touchcancel', cancel);
+  // Letting go after the menu opened is not also a tap: without this, the
+  // press the browser makes of it moves the cursor, and the menu goes with it.
+  dom.addEventListener('touchend', (event) => {
+    cancel();
+    if (fired) event.preventDefault();
+  });
+}
+
+// ── the menu ────────────────────────────────────────────────────────────────
+
+const setMenu = StateEffect.define<Tooltip | null>();
+
+/**
+ * What a preview offers: to copy its value. One item, so a button. Placed by
+ * the preview rather than by its position in the text, which sits at the
+ * preview's near edge and is out of sight when a long line has the editor
+ * scrolled sideways, taking the menu with it.
+ */
+function menuAt(pos: number, preview: HTMLElement, copy: () => string): Tooltip {
+  return {
+    pos,
+    above: true,
+    create: (view) => {
+      const dom = document.createElement('button');
+      dom.type = 'button';
+      dom.className = 'cm-preview-menu';
+      dom.textContent = 'copy result';
+      // Taken on the press, and not the editor's, which would move the cursor
+      // and the menu out from under it.
+      dom.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        void navigator.clipboard.writeText(copy());
+        view.dispatch({ effects: setMenu.of(null) });
+      });
+      return { dom, getCoords: () => preview.getBoundingClientRect() };
+    },
+  };
+}
+
+/** The menu, open until it is used or anything else happens. */
+const menu = StateField.define<Tooltip | null>({
+  create: () => null,
+  update(value, tr) {
+    for (const effect of tr.effects) if (effect.is(setMenu)) return effect.value;
+    return tr.docChanged || tr.selection ? null : value;
+  },
+  provide: (field) => showTooltip.from(field),
+});
+
+const close = (view: EditorView): boolean => {
+  if (!view.state.field(menu)) return false;
+  view.dispatch({ effects: setMenu.of(null) });
+  return true;
+};
 
 // Keyed by the wrap rather than kept on the widget, because `destroy` is
 // handed the DOM: the editor can make a widget's DOM again after discarding
@@ -222,10 +325,8 @@ const theme = EditorView.baseTheme({
     // It is not part of the document, so it must not look selectable or
     // land in a copy of the text.
     userSelect: 'none',
-    // The end of a line is where a click most often means to land, and this
-    // sits exactly there. An event inside a widget is one the editor drops,
-    // cursor and all, so the click has to reach the line instead.
-    pointerEvents: 'none',
+    // A long press is the menu's, not the browser's own callout.
+    WebkitTouchCallout: 'none',
   },
 });
 
@@ -265,7 +366,7 @@ function build(
       expression.to,
       expression.to,
       value.type === 'inline'
-        ? Decoration.widget({ side: 1, widget: new InlinePreview(value.formatted) })
+        ? Decoration.widget({ side: 1, widget: new InlinePreview(value) })
         : Decoration.widget({
             side: 1,
             block: true,
@@ -306,6 +407,10 @@ export function previews(config: Resolved): Extension {
 
   return [
     theme,
+    menu,
+    tappable('.cm-tooltip.cm-preview-menu'),
+    keymap.of([{ key: 'Escape', run: close }]),
+    EditorView.domEventHandlers({ blur: (_event, view) => void close(view) }),
     evaluated.field,
     expressions,
     decorations,

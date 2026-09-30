@@ -31,3 +31,21 @@ export const legible = (...selectors: readonly string[]): Extension =>
       color: '#eeeeee',
     },
   });
+
+/**
+ * A small tappable tooltip — one control, by the cursor or by what it acts on:
+ * [legible], outlined, in the editor's font. `selector` names the tooltip's
+ * root by both of its classes, as [legible] needs.
+ */
+export const tappable = (selector: string): Extension => [
+  legible(selector),
+  EditorView.baseTheme({
+    [selector]: {
+      border: '1px solid #8884',
+      borderRadius: '4px',
+      padding: '2px 8px',
+      font: 'inherit',
+      cursor: 'pointer',
+    },
+  }),
+];
