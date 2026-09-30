@@ -169,20 +169,44 @@ class InlinePreview extends WidgetType {
     wrap.className = 'cm-preview';
     wrap.setAttribute('aria-hidden', 'true');
     wrap.textContent = this.preview.formatted;
-    // A press lands the cursor where the preview stands, at the end of its
-    // expression — the widget's to do rather than the editor's, which leaves
-    // a press inside a widget alone and, on a touch screen, the tap's
-    // emulated press too.
-    wrap.addEventListener('mousedown', (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      view.dispatch({ selection: { anchor: view.posAtDOM(wrap) } });
-      view.focus();
-    });
+    wrap.addEventListener('mousedown', (event) => land(view, wrap, event));
     secondary(wrap, () => view.dispatch({ effects: toggle.of(this.dag) }));
     return wrap;
   }
 }
+
+/**
+ * Lands the cursor where `preview` stands, at the end of its expression, for a
+ * plain press — whether on the preview or past it (see `pressPast`). The
+ * preview's to do rather than the editor's, which leaves a press inside a
+ * widget alone and, on a touch screen, the tap's emulated press too.
+ */
+function land(view: EditorView, preview: HTMLElement, event: MouseEvent): boolean {
+  if (event.button !== 0 || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)
+    return false;
+  event.preventDefault();
+  view.dispatch({ selection: { anchor: view.posAtDOM(preview) } });
+  view.focus();
+  return true;
+}
+
+/**
+ * A press in the rest of a line, past its preview, is the preview's too. Left
+ * to the browser, it is a caret to place beside an element that cannot hold
+ * one, at the end of a line — which WebKit gets wrong.
+ */
+const pressPast = EditorView.domEventHandlers({
+  mousedown(event, view) {
+    const line = event.target;
+    if (!(line instanceof HTMLElement) || !line.classList.contains('cm-line')) return false;
+    const preview = line.querySelector<HTMLElement>(':scope > .cm-preview');
+    return (
+      !!preview &&
+      event.clientX >= preview.getBoundingClientRect().right &&
+      land(view, preview, event)
+    );
+  },
+});
 
 /**
  * Calls `then` on a right-click, or when a finger rests on `dom` — the long
@@ -520,6 +544,7 @@ export function previews(config: Resolved): Extension {
 
   return [
     theme,
+    pressPast,
     evaluated.field,
     expressions,
     decorations,
