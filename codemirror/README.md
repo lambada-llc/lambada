@@ -90,6 +90,12 @@ a `Tree` is live objects, and a
 [DAG](https://github.com/lambada-llc/tree-calculus/blob/main/conventions/README.md#dag-directed-acyclic-graph)
 is text, so it can go into a link, a file, or a frame that renders it.
 
+A click on a preview puts the cursor at the end of its expression. A
+right-click, or a long press on a touch screen, expands it under the expression:
+more of the value, its size in nodes (written out, and distinct), the steps it
+took, and buttons to copy the tree — or the value, as the preview's `copy`
+has it, where the host gives one.
+
 Evaluating happens on a second worker. A compilation takes single-digit
 milliseconds and an evaluation need never finish, so sharing one would let a
 program that loops hold up the marks, the reported names and the completions
