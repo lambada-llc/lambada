@@ -212,8 +212,9 @@ Pair.snd 301
 361 329 360
 362 351 361
 363 :c 362
+_equal_body:1 363
 365 wait self_apply
-366 365 363
+366 365 _equal_body:1
 equal 366
 367 191 :i
 368 :b 367

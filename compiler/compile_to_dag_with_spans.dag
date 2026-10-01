@@ -207,8 +207,9 @@ Pair.snd 137
 182 159 181
 183 172 182
 184 :c 183
+_equal_body:1 184
 185 wait self_apply
-186 185 184
+186 185 _equal_body:1
 equal 186
 187 112 :i
 188 :b 187
