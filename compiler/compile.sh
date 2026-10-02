@@ -9,8 +9,9 @@ set -euo pipefail
 # CLI does the linking, and is what runs the result afterwards.
 
 here="$(dirname "$0")"
-# Compiled sources are memoized beside this script; the runtime is fetched there too.
-emit() { node "$here/../bin/lambada.js" emit --cache "$here/.cache/lambada"; }
+# Compiled sources are kept beside this script, unless the caller keeps them
+# elsewhere; the runtime is fetched there too.
+emit() { TREE_CALCULUS_CACHE="${TREE_CALCULUS_CACHE:-$here/.cache/tree-calculus}" node "$here/../bin/lambada.js" emit; }
 tc="$here/tree-calculus.js"
 >&2 echo Downloading latest version of the Tree Calculus runtime...
 tctmp=$(mktemp)

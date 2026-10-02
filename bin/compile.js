@@ -110,10 +110,8 @@ function compile_source(runtime, compile_file, { root, cwd, prelude }, source_pa
 }
 
 /** Compile `paths`, one compiler for all of them. */
-function compile_sources({ runtime, root, compiler, prelude: prelude_path, cache_dir, cwd, paths }) {
-  const compile_file = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
-    cache_dir,
-  });
+function compile_sources({ runtime, root, compiler, prelude: prelude_path, cwd, paths }) {
+  const compile_file = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'));
   const prelude = readFileSync(prelude_path, 'utf8');
   for (const source_path of paths) {
     compile_source(runtime, compile_file, { root, cwd, prelude }, source_path);
@@ -175,10 +173,8 @@ if (!isMainThread && workerData && workerData.compile) {
  * it, which is what a snippet run against a library wants, and what a test of
  * the compiler's own output pins.
  */
-function emit({ runtime, compiler, prelude, cache_dir, source, where = 'emit' }) {
-  const compile_file = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'), {
-    cache_dir,
-  });
+function emit({ runtime, compiler, prelude, source, where = 'emit' }) {
+  const compile_file = runtime.transformer(runtime.evaluator, readFileSync(compiler, 'utf8'));
   return readFileSync(prelude, 'utf8') + compiled(compile_file, source, where);
 }
 
