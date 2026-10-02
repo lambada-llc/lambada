@@ -43,14 +43,13 @@ $ ./lambada.js <command> [options]
 
 | Command | |
 | --- | --- |
-| `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. |
+| `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. With `$TREE_CALCULUS_CACHE` set, each compiled source is kept there, keyed by the source and the compiler, so a rebuild compiles only the sources that changed, and changing the compiler correctly invalidates everything. |
 | `expect-test <bundle>` | Evaluate the tests in a linked, canonicalized bundle and record each result in the source it came from. With `$TREE_CALCULUS_CACHE` set, each result is kept under the fingerprint of its test's term, so a rerun evaluates only the tests whose terms changed. |
 | `emit [file]` | One source as the compiler emits it, after the prelude, on standard output, nothing named or qualified. Reads stdin without a file. For a snippet to run against a library, or to see what the compiler makes of a file. |
 
 | Option | |
 | --- | --- |
 | `--root <dir>` | Where the sources live. Defaults to `src`. |
-| `--cache <dir>` | Where to memoize compiled sources. Compiling is a pure function of the source and the compiler, so a rebuild only compiles the sources that changed, and changing the compiler correctly invalidates everything. Defaults to `.cache/lambada`. |
 | `--jobs <n>` | Compile this many sources, or evaluate this many tests, at once, each in a thread with a reducer of its own. Defaults to 1: memory scales with the count, and a reducer on a heavy source or test is not small. |
 | `--compiler <file>` | The compiler to use, as a `.dag`: a function from a whole source's text to its DAG, like `compile_file`. Defaults to the one shipped in [`compiler/`](../compiler/). |
 | `--prelude <file>` | The combinator definitions compiled code refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |

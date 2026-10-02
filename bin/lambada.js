@@ -34,10 +34,6 @@ Commands:
 
 Options:
   --root <dir>          Where the sources live. Defaults to src.
-  --cache <dir>         Where to memoize compiled sources. Compiling is a pure
-                        function of the source and the compiler, so a rebuild
-                        only compiles the sources that changed. Defaults to
-                        .cache/lambada.
   --jobs <n>            Compile this many sources, or evaluate this many tests,
                         at once, each in a thread with a reducer of its own.
                         Defaults to 1: memory scales with the count, and a
@@ -58,7 +54,11 @@ Between compile and expect-test, link and canonicalize the modules with dag.js:
 
   lambada compile
   dag.js link $(find src -name '.*.dag' | sort) | dag.js canonicalize > bundle.dag
-  lambada expect-test bundle.dag`;
+  lambada expect-test bundle.dag
+
+With $TREE_CALCULUS_CACHE set, the runtime keeps what it computes there:
+compiled sources, so a rebuild compiles only those that changed, and test
+results, so a rerun evaluates only the tests whose terms changed.`;
 
 function parse_args(argv) {
   const command = argv[0];
@@ -71,7 +71,6 @@ function parse_args(argv) {
       return argv[++i];
     };
     if (arg === '--root') options.root = value();
-    else if (arg === '--cache') options.cache = value();
     else if (arg === '--jobs') options.jobs = Number(value());
     else if (arg === '--compiler') options.compiler = value();
     else if (arg === '--prelude') options.prelude = value();
@@ -104,7 +103,6 @@ async function main(argv) {
         root,
         compiler: options.compiler ?? COMPILER,
         prelude: options.prelude ?? PRELUDE,
-        cache_dir: resolve(options.cache ?? '.cache/lambada'),
         cwd: process.cwd(),
         jobs: options.jobs ?? 1,
         tree_calculus: options.tree_calculus,
@@ -118,7 +116,6 @@ async function main(argv) {
         runtime,
         compiler: options.compiler ?? COMPILER,
         prelude: options.prelude ?? PRELUDE,
-        cache_dir: resolve(options.cache ?? '.cache/lambada'),
         source,
         where: file,
       }));
