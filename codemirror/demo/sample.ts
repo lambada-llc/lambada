@@ -35,7 +35,7 @@ List.length (Map.entries map_of_examples)
 List.length $ Map.entries map_of_examples
 
 # Uppercase names are interpreted as algebraic data types
-Shape = Circle radius | Rect width height
+Shape \= Circle radius | Rect width height
 # ... and desugared as Scott encodings, making elimination as simple as:
 shape_to_string = \\shape shape
   (\\r List.concat_list [ "Circle ", Nat.to_string r ])
