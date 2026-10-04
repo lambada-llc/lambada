@@ -61,7 +61,8 @@ Identifier { identifier }
   // theme paints the whole lot the same, because a program in which every space
   // is an application has little else to mark. `;` is `parse_special_char`'s
   // other spelling of `,`, both being `Schar_separator`.
-  Operator { "=" | "$" | "|" | "," | ";" | ":" }
+  // `\=` is one token too: the lambda-encoded ADT declaration.
+  Operator { "\\=" | "=" | "$" | "|" | "," | ";" | ":" }
 
   // `is_whitespace_char` is `is_gte ' '`, i.e. every code point up to and
   // including the space. Line breaks are in there: a chunk boundary is layout,

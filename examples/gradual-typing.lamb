@@ -151,7 +151,7 @@ sn_to_intro = y $ \self triage "" (\n concats ["∀v", n_to_str $ sn_to_n n, ". 
 
 
 # Type System sketch
-Type = T               # △ :: T
+Type \= T               # △ :: T
      | App t1 t2       # a :: A   and   b :: B   =>  a b :: App A B
      | Or t1 t2        # x :: A   or    x :: B   =>  x :: Or A B
      | Fun sn t1 t2    # "sn" is number of variables bound by "t1"
