@@ -76,15 +76,19 @@ export interface Resolved {
 export function resolve(compile: boolean | CompileConfig): Resolved | null {
   if (compile === false) return null;
   const config = compile === true ? {} : compile;
+  const prelude = dagLines(config.prelude ?? defaultPrelude);
   const environment = dagLines(config.environment ?? '');
   const scope = initialScope(environment);
   return {
     compiler: config.compiler ?? defaultCompiler,
-    prelude: dagLines(config.prelude ?? defaultPrelude),
+    prelude,
     timeout: config.timeout ?? 10000,
     environment,
     initialScope: scope,
-    analyses: analyses(scope),
+    // Compiled code refers to the prelude's combinator labels, so they are
+    // defined as far as a statement is concerned. No source can spell one,
+    // which is why they stay out of the scope completions offer.
+    analyses: analyses(new Set([...initialScope(prelude), ...scope])),
     showStatus: config.showStatus !== false,
     showDiagnostics: config.showDiagnostics !== false,
     showCompletions: config.showCompletions !== false,
