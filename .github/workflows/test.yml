@@ -1,4 +1,5 @@
-# Runs the build tool's own tests.
+# Runs the build tool's own tests. They also compile the playground's snippets
+# with the compiler shipped here, so a change to either reruns them.
 name: test
 
 on:
@@ -6,10 +7,14 @@ on:
     branches: [main]
     paths:
       - 'bin/**'
+      - 'compiler/**'
+      - 'examples/snippets/**'
       - '.github/workflows/test.yml'
   pull_request:
     paths:
       - 'bin/**'
+      - 'compiler/**'
+      - 'examples/snippets/**'
       - '.github/workflows/test.yml'
   workflow_dispatch:
 
