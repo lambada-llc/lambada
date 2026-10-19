@@ -74,4 +74,4 @@ See [arboretum](https://github.com/lambada-llc/arboretum) for a repository built
 | `compile.js` | Applying the compiler to each source and namespacing the result. |
 | `expect-test.js` | Evaluating tests and writing results back into sources. |
 | `runtime.js` | Locating the tree calculus runtime. |
-| `test.js` | Tests for the conventions in `project.js` (what CI runs). |
+| `test.js` | Tests for the conventions in `project.js`, and that the playground's [snippets](../examples/snippets/) need nothing but `△` and the ones before them (what CI runs). |

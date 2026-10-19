@@ -92,6 +92,23 @@ check('a statement that does not compile is named by its line', () => {
     /^Error: f\.lamb:3: the statement ending here does not compile$/);
 });
 
+// The treecalcul.us playground puts intro in front of a program and offers the
+// other three as text to insert. So each may use what the ones before it define,
+// and otherwise only △: the page also has `t` for it, but that alias is the
+// page's choice, not the language's.
+check('the playground snippets need nothing but △ and the snippets before them', () => {
+  const runtime = load();
+  const defined = new Set(['△']);
+  for (const name of ['intro', 'basics', 'nat-arithmetic', 'nat-stringify']) {
+    const where = `examples/snippets/${name}.lamb`;
+    const source = readFileSync(resolve(__dirname, '..', where), 'utf8');
+    const { exports, imports } = runtime.interface_of(emit({ runtime, compiler, prelude, source, where }));
+    const missing = imports.filter(symbol => !defined.has(symbol));
+    assert.deepEqual(missing, [], `${where} uses ${missing.join(', ')}, which nothing before it defines`);
+    exports.forEach(symbol => defined.add(symbol));
+  }
+});
+
 check('a deleted test takes its result along, and a file written twice is refused', async () => {
   const runtime = load();
   const root = mkdtempSync(join(tmpdir(), 'lambada-test-'));
