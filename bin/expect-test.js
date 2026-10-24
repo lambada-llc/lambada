@@ -26,8 +26,8 @@
 // costs, where it is reported, and one that fails to finish is named.
 //
 // An expression that evaluates to a file — △ (△ <name> <media type>) <bytes> —
-// is written into a sibling expect-test-out/ directory instead, and the comment
-// records its name and content hash.
+// is written into a sibling output directory instead (`out/` unless the project
+// names another), and the comment records its name and content hash.
 
 const { createHash } = require('crypto');
 const {
@@ -36,7 +36,7 @@ const {
 const { dirname, resolve } = require('path');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const {
-  EXPECT_DIR, fingerprint, is_source_line, is_source_symbol, is_test_symbol,
+  fingerprint, is_lamb_file, is_source_line, is_source_symbol, is_test_symbol,
   parse_source_symbol, parse_test_symbol, physical_lines,
 } = require('./project.js');
 
@@ -76,18 +76,31 @@ function write_results(path, content, blocks) {
   writeFileSync(path, out.join('\n'));
 }
 
-/** Everything currently under an expect-test-out/ directory, to be pruned if unclaimed. */
-function generated_files(root) {
+/**
+ * Every file currently in an output directory, to be pruned if unclaimed.
+ *
+ * A test names a file, never a path, so only what sits directly in one is
+ * ours. A source in one would be pruned with the rest, so that is refused: the
+ * directory is then a module of its own as well, and `out` names both.
+ */
+function generated_files(root, out) {
   const files = new Set();
-  (function walk(directory, generated) {
+  (function walk(directory) {
     let entries;
     try { entries = readdirSync(directory, { withFileTypes: true }); } catch { return; }
     for (const entry of entries) {
       const full = resolve(directory, entry.name);
-      if (entry.isDirectory()) walk(full, generated || entry.name === EXPECT_DIR);
-      else if (generated) files.add(full);
+      if (entry.name !== out) { if (entry.isDirectory()) walk(full); continue; }
+      if (!entry.isDirectory()) continue;
+      for (const file of readdirSync(full, { withFileTypes: true })) {
+        if (is_lamb_file(file.name)) {
+          throw new Error(`${full}: holds sources and is where tests write their files; pass another --out`);
+        }
+        if (!file.isDirectory()) files.add(resolve(full, file.name));
+      }
+      walk(full);
     }
-  })(resolve(root), false);
+  })(resolve(root));
   return files;
 }
 
@@ -119,8 +132,8 @@ function tests_by_source(runtime, root, linked) {
     }
     if (!is_test_symbol(line[0].symbol)) continue;
 
-    const { source_path, file_directory, code_line } = parse_test_symbol(root, line[0].symbol);
-    if (!by_source.has(source_path)) by_source.set(source_path, { file_directory, tests: [] });
+    const { source_path, directory, code_line } = parse_test_symbol(root, line[0].symbol);
+    if (!by_source.has(source_path)) by_source.set(source_path, { directory, tests: [] });
     by_source.get(source_path).tests.push({
       symbol: line[0].symbol,
       target: line[1],
@@ -248,7 +261,7 @@ function serve({ tree_calculus, library, bundle_path }) {
   });
 }
 
-async function expect_test({ runtime, root, bundle_path, jobs = 1, tree_calculus }) {
+async function expect_test({ runtime, root, out = 'out', bundle_path, jobs = 1, tree_calculus }) {
   const { DagModule, cache_store, fingerprint } = runtime;
 
   const linked = DagModule.parse(readFileSync(bundle_path, 'utf8'));
@@ -315,13 +328,13 @@ async function expect_test({ runtime, root, bundle_path, jobs = 1, tree_calculus
 
   // Every source gets its blocks rewritten, one without tests included: its
   // last test may have been deleted, and its result with it.
-  const stale = generated_files(root);
+  const stale = generated_files(root, out);
   const written_by = new Map();
   const blocks = new Map([...contents.keys()].map(path => [path, new Map()]));
   for (const { source_path, code_line, key } of tests) {
     const { result, file } = answers.get(key.toString('hex'));
     if (file) {
-      const { file_directory } = by_source.get(source_path);
+      const file_directory = resolve(by_source.get(source_path).directory, out);
       const path = resolve(file_directory, file.name);
       if (written_by.has(path)) {
         throw new Error(`${path}: written by a test in ${written_by.get(path)} and one in ${source_path}`);
