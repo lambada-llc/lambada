@@ -43,34 +43,42 @@ $ ./lambada.js <command> [options]
 
 | Command | |
 | --- | --- |
-| `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. With `$TREE_CALCULUS_CACHE` set, each compiled source is kept there, keyed by the source and the compiler, so a rebuild compiles only the sources that changed, and changing the compiler correctly invalidates everything. |
-| `expect-test <bundle>` | Evaluate the tests in a linked, canonicalized bundle and record each result in the source it came from. With `$TREE_CALCULUS_CACHE` set, each result is kept under the fingerprint of its test's term, so a rerun evaluates only the tests whose terms changed. |
+| `build` | All of the below in one go: compile each `--library` under its own root and link it without its tests, compile the sources under the root, link them against the libraries into `<root>/.dag-bundle-linked`, canonicalize that into `<root>/.dag-bundle-canonical`, and run the tests. |
+| `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. Each compiled source is kept in the runtime's cache, keyed by the source and the compiler, so a rebuild compiles only the sources that changed, and changing the compiler correctly invalidates everything. |
+| `expect-test <bundle>` | Evaluate the tests in a linked, canonicalized bundle and record each result in the source it came from. A bundle that is linked but not canonicalized is refused. Each result is kept in the runtime's cache under the fingerprint of its test's term, so a rerun evaluates only the tests whose terms changed. |
 | `emit [file]` | One source as the compiler emits it, after the prelude, on standard output, nothing named or qualified. Reads stdin without a file. For a snippet to run against a library, or to see what the compiler makes of a file. |
 
 | Option | |
 | --- | --- |
 | `--root <dir>` | Where the sources live. Defaults to `src`. |
+| `--library <dir>` | A directory of sources `build` builds against, its names qualified under it as its own build would. Repeat it for several. |
 | `--out <name>` | The directory beside each source that its tests' files go to. Defaults to `out`. Machine-owned: a file there that no test wrote is removed, and a source there is refused. |
-| `--jobs <n>` | Compile this many sources, or evaluate this many tests, at once, each in a thread with a reducer of its own. Defaults to 1: memory scales with the count, and a reducer on a heavy source or test is not small. |
+| `--jobs <n>` | Compile this many sources, or evaluate this many tests, at once, each in a thread with a reducer of its own. Defaults to one per core, as far as 3 GB each goes: a reducer peaks at about 1.1 GB under the runner's default collection threshold. |
 | `--compiler <file>` | The compiler to use, as a `.dag`: a function from a whole source's text to its DAG, like `compile_file`. Defaults to the one shipped in [`compiler/`](../compiler/). |
 | `--prelude <file>` | The combinator definitions compiled code refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |
 | `--tree-calculus <path>` | A [tree-calculus](https://github.com/lambada-llc/tree-calculus) checkout to use, instead of downloading the published runtime. Also settable as `$LAMBADA_TREE_CALCULUS`. |
 
-Compiling produces one [DAG module](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#dag-modules) per source. Putting those together into one program is [`dag.js`](https://github.com/lambada-llc/tree-calculus/tree/main/bin)'s job, so a full build is:
+Compiling produces one [DAG module](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#dag-modules) per source. Putting those together into one program is [`dag.js`](https://github.com/lambada-llc/tree-calculus/tree/main/bin)'s job, so `build` without libraries is:
 
 ``` bash
 lambada.js compile
-dag.js link $(find src -name '.*.dag' | sort) | dag.js canonicalize > bundle.dag
-lambada.js expect-test bundle.dag
+dag.js link $(find src -name '.*.dag' | sort) > src/.dag-bundle-linked
+dag.js canonicalize src/.dag-bundle-linked > src/.dag-bundle-canonical
+lambada.js expect-test src/.dag-bundle-canonical
 ```
 
-See [arboretum](https://github.com/lambada-llc/arboretum) for a repository built exactly this way.
+A project using [arboretum](https://github.com/lambada-llc/arboretum) as its standard library builds with
+
+``` bash
+lambada.js build --library submodules/arboretum/src
+```
 
 ## Layout
 
 | | |
 | --- | --- |
 | `lambada.js` | Command line entry point. |
+| `build.js` | `compile`, linking against libraries, and `expect-test`, in one go. |
 | `project.js` | What a directory of LambAda sources means: how a path becomes a namespace and back, and which lines of a source are code. |
 | `compile.js` | Applying the compiler to each source and namespacing the result. |
 | `expect-test.js` | Evaluating tests and writing results back into sources. |

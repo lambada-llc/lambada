@@ -124,6 +124,12 @@ function tests_by_source(runtime, root, linked) {
 
   for (const line of linked.lines) {
     if (line.length === 2 || line.length === 3) defining_line.set(line[0], line);
+    // Linking leaves a test a node of its own; canonicalizing makes it a name
+    // for one, which is the only form looked for below. Unrefused, a linked
+    // bundle would have no tests at all, and every result would be erased.
+    if (line.length === 3 && is_test_symbol(line[0].symbol)) {
+      throw new Error(`${line[0].symbol}: a node rather than a name, so the bundle is not canonicalized`);
+    }
     if (line.length !== 2 || !is_label(line[0].symbol)) continue;
 
     if (is_source_symbol(line[0].symbol)) {
