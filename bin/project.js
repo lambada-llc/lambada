@@ -14,9 +14,6 @@ const { createHash } = require('crypto');
 const { existsSync, readdirSync } = require('fs');
 const { relative, resolve } = require('path');
 
-/** Where a test's generated files go, as a sibling of the source that made them. */
-const EXPECT_DIR = 'expect-test-out';
-
 const TEST_SYMBOL = /^:test\.((?:[^.]+\.)+)(\d+)$/;
 const SOURCE_SYMBOL = /^:source\.((?:[^.]+\.)+)([0-9a-f]{64})$/;
 
@@ -120,7 +117,7 @@ function source_of(root, prefix) {
   const segments = prefix.split('.').filter(Boolean).map(lower_initial);
   return {
     source_path: lamb_source_path(`${root}/${segments.join('/')}`),
-    file_directory: [root, ...segments.slice(0, -1), EXPECT_DIR].join('/'),
+    directory: [root, ...segments.slice(0, -1)].join('/'),
   };
 }
 
@@ -156,7 +153,6 @@ function parse_source_symbol(root, symbol) {
 const is_source_symbol = symbol => SOURCE_SYMBOL.test(symbol);
 
 module.exports = {
-  EXPECT_DIR,
   is_lamb_file,
   lamb_base,
   lamb_source_path,

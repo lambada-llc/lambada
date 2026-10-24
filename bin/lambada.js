@@ -22,10 +22,11 @@ Commands:
                                 sibling .<name>.dag module, namespaced by where
                                 it lives. Modules from a previous run are removed
                                 first, so a deleted source leaves nothing behind.
-  expect-test <bundle> [--root <dir>]
+  expect-test <bundle> [--root <dir>] [--out <name>]
                                 Evaluate the tests in a linked, canonicalized
                                 bundle and record each result as a '# = …'
-                                comment below the expression it belongs to.
+                                comment below the expression it belongs to, or
+                                a file in an <name>/ beside its source.
   emit [file]                   One source as the compiler emits it, after the
                                 prelude, on standard output, nothing named or
                                 qualified. Reads stdin without
@@ -34,6 +35,9 @@ Commands:
 
 Options:
   --root <dir>          Where the sources live. Defaults to src.
+  --out <name>          The directory, beside each source, that its tests'
+                        files are written to. Defaults to out. Machine-owned:
+                        a file in it no test wrote is removed.
   --jobs <n>            Compile this many sources, or evaluate this many tests,
                         at once, each in a thread with a reducer of its own.
                         Defaults to 1: memory scales with the count, and a
@@ -71,6 +75,7 @@ function parse_args(argv) {
       return argv[++i];
     };
     if (arg === '--root') options.root = value();
+    else if (arg === '--out') options.out = value();
     else if (arg === '--jobs') options.jobs = Number(value());
     else if (arg === '--compiler') options.compiler = value();
     else if (arg === '--prelude') options.prelude = value();
@@ -127,6 +132,7 @@ async function main(argv) {
       await require('./expect-test.js').expect_test({
         runtime,
         root,
+        out: options.out,
         bundle_path: positional[0],
         jobs: options.jobs ?? 1,
         tree_calculus: options.tree_calculus,

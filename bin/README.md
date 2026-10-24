@@ -23,7 +23,7 @@ not true
 
 If the file defines `_to_string`, it is applied to the result before rendering; otherwise identity is assumed. Only `# = ` lines and their `#   ` continuations are machine-owned — your own comments are left alone, and multi-line results wrap onto the continuation lines.
 
-An expression that evaluates to a [file](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#files) — `△ (△ <name> <media type>) <bytes>` — is written into a sibling `expect-test-out/` directory instead, and the comment identifies it by name and content hash:
+An expression that evaluates to a [file](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#files) — `△ (△ <name> <media type>) <bytes>` — is written into a sibling `out/` directory instead (`--out` names another), and the comment identifies it by name and content hash:
 
 ```
 # src/expect_test.lamb
@@ -50,6 +50,7 @@ $ ./lambada.js <command> [options]
 | Option | |
 | --- | --- |
 | `--root <dir>` | Where the sources live. Defaults to `src`. |
+| `--out <name>` | The directory beside each source that its tests' files go to. Defaults to `out`. Machine-owned: a file there that no test wrote is removed, and a source there is refused. |
 | `--jobs <n>` | Compile this many sources, or evaluate this many tests, at once, each in a thread with a reducer of its own. Defaults to 1: memory scales with the count, and a reducer on a heavy source or test is not small. |
 | `--compiler <file>` | The compiler to use, as a `.dag`: a function from a whole source's text to its DAG, like `compile_file`. Defaults to the one shipped in [`compiler/`](../compiler/). |
 | `--prelude <file>` | The combinator definitions compiled code refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |

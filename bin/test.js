@@ -8,7 +8,7 @@
 // whatever extensions a project puts on a source file change none of it.
 
 const assert = require('assert');
-const { mkdtempSync, mkdirSync, readFileSync, writeFileSync, symlinkSync, rmSync } = require('fs');
+const { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, symlinkSync, rmSync } = require('fs');
 const { tmpdir } = require('os');
 const { join, resolve } = require('path');
 const {
@@ -109,7 +109,7 @@ check('the playground snippets need nothing but △ and the snippets before them
   }
 });
 
-check('a deleted test takes its result along, and a file written twice is refused', async () => {
+check('a deleted test takes its result along, files included, and a file written twice is refused', async () => {
   const runtime = load();
   const root = mkdtempSync(join(tmpdir(), 'lambada-test-'));
   const source = join(root, 'a.lamb');
@@ -132,6 +132,14 @@ check('a deleted test takes its result along, and a file written twice is refuse
     assert.strictEqual(await run('x = "hi"\n# = hi\n'), 'x = "hi"\n');
     const file = bytes => `△ (△ "a.txt" "text/plain") "${bytes}"`;
     await assert.rejects(run(`${file(1)}\n${file(2)}\n`), /a\.txt: written by a test in .* and one in/);
+    await run(`${file(1)}\n`);
+    assert.ok(existsSync(join(root, 'out/a.txt')));
+    await run('x = △\n');
+    assert.ok(!existsSync(join(root, 'out/a.txt')));
+    // A source where files are written would be pruned with them.
+    mkdirSync(join(root, 'out'));
+    writeFileSync(join(root, 'out/b.lamb'), 'y = △\n');
+    await assert.rejects(run('x = △\n'), /holds sources/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
