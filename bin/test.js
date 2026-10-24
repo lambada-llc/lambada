@@ -17,6 +17,7 @@ const {
 } = require('./project.js');
 const { compile, emit } = require('./compile.js');
 const { expect_test } = require('./expect-test.js');
+const { build } = require('./build.js');
 const { load } = require('./runtime.js');
 
 // Run in the order written, one at a time, so an async check finishes before
@@ -143,6 +144,38 @@ check('a deleted test takes its result along, files included, and a file written
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+check('a bundle that is linked but not canonicalized is refused, not read as testless', async () => {
+  const runtime = load();
+  const root = mkdtempSync(join(tmpdir(), 'lambada-test-'));
+  try {
+    writeFileSync(join(root, 'a.lamb'), 'x = △\nx\n# = △\n');
+    await compile({ runtime, root, cwd: root, compiler, prelude });
+    const bundle = join(root, 'bundle.dag');
+    writeFileSync(bundle, runtime.link([{ name: 'a', text: readFileSync(join(root, '.a.dag'), 'utf8') }]));
+    await assert.rejects(expect_test({ runtime, root, bundle_path: bundle }), /not canonicalized/);
+    assert.strictEqual(readFileSync(join(root, 'a.lamb'), 'utf8'), 'x = △\nx\n# = △\n');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+check('build links a library under its own names, and leaves its tests alone', async () => {
+  const runtime = load();
+  const dir = mkdtempSync(join(tmpdir(), 'lambada-test-'));
+  try {
+    mkdirSync(join(dir, 'lib/pair'), { recursive: true });
+    mkdirSync(join(dir, 'src/b'), { recursive: true });
+    const library = 'first = \\x \\_ x\nfirst "a" "b"\n';
+    writeFileSync(join(dir, 'lib/pair/pair.lamb'), library);
+    writeFileSync(join(dir, 'src/b/b.lamb'), 'Pair.first "hi" "no"\n');
+    await build({
+      runtime, root: join(dir, 'src'), libraries: [join(dir, 'lib')],
+      compiler, prelude, cwd: dir, jobs: 1,
+    });
+    assert.strictEqual(readFileSync(join(dir, 'src/b/b.lamb'), 'utf8'), 'Pair.first "hi" "no"\n# = hi\n');
+    assert.strictEqual(readFileSync(join(dir, 'lib/pair/pair.lamb'), 'utf8'), library);
+    assert.ok(existsSync(join(dir, 'src/.dag-bundle-linked')));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 (async () => {

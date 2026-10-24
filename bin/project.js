@@ -12,7 +12,7 @@
 
 const { createHash } = require('crypto');
 const { existsSync, readdirSync } = require('fs');
-const { relative, resolve } = require('path');
+const { basename, dirname, relative, resolve } = require('path');
 
 const TEST_SYMBOL = /^:test\.((?:[^.]+\.)+)(\d+)$/;
 const SOURCE_SYMBOL = /^:source\.((?:[^.]+\.)+)([0-9a-f]{64})$/;
@@ -46,6 +46,9 @@ function lamb_source_path(base_path) {
   const found = entries.filter(e => is_lamb_file(e) && lamb_base(e) === name).sort();
   return found.length ? `${dir}/${found[0]}` : base_path + LAMB_EXT;
 }
+
+/** The module compiling `source_path` writes: `.<name>.dag` beside it. */
+const module_path = source_path => `${dirname(source_path)}/.${lamb_base(basename(source_path))}.dag`;
 
 /** Every `.lamb` file under `dir`, in a stable order. */
 function sources(dir) {
@@ -156,6 +159,7 @@ module.exports = {
   is_lamb_file,
   lamb_base,
   lamb_source_path,
+  module_path,
   sources,
   is_source_line,
   physical_lines,

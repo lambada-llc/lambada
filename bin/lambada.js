@@ -9,15 +9,28 @@
 // together into a program is the tree calculus runtime's job — see
 // https://github.com/lambada-llc/tree-calculus/tree/main/bin
 
+const { availableParallelism, totalmem } = require('os');
 const { resolve } = require('path');
 const { load } = require('./runtime.js');
 
 const COMPILER = resolve(__dirname, '../compiler/compile_file.dag');
 const PRELUDE = resolve(__dirname, '../compiler/prelude.dag');
 
+// A reducer per thread, each granted 3 GB: one peaks at about 1.1 GB under the
+// runner's default collection threshold. Memory is the container's limit where
+// one is set: inside a container, totalmem() reports the host's.
+const JOBS = Math.max(1, Math.min(availableParallelism(),
+  Math.floor(Math.min(totalmem(), process.constrainedMemory() || Infinity) / 3 / 2 ** 30)));
+
 const USAGE = `Usage: lambada <command> [options]
 
 Commands:
+  build [--root <dir>] [--library <dir>]... [--out <name>]
+                                Compile, link and test in one go: every library
+                                (compiled under its own root, linked without its
+                                tests), then the sources under <dir>, writing
+                                <dir>/.dag-bundle-linked and
+                                <dir>/.dag-bundle-canonical along the way.
   compile [--root <dir>]        Compile every .lamb file under <dir> into a
                                 sibling .<name>.dag module, namespaced by where
                                 it lives. Modules from a previous run are removed
@@ -38,10 +51,11 @@ Options:
   --out <name>          The directory, beside each source, that its tests'
                         files are written to. Defaults to out. Machine-owned:
                         a file in it no test wrote is removed.
+  --library <dir>       A directory of sources to build against, for build.
+                        Repeat it for several.
   --jobs <n>            Compile this many sources, or evaluate this many tests,
                         at once, each in a thread with a reducer of its own.
-                        Defaults to 1: memory scales with the count, and a
-                        reducer on a heavy source or test is not small.
+                        Defaults to one per core, as far as 3 GB each goes.
   --compiler <file>     The compiler to use, as a .dag: a function from a
                         whole source's text to its DAG. Defaults to the one
                         shipped in compiler/.
@@ -54,20 +68,21 @@ Options:
                         the published runtime. Also settable as
                         $LAMBADA_TREE_CALCULUS.
 
-Between compile and expect-test, link and canonicalize the modules with dag.js:
+build is the steps below; between compile and expect-test, link and
+canonicalize the modules with dag.js:
 
   lambada compile
   dag.js link $(find src -name '.*.dag' | sort) | dag.js canonicalize > bundle.dag
   lambada expect-test bundle.dag
 
-With $TREE_CALCULUS_CACHE set, the runtime keeps what it computes there:
-compiled sources, so a rebuild compiles only those that changed, and test
-results, so a rerun evaluates only the tests whose terms changed.`;
+The runtime keeps what it computes in its cache: compiled sources, so a rebuild
+compiles only those that changed, and test results, so a rerun evaluates only
+the tests whose terms changed.`;
 
 function parse_args(argv) {
   const command = argv[0];
   const positional = [];
-  const options = {};
+  const options = { libraries: [] };
   for (let i = 1; i < argv.length; i++) {
     const arg = argv[i];
     const value = () => {
@@ -76,6 +91,7 @@ function parse_args(argv) {
     };
     if (arg === '--root') options.root = value();
     else if (arg === '--out') options.out = value();
+    else if (arg === '--library') options.libraries.push(value());
     else if (arg === '--jobs') options.jobs = Number(value());
     else if (arg === '--compiler') options.compiler = value();
     else if (arg === '--prelude') options.prelude = value();
@@ -93,7 +109,7 @@ async function main(argv) {
   }
 
   const { command, positional, options } = parse_args(argv);
-  if (!['compile', 'expect-test', 'emit'].includes(command)) {
+  if (!['build', 'compile', 'expect-test', 'emit'].includes(command)) {
     throw new Error(`unrecognized command ${command}`);
   }
 
@@ -102,6 +118,20 @@ async function main(argv) {
   const root = options.root ?? 'src';
 
   switch (command) {
+    case 'build':
+      await require('./build.js').build({
+        runtime,
+        root,
+        libraries: options.libraries,
+        out: options.out,
+        compiler: options.compiler ?? COMPILER,
+        prelude: options.prelude ?? PRELUDE,
+        cwd: process.cwd(),
+        jobs: options.jobs ?? JOBS,
+        tree_calculus: options.tree_calculus,
+      });
+      break;
+
     case 'compile':
       await require('./compile.js').compile({
         runtime,
@@ -109,7 +139,7 @@ async function main(argv) {
         compiler: options.compiler ?? COMPILER,
         prelude: options.prelude ?? PRELUDE,
         cwd: process.cwd(),
-        jobs: options.jobs ?? 1,
+        jobs: options.jobs ?? JOBS,
         tree_calculus: options.tree_calculus,
       });
       break;
@@ -134,7 +164,7 @@ async function main(argv) {
         root,
         out: options.out,
         bundle_path: positional[0],
-        jobs: options.jobs ?? 1,
+        jobs: options.jobs ?? JOBS,
         tree_calculus: options.tree_calculus,
       });
       break;

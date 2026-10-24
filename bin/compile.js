@@ -12,8 +12,8 @@
 
 const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
 const { Worker, isMainThread, workerData } = require('worker_threads');
-const { basename, dirname, relative, resolve } = require('path');
-const { lamb_base, sources, physical_lines, namespace, test_symbol, source_symbol } = require('./project.js');
+const { relative, resolve } = require('path');
+const { module_path, sources, physical_lines, namespace, test_symbol, source_symbol } = require('./project.js');
 
 
 // The compiler names a bare expression's value after the code line its
@@ -105,8 +105,7 @@ function compile_source(runtime, compile_file, { root, cwd, prelude }, source_pa
   // tests were named after.
   module.lines.push([box(source_symbol(root, source_path, source)), box(LEAF)]);
 
-  const name = lamb_base(basename(source_path));
-  writeFileSync(resolve(dirname(source_path), `.${name}.dag`), module.toString());
+  writeFileSync(module_path(source_path), module.toString());
 }
 
 /** Compile `paths`, one compiler for all of them. */
