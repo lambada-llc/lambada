@@ -198,9 +198,9 @@ check('repl: definitions persist, and only the input\'s own expressions are show
   const { dir, env } = await repl_environment(runtime);
   try {
     const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
-    const session = 'pick = Pair.first\npick "old" "x"\n';
-    assert.deepEqual(repl.prepare('', session).map(e => e.line), [2]);
-    const shown = repl.prepare(session, '_to_string = \\s s\npick "ab" "c"\nPair.second "x" "yz"\n');
+    const first = repl.prepare('', { source: 'pick = Pair.first\npick "old" "x"\n' });
+    assert.deepEqual(first.expressions.map(e => e.line), [2]);
+    const shown = repl.prepare(first.dag, { source: '_to_string = \\s s\npick "ab" "c"\nPair.second "x" "yz"\n' }).expressions;
     assert.deepEqual(shown.map(e => e.line), [2, 3], 'lines are the input\'s own');
     assert.deepEqual(shown.map(e => repl.show(e, 'term')), ['ab', 'yz'], 'through _to_string, as an expect test is');
   } finally { rmSync(dir, { recursive: true, force: true }); }
@@ -211,8 +211,24 @@ check('repl: a name nothing defines is reported before anything runs', async () 
   const { dir, env } = await repl_environment(runtime);
   try {
     const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
-    assert.throws(() => repl.prepare('', 'Pair.third 1 2\n'), e => e instanceof InputError && /not defined: Pair\.third$/.test(e.message));
-    assert.throws(() => repl.prepare('a = △\nb = a\n', 'c = b\nd = (\n'), /^Error: line 2: the statement ending here does not compile$/);
+    assert.throws(() => repl.prepare('', { source: 'Pair.third 1 2\n' }), e => e instanceof InputError && /not defined: Pair\.third$/.test(e.message));
+    assert.throws(() => repl.prepare('', { dag: 'x Pair.third\n' }), /not defined: Pair\.third$/, 'in a DAG step too');
+    const { dag } = repl.prepare('', { source: 'a = △\nb = a\n' });
+    assert.throws(() => repl.prepare(dag, { source: 'c = b\nd = (\n' }), /^Error: line 2: the statement ending here does not compile$/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: a DAG is a step like any other: in scope after it, hiding what came before', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    const term = (session, source) => repl.show(repl.prepare(session, { source }).expressions[0], 'term');
+    let session = '';
+    for (const step of [{ source: 'f = Pair.first\ng = f\n' }, { dag: repl.prepare('', { source: 'f = Pair.second\n' }).dag }])
+      session += repl.prepare(session, step).dag;
+    assert.strictEqual(term(session, '[g 6 0, f 0 7]'), term('', '[6, 7]'), 'g keeps the f it was defined with');
+    assert.deepEqual(repl.names_in(session, 'f'), ['f']);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -221,9 +237,9 @@ check('repl: an input is unfinished when its last statement does not compile', a
   const { dir, env } = await repl_environment(runtime);
   try {
     const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
-    assert.throws(() => repl.prepare('', 'f = \\x\n'), e => e.unfinished === true);
-    assert.deepEqual(repl.prepare('', 'f = \\x\n  x\nf 1\n').map(e => e.line), [3], 'an indented line continues it');
-    assert.throws(() => repl.prepare('', 'x = (\ny = 2\n'), e => e.unfinished === false, 'no line after can mend an earlier statement');
+    assert.throws(() => repl.prepare('', { source: 'f = \\x\n' }), e => e.unfinished === true);
+    assert.deepEqual(repl.prepare('', { source: 'f = \\x\n  x\nf 1\n' }).expressions.map(e => e.line), [3], 'an indented line continues it');
+    assert.throws(() => repl.prepare('', { source: 'x = (\ny = 2\n' }), e => e.unfinished === false, 'no line after can mend an earlier statement');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -232,7 +248,7 @@ check('repl: a result is shown in the format asked for, or as a term when it is 
   const { dir, env } = await repl_environment(runtime);
   try {
     const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
-    const [number, text] = repl.prepare('', 'Pair.first 6 0\nPair.second 0 "hi"\n');
+    const [number, text] = repl.prepare('', { source: 'Pair.first 6 0\nPair.second 0 "hi"\n' }).expressions;
     assert.strictEqual(repl.show(number, 'nat'), '6');
     assert.strictEqual(repl.show(text, 'string'), 'hi');
     assert.throws(() => repl.show(text, 'bool'), /^Error: not a bool .*; as a term: /);

@@ -89,11 +89,11 @@ $ lambada.js repl src/.dag-bundle-canonical
 [2; 4; 6]
 ```
 
-A session is a source that grows: each input is compiled after the ones before it, so its definitions stay in scope and a later one hides an earlier one, as in a file. Each new bare expression is evaluated and shown — through `_to_string` when the session defines one, as an expect test is, and otherwise in `--format`. A file is described rather than printed. A name the input uses that nothing defines is reported before anything runs, and a statement that does not compile is named by the input's own line.
+A session is a DAG that grows one step at a time: an input compiled on its own, or a DAG file as it is. In a DAG a reference means the definition above it, so a step's definitions stay in scope and a later one hides an earlier one, as in a file. Each bare expression a step adds is evaluated and shown — through `_to_string` when the session defines one, as an expect test is, and otherwise in `--format`. A file is described rather than printed. A name a step uses that nothing defines is reported before anything runs, and a statement that does not compile is named by the input's own line.
 
 Evaluation runs in a thread of its own, so Ctrl-C (or `--timeout`) stops a term that does not finish without losing the session.
 
-An input whose last statement does not compile yet continues on an indented line, as a statement does in a source, until it compiles or an empty line ends it. Alt-Enter starts a new line without running the input, and a pasted block runs as one input. `:load <file>` runs a `.lamb` source as an input, or links any other file into the environment as a DAG. `:undo [n]` takes back the last input or `:load`, or the last n: the session is a stack of those steps, and what remains is the state it returns to. `:names <prefix>` lists the environment's names, `:format` and `:quit` do what they say, and `:help` lists them.
+An input whose last statement does not compile yet continues on an indented line, as a statement does in a source, until it compiles or an empty line ends it. Alt-Enter starts a new line without running the input, and a pasted block runs as one input. `:load <file>` makes a `.lamb` source, or any other file as a DAG, the next step. `:undo [n]` takes back the last step that defined something, or the last n. `:names <prefix>` lists the names in scope, `:format` and `:quit` do what they say, and `:help` lists them.
 
 Not at a terminal — with `--eval`, or input piped in — it shows each expression's result on standard output, reports problems on standard error, and exits with status 1 if there were any:
 
