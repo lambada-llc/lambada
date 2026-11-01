@@ -19,6 +19,8 @@ const { compile, emit } = require('./compile.js');
 const { expect_test } = require('./expect-test.js');
 const { build } = require('./build.js');
 const { load } = require('./runtime.js');
+const { session_evaluator, InputError } = require('./repl.js');
+const { spawnSync } = require('child_process');
 
 // Run in the order written, one at a time, so an async check finishes before
 // the next starts.
@@ -175,6 +177,67 @@ check('build links a library under its own names, and leaves its tests alone', a
     assert.strictEqual(readFileSync(join(dir, 'src/b/b.lamb'), 'utf8'), 'Pair.first "hi" "no"\n# = hi\n');
     assert.strictEqual(readFileSync(join(dir, 'lib/pair/pair.lamb'), 'utf8'), library);
     assert.ok(existsSync(join(dir, 'src/.dag-bundle-linked')));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// An environment for the repl: a library compiled and linked as `build` would,
+// in a directory of its own.
+function repl_environment(runtime) {
+  const dir = mkdtempSync(join(tmpdir(), 'lambada-test-'));
+  mkdirSync(join(dir, 'lib/pair'), { recursive: true });
+  writeFileSync(join(dir, 'lib/pair/pair.lamb'), 'first = \\x \\_ x\nsecond = \\_ \\y y\n');
+  return compile({ runtime, root: join(dir, 'lib'), compiler, prelude, cwd: dir, jobs: 1 }).then(() => {
+    const module = join(dir, 'lib/pair/.pair.dag');
+    writeFileSync(join(dir, 'env.dag'), runtime.link([{ name: module, text: readFileSync(module, 'utf8') }]));
+    return { dir, env: join(dir, 'env.dag') };
+  });
+}
+
+check('repl: definitions persist, and only the input\'s own expressions are shown', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    const session = 'pick = Pair.first\npick "old" "x"\n';
+    assert.deepEqual(repl.prepare('', session).map(e => e.line), [2]);
+    const shown = repl.prepare(session, '_to_string = \\s s\npick "ab" "c"\nPair.second "x" "yz"\n');
+    assert.deepEqual(shown.map(e => e.line), [2, 3], 'lines are the input\'s own');
+    assert.deepEqual(shown.map(e => repl.show(e, 'term')), ['ab', 'yz'], 'through _to_string, as an expect test is');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: a name nothing defines is reported before anything runs', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    assert.throws(() => repl.prepare('', 'Pair.third 1 2\n'), e => e instanceof InputError && /not defined: Pair\.third$/.test(e.message));
+    assert.throws(() => repl.prepare('a = △\nb = a\n', 'c = b\nd = (\n'), /^Error: line 2: the statement ending here does not compile$/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: a result is shown in the format asked for, or as a term when it is not one', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    const [number, text] = repl.prepare('', 'Pair.first 6 0\nPair.second 0 "hi"\n');
+    assert.strictEqual(repl.show(number, 'nat'), '6');
+    assert.strictEqual(repl.show(text, 'string'), 'hi');
+    assert.throws(() => repl.show(text, 'bool'), /^Error: not a bool .*; as a term: /);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: an expression that does not finish is stopped, and the ones after it still run', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const input = '_to_string = \\s s\nloop = (\\x x x) (\\x x x)\nloop\nPair.second loop "after"\n"last"\n';
+    const run = spawnSync(process.execPath, [resolve(__dirname, 'lambada.js'), 'repl', env, '--timeout', '2'],
+      { input, encoding: 'utf8', env: process.env });
+    assert.strictEqual(run.stdout, 'after\nlast\n');
+    assert.match(run.stderr, /^line 3: did not finish within 2 s$/m);
+    assert.strictEqual(run.status, 1, 'a stopped expression is a failure');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

@@ -47,6 +47,7 @@ $ ./lambada.js <command> [options]
 | `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. Each compiled source is kept in the runtime's cache, keyed by the source and the compiler, so a rebuild compiles only the sources that changed, and changing the compiler correctly invalidates everything. |
 | `expect-test <bundle>` | Evaluate the tests in a linked, canonicalized bundle and record each result in the source it came from. A bundle that is linked but not canonicalized is refused. Each result is kept in the runtime's cache under the fingerprint of its test's term, so a rerun evaluates only the tests whose terms changed. |
 | `emit [file]` | One source as the compiler emits it, after the prelude, on standard output, nothing named or qualified. Reads stdin without a file. For a snippet to run against a library, or to see what the compiler makes of a file. |
+| `repl [env.dag]...` | An interactive session against the given DAG files, linked into one environment — see [The repl](#the-repl). |
 
 | Option | |
 | --- | --- |
@@ -57,6 +58,9 @@ $ ./lambada.js <command> [options]
 | `--compiler <file>` | The compiler to use, as a `.dag`: a function from a whole source's text to its DAG, like `compile_file`. Defaults to the one shipped in [`compiler/`](../compiler/). |
 | `--prelude <file>` | The combinator definitions compiled code refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |
 | `--tree-calculus <path>` | A [tree-calculus](https://github.com/lambada-llc/tree-calculus) checkout to use, instead of downloading the published runtime. Also settable as `$LAMBADA_TREE_CALCULUS`. |
+| `--eval`, `-e <source>` | For `repl`: evaluate this and exit, instead of reading input. Repeat it for several, in order. |
+| `--format <f>` | For `repl`: how a result is shown when the session does not define `_to_string`: `term` (the default), `nat`, `string`, `bool`, `ternary`, `dag` or `minbin`. |
+| `--timeout <s>` | For `repl`: stop an expression that runs longer than this many seconds, and carry on with the next. |
 
 Compiling produces one [DAG module](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#dag-modules) per source. Putting those together into one program is [`dag.js`](https://github.com/lambada-llc/tree-calculus/tree/main/bin)'s job, so `build` without libraries is:
 
@@ -73,6 +77,28 @@ A project using [arboretum](https://github.com/lambada-llc/arboretum) as its sta
 lambada.js build --library submodules/arboretum/src
 ```
 
+## The repl
+
+`repl` evaluates LambAda against an environment of DAG files: a project's `.dag-bundle-canonical`, a library's modules, anything `dag.js link` takes. Several are linked into one.
+
+```
+$ lambada.js repl src/.dag-bundle-canonical
+λ> double = \x Nat.add x x
+λ> _to_string = List.to_source Nat.to_source
+λ> List.map double [1, 2, 3]
+[2; 4; 6]
+```
+
+A session is a source that grows: each input is compiled after the ones before it, so its definitions stay in scope and a later one hides an earlier one, as in a file. Each new bare expression is evaluated and shown — through `_to_string` when the session defines one, as an expect test is, and otherwise in `--format`. A file is described rather than printed. A name the input uses that nothing defines is reported before anything runs, and a statement that does not compile is named by the input's own line.
+
+Evaluation runs in a thread of its own, so Ctrl-C (or `--timeout`) stops a term that does not finish without losing the session. `:{` and `:}` around lines make one input of them; `:names <prefix>` lists the environment's names, `:load <file>` adds a source, `:format`, `:reset` and `:quit` do what they say, and `:help` lists them.
+
+Not at a terminal — with `--eval`, or input piped in — it shows each expression's result on standard output, reports problems on standard error, and exits with status 1 if there were any:
+
+``` bash
+echo 'Nat.mul 6 7' | lambada.js repl src/.dag-bundle-canonical --format nat
+```
+
 ## Layout
 
 | | |
@@ -82,5 +108,6 @@ lambada.js build --library submodules/arboretum/src
 | `project.js` | What a directory of LambAda sources means: how a path becomes a namespace and back, and which lines of a source are code. |
 | `compile.js` | Applying the compiler to each source and namespacing the result. |
 | `expect-test.js` | Evaluating tests and writing results back into sources. |
+| `repl.js` | The interactive session. |
 | `runtime.js` | Locating the tree calculus runtime. |
-| `test.js` | Tests for the conventions in `project.js`, and that the playground's [snippets](../examples/snippets/) need nothing but `△` and the ones before them (what CI runs). |
+| `test.js` | Tests for the conventions in `project.js`, the repl, and that the playground's [snippets](../examples/snippets/) need nothing but `△` and the ones before them (what CI runs). |
