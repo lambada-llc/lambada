@@ -45,12 +45,14 @@ Commands:
                                 qualified. Reads stdin without
                                 a file. For a snippet to run against a library,
                                 or to see what the compiler makes of a file.
-  repl [env.dag]... [--eval <source>]... [--format <f>] [--timeout <s>]
+  repl [file]... [--eval <source>]... [--format <f>] [--timeout <s>]
                                 An interactive session against the given DAG
                                 files (a bundle, modules, ...), linked into one
-                                environment: definitions persist, expressions
-                                are evaluated and shown. With --eval, or input
-                                piped in, it shows those expressions and exits.
+                                environment, with the .lamb sources among them
+                                loaded in order: definitions persist,
+                                expressions are evaluated and shown. With
+                                --eval, or input piped in, it shows those
+                                expressions and exits.
 
 Options:
   --root <dir>          Where the sources live. Defaults to src.
@@ -175,8 +177,7 @@ async function main(argv) {
 
     case 'repl': {
       const failures = await require('./repl.js').repl({
-        runtime,
-        environment: positional,
+        files: positional,
         compiler: options.compiler ?? COMPILER,
         prelude: options.prelude ?? PRELUDE,
         format: options.format,

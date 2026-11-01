@@ -252,6 +252,20 @@ check('repl: an expression that does not finish is stopped, and the ones after i
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+check('repl: .lamb sources given with the environment are loaded into the session', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const [source, broken] = [join(dir, 'pick.lamb'), join(dir, 'broken.lamb')];
+    writeFileSync(source, 'pick = Pair.first\npick 6 0\n');
+    writeFileSync(broken, 'fine = △\nbad = (\n');
+    const run = spawnSync(process.execPath, [resolve(__dirname, 'lambada.js'), 'repl', source, broken, env, '--format', 'nat', '-e', 'pick 7 0'],
+      { encoding: 'utf8', env: process.env });
+    assert.strictEqual(run.stdout, '6\n7\n', 'after the environment, whatever order they are given in');
+    assert.strictEqual(run.stderr, `${broken}: line 2: the statement ending here does not compile\n`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 (async () => {
   let failures = 0;
   for (const { what, fn } of checks) {

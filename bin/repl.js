@@ -21,12 +21,13 @@
 // session: the worker is replaced and the expressions after the stopped one
 // still run.
 //
-// The session is kept as the inputs it accepted, so `:undo` takes back the
-// last ones and the session is what remains.
+// The session is kept as a stack of steps — each input it accepted, and each
+// DAG file loaded into the environment along the way — so `:undo` takes back
+// the last ones and the session is what remains.
 
 const { readFileSync } = require('fs');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
-const { physical_lines } = require('./project.js');
+const { is_lamb_file, physical_lines } = require('./project.js');
 
 // As in compile.js: a bare expression's value is named after the code line its
 // statement ends on, and a statement that did not compile is recorded the same way.
@@ -43,8 +44,9 @@ the input, and a pasted block runs as one input.
   :format <f>       show results as ${FORMATS.join(', ')} (now: %FORMAT%);
                     a definition of _to_string takes precedence, as in expect tests
   :names [prefix]   the environment's names, or those starting with prefix
-  :load <file>      add a source's definitions, and show its expressions
-  :undo [n]         take back the last input, or the last n
+  :load <file>      a .lamb source, run as an input, or a DAG file, added to
+                    the environment
+  :undo [n]         take back the last input or :load, or the last n
   :quit             leave (also Ctrl-D)
 Ctrl-C stops an evaluation that does not finish, or drops an unfinished input.`;
 
@@ -69,7 +71,8 @@ function session_evaluator({ runtime, environment: paths, compiler, prelude: pre
     const words = line.trim().split(/\s+/);
     if (words.length === 2 || words.length === 3) defined.add(words[0]);
   }
-  const names = [...defined].filter(name => /^[A-Za-z_]/.test(name)).sort();
+  // Those code can name: internal aliases such as `M._to_string:0` cannot be.
+  const names = [...defined].filter(name => /^[A-Za-z_][^:]*$/.test(name)).sort();
 
   const not_a_pair = () => { throw new Error('expected a pair'); };
   const halves = evaluator.triage(not_a_pair, not_a_pair, (raw, shown) => [raw, shown]);
@@ -180,15 +183,15 @@ function serve({ tree_calculus, ...options }) {
 }
 
 /**
- * The worker, replaceable: `stop` terminates the current one and starts a
- * fresh one reading the same environment.
+ * The worker, replaceable: `restart` terminates the current one and starts a
+ * fresh one, on what `options()` says then.
  */
 function worker_pool(options) {
   let worker = null;
   let ready = null;
   let listener = null;
   const start = () => {
-    worker = new Worker(__filename, { workerData: { repl: options } });
+    worker = new Worker(__filename, { workerData: { repl: options() } });
     ready = new Promise((ok, fail) => {
       worker.once('message', message => message.fatal ? fail(new Error(message.fatal)) : ok(message.ready));
       worker.once('error', fail);
@@ -202,11 +205,11 @@ function worker_pool(options) {
       listener = on_message;
       worker.postMessage(message);
     },
-    async stop() {
+    async restart() {
       listener = null;
       await worker.terminate();
       start();
-      await ready;
+      return ready;
     },
     close: () => worker.terminate(),
   };
@@ -214,28 +217,35 @@ function worker_pool(options) {
 
 // ---- the session ------------------------------------------------------------
 
-async function repl({ runtime, environment = [], compiler, prelude, format = 'term', evals = [], timeout, tree_calculus }) {
+async function repl({ files = [], compiler, prelude, format = 'term', evals = [], timeout, tree_calculus }) {
   if (!FORMATS.includes(format)) throw new Error(`unknown format ${format} (one of ${FORMATS.join(', ')})`);
   const interactive = !evals.length && process.stdin.isTTY;
-  const pool = worker_pool({ environment, compiler, prelude, tree_calculus });
+  // The DAG files given form the environment the session starts from; the
+  // .lamb sources among them are then loaded into it, in order.
+  const base = files.filter(file => !is_lamb_file(file));
+  const stack = [];
+  const session = () => stack.map(step => step.input).join('');
+  const environment = () => [...base, ...stack.filter(step => step.dag).map(step => step.dag)];
+  const pool = worker_pool(() => ({ environment: environment(), compiler, prelude, tree_calculus }));
   const count = await pool.ready();
   if (interactive) {
-    console.log(`LambAda, with ${count} names from ${environment.length ? environment.join(', ') : 'no environment'}. :help for help.`);
+    console.log(`LambAda, with ${count} names from ${base.length ? base.join(', ') : 'no environment'}. :help for help.`);
   }
 
-  const inputs = [];
   let failures = 0;
   let next_id = 0;
   const say_error = text => { failures++; console.error(text); };
 
   // Run one input to the end: show each of its expressions, and on a stopped
   // one (timeout, Ctrl-C) start a fresh worker and carry on after it. With
-  // `more`, an unfinished input is left unreported and answered 'more'.
+  // `more`, an unfinished input is left unreported and answered 'more'. An
+  // input loaded from a file is reported, and undone, by the file's name.
   let stop_current = null;
-  async function run(input, more = false) {
+  async function run(input, more = false, file = null) {
     if (!input.trim()) return;
     if (!input.endsWith('\n')) input += '\n';
-    const before = inputs.join('');
+    const before = session();
+    const report = text => say_error(file ? `${file}: ${text}` : text);
     let accepted = false;
     let from = 0;
     for (;;) {
@@ -252,10 +262,10 @@ async function repl({ runtime, environment = [], compiler, prelude, format = 'te
           if (message.done) return finish({ done: true });
           if (message.compiled) {
             lines = message.compiled;
-            if (!accepted) inputs.push(input);
+            if (!accepted) stack.push({ input, label: file && `:load ${file}` });
             accepted = true;
           } else {
-            if (message.error) say_error(`${where(lines, message.index)}${message.error}`);
+            if (message.error) report(`${where(lines, message.index)}${message.error}`);
             else console.log(message.text);
             current = message.index + 1;
           }
@@ -266,15 +276,33 @@ async function repl({ runtime, environment = [], compiler, prelude, format = 'te
         });
       });
       stop_current = null;
-      if (outcome.error) return more && outcome.unfinished ? 'more' : say_error(outcome.error);
+      if (outcome.error) return more && outcome.unfinished ? 'more' : report(outcome.error);
       if (outcome.done) return;
-      say_error(`${where(outcome.lines, outcome.at)}${outcome.stopped}`);
-      await pool.stop();
+      report(`${where(outcome.lines, outcome.at)}${outcome.stopped}`);
+      await pool.restart();
       from = outcome.at + 1;
       if (from >= outcome.lines.length) return;
     }
   }
   const where = (lines, index) => (lines.length > 1 ? `line ${lines[index]}: ` : '');
+
+  // A .lamb source is an input; any other file is a DAG, joining the
+  // environment, which takes a fresh worker to link it in.
+  async function load(file) {
+    if (is_lamb_file(file)) {
+      let text;
+      try { text = readFileSync(file, 'utf8'); } catch (error) { return say_error(error.message); }
+      return run(text, false, file);
+    }
+    stack.push({ input: '', label: `:load ${file}`, dag: file });
+    try {
+      console.log(`now ${await pool.restart()} names`);
+    } catch (error) {
+      stack.pop();
+      say_error(error.message);
+      await pool.restart();
+    }
+  }
 
   async function names(prefix) {
     const found = await new Promise(ok => pool.request({ id: next_id++, kind: 'names', prefix }, message => ok(message.names)));
@@ -291,21 +319,23 @@ async function repl({ runtime, environment = [], compiler, prelude, format = 'te
     else if (name === 'undo') {
       const count = Number(argument.trim() || 1);
       if (!Number.isInteger(count) || count < 1) say_error(`:undo takes a count, not ${argument.trim()}`);
-      else if (!inputs.length) console.log('nothing to undo');
-      else for (const input of inputs.splice(-count).reverse()) console.log(`undid ${input.trimEnd()}`);
+      else if (!stack.length) console.log('nothing to undo');
+      else {
+        const undone = stack.splice(-count).reverse();
+        for (const step of undone) console.log(`undid ${step.label ?? step.input.trimEnd()}`);
+        if (undone.some(step => step.dag)) await pool.restart();
+      }
     }
     else if (name === 'names') await names(argument.trim());
-    else if (name === 'load') {
-      let text;
-      try { text = readFileSync(argument.trim(), 'utf8'); } catch (error) { return say_error(error.message); }
-      await run(text);
-    } else if (name === 'format') {
+    else if (name === 'load') await load(argument.trim());
+    else if (name === 'format') {
       if (!FORMATS.includes(argument.trim())) say_error(`unknown format ${argument.trim()} (one of ${FORMATS.join(', ')})`);
       else format = argument.trim();
     } else say_error(`unknown command :${name} (:help lists them)`);
   }
 
   try {
+    for (const file of files) if (is_lamb_file(file)) await load(file);
     if (evals.length) {
       for (const input of evals) await run(input);
     } else if (!interactive) {
