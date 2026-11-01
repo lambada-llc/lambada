@@ -47,7 +47,7 @@ $ ./lambada.js <command> [options]
 | `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. Each compiled source is kept in the runtime's cache, keyed by the source and the compiler, so a rebuild compiles only the sources that changed, and changing the compiler correctly invalidates everything. |
 | `expect-test <bundle>` | Evaluate the tests in a linked, canonicalized bundle and record each result in the source it came from. A bundle that is linked but not canonicalized is refused. Each result is kept in the runtime's cache under the fingerprint of its test's term, so a rerun evaluates only the tests whose terms changed. |
 | `emit [file]` | One source as the compiler emits it, after the prelude, on standard output, nothing named or qualified. Reads stdin without a file. For a snippet to run against a library, or to see what the compiler makes of a file. |
-| `repl [env.dag]...` | An interactive session against the given DAG files, linked into one environment — see [The repl](#the-repl). |
+| `repl [file]...` | An interactive session against the given DAG files, linked into one environment, with any `.lamb` sources among them loaded into it — see [The repl](#the-repl). |
 
 | Option | |
 | --- | --- |
@@ -79,7 +79,7 @@ lambada.js build --library submodules/arboretum/src
 
 ## The repl
 
-`repl` evaluates LambAda against an environment of DAG files: a project's `.dag-bundle-canonical`, a library's modules, anything `dag.js link` takes. Several are linked into one.
+`repl` evaluates LambAda against an environment of DAG files: a project's `.dag-bundle-canonical`, a library's modules, anything `dag.js link` takes. Several are linked into one. `.lamb` sources given alongside are then loaded in order, as `:load` would.
 
 ```
 $ lambada.js repl src/.dag-bundle-canonical
@@ -93,7 +93,7 @@ A session is a source that grows: each input is compiled after the ones before i
 
 Evaluation runs in a thread of its own, so Ctrl-C (or `--timeout`) stops a term that does not finish without losing the session.
 
-An input whose last statement does not compile yet continues on an indented line, as a statement does in a source, until it compiles or an empty line ends it. Alt-Enter starts a new line without running the input, and a pasted block runs as one input. `:undo [n]` takes back the last input, or the last n: the session is the inputs it accepted, and what remains is the state it returns to. `:names <prefix>` lists the environment's names, `:load <file>` adds a source, `:format` and `:quit` do what they say, and `:help` lists them.
+An input whose last statement does not compile yet continues on an indented line, as a statement does in a source, until it compiles or an empty line ends it. Alt-Enter starts a new line without running the input, and a pasted block runs as one input. `:load <file>` runs a `.lamb` source as an input, or links any other file into the environment as a DAG. `:undo [n]` takes back the last input or `:load`, or the last n: the session is a stack of those steps, and what remains is the state it returns to. `:names <prefix>` lists the environment's names, `:format` and `:quit` do what they say, and `:help` lists them.
 
 Not at a terminal — with `--eval`, or input piped in — it shows each expression's result on standard output, reports problems on standard error, and exits with status 1 if there were any:
 
