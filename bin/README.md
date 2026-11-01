@@ -91,7 +91,9 @@ $ lambada.js repl src/.dag-bundle-canonical
 
 A session is a source that grows: each input is compiled after the ones before it, so its definitions stay in scope and a later one hides an earlier one, as in a file. Each new bare expression is evaluated and shown — through `_to_string` when the session defines one, as an expect test is, and otherwise in `--format`. A file is described rather than printed. A name the input uses that nothing defines is reported before anything runs, and a statement that does not compile is named by the input's own line.
 
-Evaluation runs in a thread of its own, so Ctrl-C (or `--timeout`) stops a term that does not finish without losing the session. `:{` and `:}` around lines make one input of them; `:names <prefix>` lists the environment's names, `:load <file>` adds a source, `:format`, `:reset` and `:quit` do what they say, and `:help` lists them.
+Evaluation runs in a thread of its own, so Ctrl-C (or `--timeout`) stops a term that does not finish without losing the session.
+
+An input whose last statement does not compile yet continues on an indented line, as a statement does in a source, until it compiles or an empty line ends it. Alt-Enter starts a new line without running the input, and a pasted block runs as one input. `:undo [n]` takes back the last input, or the last n: the session is the inputs it accepted, and what remains is the state it returns to. `:names <prefix>` lists the environment's names, `:load <file>` adds a source, `:format` and `:quit` do what they say, and `:help` lists them.
 
 Not at a terminal — with `--eval`, or input piped in — it shows each expression's result on standard output, reports problems on standard error, and exits with status 1 if there were any:
 

@@ -216,6 +216,17 @@ check('repl: a name nothing defines is reported before anything runs', async () 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+check('repl: an input is unfinished when its last statement does not compile', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    assert.throws(() => repl.prepare('', 'f = \\x\n'), e => e.unfinished === true);
+    assert.deepEqual(repl.prepare('', 'f = \\x\n  x\nf 1\n').map(e => e.line), [3], 'an indented line continues it');
+    assert.throws(() => repl.prepare('', 'x = (\ny = 2\n'), e => e.unfinished === false, 'no line after can mend an earlier statement');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 check('repl: a result is shown in the format asked for, or as a term when it is not one', async () => {
   const runtime = load();
   const { dir, env } = await repl_environment(runtime);

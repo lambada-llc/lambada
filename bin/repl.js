@@ -20,6 +20,9 @@
 // does not finish can be stopped (Ctrl-C, or --timeout) without losing the
 // session: the worker is replaced and the expressions after the stopped one
 // still run.
+//
+// The session is kept as the inputs it accepted, so `:undo` takes back the
+// last ones and the session is what remains.
 
 const { readFileSync } = require('fs');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
@@ -34,14 +37,16 @@ const FAIL = /^:fail\.(\d+) /gm;
 const FORMATS = ['term', 'nat', 'string', 'bool', 'ternary', 'dag', 'minbin'];
 
 const HELP = `Enter a definition (name = expression) or an expression to evaluate.
-  :{ … :}           a multi-line input
+An input that ends unfinished continues on an indented line (..), until it
+compiles or an empty line ends it. Alt-Enter starts a new line without running
+the input, and a pasted block runs as one input.
   :format <f>       show results as ${FORMATS.join(', ')} (now: %FORMAT%);
                     a definition of _to_string takes precedence, as in expect tests
   :names [prefix]   the environment's names, or those starting with prefix
   :load <file>      add a source's definitions, and show its expressions
-  :reset            forget this session's definitions
+  :undo [n]         take back the last input, or the last n
   :quit             leave (also Ctrl-D)
-Ctrl-C stops an evaluation that does not finish.`;
+Ctrl-C stops an evaluation that does not finish, or drops an unfinished input.`;
 
 /** Where an input went wrong, as opposed to the environment or the runtime. */
 class InputError extends Error {}
@@ -73,15 +78,20 @@ function session_evaluator({ runtime, environment: paths, compiler, prelude: pre
   /**
    * Compile `session` followed by `input`, and return the expressions `input`
    * adds, each ready to evaluate. Throws an InputError naming the input's own
-   * line for a statement that does not compile or a name nothing defines.
+   * line for a statement that does not compile or a name nothing defines; it is
+   * `unfinished` when the statement that does not compile is the last, which
+   * more lines might complete.
    */
   function prepare(session, input) {
     const source = session + input;
     const session_lines = session.split('\n').length - 1;
+    const code = physical_lines(source);
     const out = compile_file(source);
-    const failed = [...out.matchAll(FAIL)].map(([, n]) => physical_lines(source)[Number(n)] - session_lines);
+    const failed = [...out.matchAll(FAIL)].map(([, n]) => code[Number(n)] - session_lines);
     if (failed.length) {
-      throw new InputError(`${failed.map(n => `line ${n}`).join(', ')}: the statement ending here does not compile`);
+      const error = new InputError(`${failed.map(n => `line ${n}`).join(', ')}: the statement ending here does not compile`);
+      error.unfinished = failed.includes(code[code.length - 1] - session_lines);
+      throw error;
     }
     const text = prelude + out;
     const unknown = interface_of(text).imports.filter(name => !defined.has(name));
@@ -101,7 +111,7 @@ function session_evaluator({ runtime, environment: paths, compiler, prelude: pre
       const test = line.length === 2 && LINE.exec(line[0].symbol);
       if (!test || Number(test[1]) <= offset) continue;
       const at = Number(test[1]);
-      const expression = { line: physical_lines(source)[at] - session_lines, value: line[0].symbol };
+      const expression = { line: code[at] - session_lines, value: line[0].symbol };
       if (to_string) {
         // One fork of the value and the value shown, so that showing it does
         // not compute it a second time; the value is what a file is told by.
@@ -154,7 +164,7 @@ function serve({ tree_calculus, ...options }) {
     try {
       expressions = evaluator.prepare(session, input);
     } catch (error) {
-      parentPort.postMessage({ id, error: error.message, input_error: error instanceof InputError });
+      parentPort.postMessage({ id, error: error.message, unfinished: Boolean(error.unfinished) });
       return;
     }
     parentPort.postMessage({ id, compiled: expressions.map(({ line }) => line) });
@@ -213,18 +223,20 @@ async function repl({ runtime, environment = [], compiler, prelude, format = 'te
     console.log(`LambAda, with ${count} names from ${environment.length ? environment.join(', ') : 'no environment'}. :help for help.`);
   }
 
-  let session = '';
+  const inputs = [];
   let failures = 0;
   let next_id = 0;
   const say_error = text => { failures++; console.error(text); };
 
   // Run one input to the end: show each of its expressions, and on a stopped
-  // one (timeout, Ctrl-C) start a fresh worker and carry on after it.
+  // one (timeout, Ctrl-C) start a fresh worker and carry on after it. With
+  // `more`, an unfinished input is left unreported and answered 'more'.
   let stop_current = null;
-  async function run(input) {
+  async function run(input, more = false) {
     if (!input.trim()) return;
     if (!input.endsWith('\n')) input += '\n';
-    const before = session;
+    const before = inputs.join('');
+    let accepted = false;
     let from = 0;
     for (;;) {
       const outcome = await new Promise(settle => {
@@ -236,11 +248,12 @@ async function repl({ runtime, environment = [], compiler, prelude, format = 'te
         const stopped = reason => () => finish({ stopped: reason, at: current, lines });
         stop_current = stopped('interrupted');
         pool.request({ id, kind: 'run', session: before, input, from, format }, message => {
-          if (message.error && message.index === undefined) return finish({ error: message.error });
+          if (message.error && message.index === undefined) return finish(message);
           if (message.done) return finish({ done: true });
           if (message.compiled) {
             lines = message.compiled;
-            session = before + input;
+            if (!accepted) inputs.push(input);
+            accepted = true;
           } else {
             if (message.error) say_error(`${where(lines, message.index)}${message.error}`);
             else console.log(message.text);
@@ -253,7 +266,7 @@ async function repl({ runtime, environment = [], compiler, prelude, format = 'te
         });
       });
       stop_current = null;
-      if (outcome.error) return say_error(outcome.error);
+      if (outcome.error) return more && outcome.unfinished ? 'more' : say_error(outcome.error);
       if (outcome.done) return;
       say_error(`${where(outcome.lines, outcome.at)}${outcome.stopped}`);
       await pool.stop();
@@ -269,13 +282,18 @@ async function repl({ runtime, environment = [], compiler, prelude, format = 'te
   }
 
   // A line starting with ':' is a command; everything else is LambAda.
-  async function handle(input) {
+  async function handle(input, more) {
     const command = /^:(\w+)\s*(.*)$/s.exec(input.trim());
-    if (!command) return run(input);
+    if (!command) return run(input, more);
     const [, name, argument] = command;
     if (name === 'help') console.log(HELP.replace('%FORMAT%', format));
     else if (name === 'quit' || name === 'q') return 'quit';
-    else if (name === 'reset') session = '';
+    else if (name === 'undo') {
+      const count = Number(argument.trim() || 1);
+      if (!Number.isInteger(count) || count < 1) say_error(`:undo takes a count, not ${argument.trim()}`);
+      else if (!inputs.length) console.log('nothing to undo');
+      else for (const input of inputs.splice(-count).reverse()) console.log(`undid ${input.trimEnd()}`);
+    }
     else if (name === 'names') await names(argument.trim());
     else if (name === 'load') {
       let text;
@@ -303,56 +321,79 @@ async function repl({ runtime, environment = [], compiler, prelude, format = 'te
 }
 
 /**
- * The interactive loop: a prompt, history, `:{ … :}` blocks and Ctrl-C.
+ * The interactive loop: a prompt, history, multi-line inputs and Ctrl-C.
  *
  * Input keeps being read while an evaluation runs — in raw mode Ctrl-C is a
  * keypress, so pausing the input would leave nothing to stop it with — and
  * lines typed meanwhile wait their turn.
+ *
+ * A line either runs, joined to the unfinished lines before it, or is held to
+ * be joined to the next: held when it ends with Alt-Enter, which readline
+ * leaves alone, or arrives inside a bracketed paste. A continuation line
+ * starts indented, since that is what continues a statement in a source.
  */
 function interact(handle, current) {
   const readline = require('readline');
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout, prompt: 'λ> ' });
   const queue = [];
-  let block = null;
+  let pending = [];
+  let hold = false;
+  let pasting = false;
   let busy = false;
+  const on_key = (_, key = {}) => {
+    if (key.name === 'paste-start' || key.name === 'paste-end') pasting = key.name === 'paste-start';
+    else if (key.name === 'return' && key.meta) { hold = true; rl.write('\r'); }
+  };
+  process.stdin.on('keypress', on_key);
+  if (rl.terminal) process.stdout.write('\x1b[?2004h');
   return new Promise(done => {
     let closed = false;
+    const prompt = () => {
+      rl.setPrompt(pending.length ? '.. ' : 'λ> ');
+      rl.prompt();
+      if (pending.length && !pasting) rl.write('  ');
+    };
     rl.on('SIGINT', () => {
       const stop = current();
       if (stop) return stop();
       queue.length = 0;
-      if (block) { block = null; rl.setPrompt('λ> '); }
-      process.stdout.write('\n(:quit or Ctrl-D to leave)\n');
-      rl.prompt();
+      if (pending.length) pending = [];
+      else process.stdout.write('\n(:quit or Ctrl-D to leave)');
+      process.stdout.write('\n');
+      rl.line = '';
+      prompt();
     });
     rl.on('close', () => { closed = true; if (!busy) finish(); });
     rl.on('line', line => {
-      if (block) {
-        if (line.trim() !== ':}') { block.push(line); return rl.prompt(); }
-        queue.push(block.join('\n'));
-        block = null;
-        rl.setPrompt('λ> ');
-      } else if (line.trim() === ':{') {
-        block = [];
-        rl.setPrompt('.. ');
-        return rl.prompt();
-      } else {
-        queue.push(line);
-      }
+      queue.push({ line, held: hold || pasting });
+      hold = false;
       pump();
     });
-    const finish = () => { process.stdout.write('\n'); done(); };
+    const finish = () => {
+      process.stdin.off('keypress', on_key);
+      if (rl.terminal) process.stdout.write('\x1b[?2004l');
+      process.stdout.write('\n');
+      done();
+    };
     async function pump() {
       if (busy) return;
       busy = true;
       while (queue.length) {
-        if (await handle(queue.shift()) === 'quit') { queue.length = 0; closed = true; rl.close(); }
+        const { line, held } = queue.shift();
+        const lines = [...pending, line];
+        if (held) { pending = lines; continue; }
+        // An empty line says the input is finished, whether it compiles or not,
+        // and is not part of it.
+        const more = line.trim() !== '';
+        const outcome = await handle((more ? lines : pending).join('\n'), more);
+        if (outcome === 'quit') { queue.length = 0; closed = true; rl.close(); }
+        pending = outcome === 'more' ? lines : [];
       }
       busy = false;
       if (closed) return finish();
-      rl.prompt();
+      prompt();
     }
-    rl.prompt();
+    prompt();
   });
 }
 
