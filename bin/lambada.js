@@ -45,6 +45,12 @@ Commands:
                                 qualified. Reads stdin without
                                 a file. For a snippet to run against a library,
                                 or to see what the compiler makes of a file.
+  repl [env.dag]... [--eval <source>]... [--format <f>] [--timeout <s>]
+                                An interactive session against the given DAG
+                                files (a bundle, modules, ...), linked into one
+                                environment: definitions persist, expressions
+                                are evaluated and shown. With --eval, or input
+                                piped in, it shows those expressions and exits.
 
 Options:
   --root <dir>          Where the sources live. Defaults to src.
@@ -53,6 +59,13 @@ Options:
                         a file in it no test wrote is removed.
   --library <dir>       A directory of sources to build against, for build.
                         Repeat it for several.
+  --eval, -e <source>   For repl: evaluate this and exit, instead of reading
+                        input. Repeat it for several, in order.
+  --format <f>          For repl: how results are shown when the session does
+                        not define _to_string: term (the default), nat, string,
+                        bool, ternary, dag or minbin.
+  --timeout <s>         For repl: stop an expression that runs longer than
+                        this many seconds, and carry on with the next.
   --jobs <n>            Compile this many sources, or evaluate this many tests,
                         at once, each in a thread with a reducer of its own.
                         Defaults to one per core, as far as 3 GB each goes.
@@ -82,7 +95,7 @@ the tests whose terms changed.`;
 function parse_args(argv) {
   const command = argv[0];
   const positional = [];
-  const options = { libraries: [] };
+  const options = { libraries: [], evals: [] };
   for (let i = 1; i < argv.length; i++) {
     const arg = argv[i];
     const value = () => {
@@ -92,6 +105,9 @@ function parse_args(argv) {
     if (arg === '--root') options.root = value();
     else if (arg === '--out') options.out = value();
     else if (arg === '--library') options.libraries.push(value());
+    else if (arg === '--eval' || arg === '-e') options.evals.push(value());
+    else if (arg === '--format') options.format = value();
+    else if (arg === '--timeout') options.timeout = Number(value());
     else if (arg === '--jobs') options.jobs = Number(value());
     else if (arg === '--compiler') options.compiler = value();
     else if (arg === '--prelude') options.prelude = value();
@@ -109,7 +125,7 @@ async function main(argv) {
   }
 
   const { command, positional, options } = parse_args(argv);
-  if (!['build', 'compile', 'expect-test', 'emit'].includes(command)) {
+  if (!['build', 'compile', 'expect-test', 'emit', 'repl'].includes(command)) {
     throw new Error(`unrecognized command ${command}`);
   }
 
@@ -154,6 +170,21 @@ async function main(argv) {
         source,
         where: file,
       }));
+      break;
+    }
+
+    case 'repl': {
+      const failures = await require('./repl.js').repl({
+        runtime,
+        environment: positional,
+        compiler: options.compiler ?? COMPILER,
+        prelude: options.prelude ?? PRELUDE,
+        format: options.format,
+        evals: options.evals,
+        timeout: options.timeout,
+        tree_calculus: options.tree_calculus,
+      });
+      if (failures) process.exitCode = 1;
       break;
     }
 
