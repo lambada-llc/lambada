@@ -1,0 +1,422 @@
+import {
+  RangeSetBuilder,
+  StateField,
+  type EditorState,
+  type Extension,
+} from '@codemirror/state';
+import {
+  Decoration,
+  EditorView,
+  ViewPlugin,
+  WidgetType,
+  type DecorationSet,
+  type ViewUpdate,
+} from '@codemirror/view';
+
+import type { Analysis } from './analysis';
+import type { Expression } from './previews';
+import { treeOf, type Tree, type Value } from './tree';
+import type { Outcome } from './worker';
+
+// Expect tests, offered rather than written.
+//
+// A source's bare expressions are its tests, and the build writes what each
+// evaluates to back under it as a `# = …` comment. Here the editor works that
+// block out as the build would — the same `_to_string`, the same file rule,
+// the same layout — and where the text below an expression disagrees, it shows
+// the block it would write as a patch. Nothing is written until the reader
+// accepts it: an edit the reader did not make is not the editor's to make.
+
+/** Only these lines are an expect test's; anything else is the author's. */
+const HEAD = '# = ';
+const TAIL = '#   ';
+
+/** What the build writes for a result, a line at a time. */
+function block(result: string): string[] {
+  const [first, ...rest] = result.replace(/\n+$/, '').split('\n');
+  return [HEAD + first, ...rest.map((line) => TAIL + line)];
+}
+
+// ── reading a value ─────────────────────────────────────────────────────────
+
+const fail = (what: string): never => {
+  throw new Error(`not ${what}`);
+};
+
+function list(tree: Tree): Tree[] {
+  const items: Tree[] = [];
+  for (; tree.length === 2; tree = tree[1]) items.push(tree[0]);
+  return tree.length === 0 ? items : fail('a list');
+}
+
+/** Least significant bit first; a bit is the leaf or a stem. */
+const nat = (tree: Tree): number =>
+  list(tree).reduceRight((n, bit) => 2 * n + (bit.length === 2 ? fail('a bit') : bit.length), 0);
+
+// A character at a time: a long string spread into one call overflows the stack.
+const text = (tree: Tree): string => list(tree).map((c) => String.fromCodePoint(nat(c))).join('');
+
+/** Deliberately narrow — the build will write nothing else as a file. */
+const FILE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z0-9]+$/;
+
+/** `△ (△ name media-type) bytes`, read as the build reads it, or null. */
+function file(tree: Tree): { name: string; bytes: Uint8Array } | null {
+  if (tree.length !== 2 || tree[0].length !== 2) return null;
+  try {
+    const name = text(tree[0][0]);
+    text(tree[0][1]);
+    if (name.length > 255 || !FILE_NAME.test(name)) return null;
+    return { name, bytes: new Uint8Array(list(tree[1]).map(nat)) };
+  } catch {
+    return null;
+  }
+}
+
+/** What the build records for a test: a file by name and hash, else the text. */
+function recorded(raw: Value, rendered: Value): string | null {
+  const written = file(treeOf(raw));
+  if (written) return `${written.name} sha256:${sha256(written.bytes)}`;
+  try {
+    return text(treeOf(rendered));
+  } catch {
+    // Not a string: the build would fail on it, so there is no block to offer.
+    return null;
+  }
+}
+
+// SHA-256, because the build names a file's content by it and the editor needs
+// the answer in the same transaction that asks — the browser's own is async.
+const K = Uint32Array.from(
+  '428a2f98 71374491 b5c0fbcf e9b5dba5 3956c25b 59f111f1 923f82a4 ab1c5ed5 d807aa98 12835b01 243185be 550c7dc3 72be5d74 80deb1fe 9bdc06a7 c19bf174 e49b69c1 efbe4786 0fc19dc6 240ca1cc 2de92c6f 4a7484aa 5cb0a9dc 76f988da 983e5152 a831c66d b00327c8 bf597fc7 c6e00bf3 d5a79147 06ca6351 14292967 27b70a85 2e1b2138 4d2c6dfc 53380d13 650a7354 766a0abb 81c2c92e 92722c85 a2bfe8a1 a81a664b c24b8b70 c76c51a3 d192e819 d6990624 f40e3585 106aa070 19a4c116 1e376c08 2748774c 34b0bcb5 391c0cb3 4ed8aa4a 5b9cca4f 682e6ff3 748f82ee 78a5636f 84c87814 8cc70208 90befffa a4506ceb bef9a3f7 c67178f2'
+    .split(' ').map((word) => parseInt(word, 16)),
+);
+
+function sha256(bytes: Uint8Array): string {
+  const bits = bytes.length * 8;
+  const padded = new Uint8Array(((bytes.length + 9 + 63) >> 6) << 6);
+  padded.set(bytes);
+  padded[bytes.length] = 0x80;
+  const tail = new DataView(padded.buffer);
+  tail.setUint32(padded.length - 8, Math.floor(bits / 2 ** 32));
+  tail.setUint32(padded.length - 4, bits >>> 0);
+
+  const h = Uint32Array.of(
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+  );
+  const w = new Uint32Array(64);
+  const rotr = (x: number, n: number) => (x >>> n) | (x << (32 - n));
+  for (let at = 0; at < padded.length; at += 64) {
+    for (let i = 0; i < 16; i++) w[i] = tail.getUint32(at + 4 * i);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+    }
+    let [a, b, c, d, e, f, g, k] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = k + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i];
+      const t2 = (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c));
+      [k, g, f, e, d, c, b, a] = [g, f, e, (d + t1) | 0, c, b, a, (t1 + t2) | 0];
+    }
+    [a, b, c, d, e, f, g, k].forEach((x, i) => (h[i] += x));
+  }
+  return [...h].map((x) => x.toString(16).padStart(8, '0')).join('');
+}
+
+// ── patches ─────────────────────────────────────────────────────────────────
+
+/** One block the build would write differently, as the change that writes it. */
+export interface Patch {
+  from: number;
+  to: number;
+  insert: string;
+  /** The lines the build would write. */
+  lines: readonly string[];
+  /** Where the block goes: the end of the expression's last line, or of the
+   * block it replaces. */
+  at: number;
+}
+
+/**
+ * Every expression whose block below disagrees with what it evaluates to.
+ *
+ * An expression still being evaluated has no patch: what it will come to is
+ * not known, and a patch that is a guess would be worse than none. `results`
+ * keeps what was read out of each pair of programs, so a value is only read —
+ * and a file only hashed — once.
+ */
+function patches(
+  state: EditorState,
+  expressions: readonly Expression[],
+  known: ReadonlyMap<string, Outcome<Value>>,
+  results: Map<string, string | null>,
+): readonly Patch[] {
+  const doc = state.doc;
+  const found: Patch[] = [];
+  const live = new Set<string>();
+  for (const { to, dag, rendered } of expressions) {
+    const key = `${dag}\n\n${rendered}`;
+    live.add(key);
+    if (!results.has(key)) {
+      const raw = known.get(dag);
+      const shown = known.get(rendered);
+      if (raw?.status !== 'ok' || shown?.status !== 'ok') continue;
+      results.set(key, recorded(raw, shown));
+    }
+    const result = results.get(key);
+    if (result == null) continue;
+
+    const lines = block(result);
+    const end = doc.lineAt(to);
+    const old: string[] = [];
+    let last = end;
+    for (let n = end.number + 1; n <= doc.lines; n++) {
+      const line = doc.line(n);
+      if (old.length ? !line.text.startsWith(TAIL) : !line.text.startsWith(HEAD)) break;
+      old.push(line.text);
+      last = line;
+    }
+    if (old.join('\n') === lines.join('\n')) continue;
+    found.push(
+      old.length
+        ? { from: doc.line(end.number + 1).from, to: last.to, insert: lines.join('\n'), lines, at: last.to }
+        : { from: end.to, to: end.to, insert: `\n${lines.join('\n')}`, lines, at: end.to },
+    );
+  }
+  for (const key of results.keys()) if (!live.has(key)) results.delete(key);
+  return found;
+}
+
+const accept = (view: EditorView, chosen: readonly Patch[]) =>
+  view.dispatch({ changes: chosen.map(({ from, to, insert }) => ({ from, to, insert })) });
+
+/**
+ * A patch, under the block it replaces. It holds what it shows and nothing
+ * else: the editor keeps a widget's DOM for as long as `eq` says it is the
+ * same, so the patch to apply is looked up when the button is pressed rather
+ * than remembered from when it was drawn, by which time it may have moved.
+ */
+class Proposed extends WidgetType {
+  constructor(
+    readonly lines: string,
+    readonly count: number,
+    readonly field: StateField<Expectations>,
+  ) {
+    super();
+  }
+
+  eq(other: Proposed): boolean {
+    return other.lines === this.lines && other.count === this.count;
+  }
+
+  get estimatedHeight(): number {
+    return 20 * this.lines.split('\n').length;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'cm-expect';
+    const lines = document.createElement('div');
+    lines.className = 'cm-expect-lines';
+    lines.textContent = this.lines;
+    const button = (label: string, chosen: (all: readonly Patch[]) => readonly Patch[]) => {
+      const dom = document.createElement('button');
+      dom.type = 'button';
+      dom.textContent = label;
+      dom.addEventListener('mousedown', (event) => event.preventDefault());
+      dom.addEventListener('click', () => accept(view, chosen(view.state.field(this.field).found)));
+      return dom;
+    };
+    const actions = document.createElement('div');
+    actions.className = 'cm-expect-actions';
+    actions.append(
+      button('accept', (all) => all.filter((patch) => patch.at === view.posAtDOM(wrap))),
+      ...(this.count > 1 ? [button(`accept all ${this.count}`, (all) => all)] : []),
+    );
+    wrap.append(lines, actions);
+    return wrap;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
+const replaced = Decoration.line({ class: 'cm-expect-replaced' });
+
+function decorate(
+  state: EditorState,
+  found: readonly Patch[],
+  field: StateField<Expectations>,
+): DecorationSet {
+  const builder = new RangeSetBuilder<Decoration>();
+  for (const patch of found) {
+    if (patch.to > patch.from)
+      for (let n = state.doc.lineAt(patch.from).number; n <= state.doc.lineAt(patch.to).number; n++)
+        builder.add(state.doc.line(n).from, state.doc.line(n).from, replaced);
+    builder.add(
+      patch.at,
+      patch.at,
+      Decoration.widget({
+        side: 1,
+        block: true,
+        widget: new Proposed(patch.lines.join('\n'), found.length, field),
+      }),
+    );
+  }
+  return builder.finish();
+}
+
+interface Expectations {
+  found: readonly Patch[];
+  results: Map<string, string | null>;
+  decorations: DecorationSet;
+}
+
+/**
+ * Where every patch is, down the editor's right edge, so a long source's are
+ * found without scrolling for them; a click goes to one.
+ */
+const marks = (field: StateField<Expectations>) =>
+  ViewPlugin.fromClass(
+    class {
+      strip: HTMLElement;
+      constructor(readonly view: EditorView) {
+        this.strip = document.createElement('div');
+        this.strip.className = 'cm-expect-marks';
+        this.strip.setAttribute('aria-hidden', 'true');
+        view.dom.appendChild(this.strip);
+        this.draw();
+      }
+
+      update(update: ViewUpdate) {
+        if (
+          update.geometryChanged ||
+          update.startState.field(field).found !== update.state.field(field).found
+        )
+          this.draw();
+      }
+
+      draw() {
+        this.view.requestMeasure({
+          read: (view) => {
+            const height = view.contentHeight || 1;
+            return {
+              top: view.scrollDOM.offsetTop,
+              size: view.scrollDOM.clientHeight,
+              at: view.state
+                .field(field)
+                .found.map((patch) => [patch.from, view.lineBlockAt(patch.from).top / height] as const),
+            };
+          },
+          write: ({ top, size, at }) => {
+            this.strip.style.top = `${top}px`;
+            this.strip.style.height = `${size}px`;
+            this.strip.replaceChildren(
+              ...at.map(([pos, fraction]) => {
+                const mark = document.createElement('div');
+                mark.className = 'cm-expect-mark';
+                mark.style.top = `${fraction * 100}%`;
+                mark.addEventListener('mousedown', (event) => {
+                  event.preventDefault();
+                  this.view.dispatch({
+                    selection: { anchor: pos },
+                    effects: EditorView.scrollIntoView(pos, { y: 'center' }),
+                  });
+                  this.view.focus();
+                });
+                return mark;
+              }),
+            );
+          },
+        });
+      }
+
+      destroy() {
+        this.strip.remove();
+      }
+    },
+  );
+
+const theme = EditorView.baseTheme({
+  '.cm-expect-replaced': {
+    textDecoration: 'line-through',
+    backgroundColor: '#e5484d1f',
+  },
+  '.cm-expect': {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    gap: '0 1ch',
+    backgroundColor: '#30a46c1f',
+    // The editor's own lines are indented by `.cm-line`'s padding.
+    padding: '0 2px 0 6px',
+  },
+  '.cm-expect-lines': { whiteSpace: 'pre-wrap', flex: '1' },
+  '.cm-expect-actions': { display: 'flex', gap: '1ch', fontSize: '85%' },
+  '.cm-expect-actions button': {
+    font: 'inherit',
+    color: 'inherit',
+    background: 'none',
+    border: '1px solid #8886',
+    borderRadius: '4px',
+    padding: '0 6px',
+    cursor: 'pointer',
+  },
+  '.cm-expect-marks': {
+    position: 'absolute',
+    right: '0',
+    width: '6px',
+    pointerEvents: 'none',
+    zIndex: '300',
+  },
+  '.cm-expect-mark': {
+    position: 'absolute',
+    left: '0',
+    right: '0',
+    height: '4px',
+    marginTop: '-2px',
+    backgroundColor: '#30a46c',
+    borderRadius: '1px',
+    pointerEvents: 'auto',
+    cursor: 'pointer',
+  },
+});
+
+/**
+ * Patches for every expression whose `# = …` block is not what the build
+ * would write, read off `expressions` and the values `evaluated` holds.
+ */
+export function expectations(
+  analyses: StateField<readonly Analysis[]>,
+  expressions: StateField<readonly Expression[]>,
+  evaluated: StateField<ReadonlyMap<string, Outcome<Value>>>,
+): Extension {
+  const compute = (state: EditorState, results: Map<string, string | null>): Expectations => {
+    const found = patches(state, state.field(expressions), state.field(evaluated), results);
+    return { found, results, decorations: decorate(state, found, field) };
+  };
+  const field: StateField<Expectations> = StateField.define<Expectations>({
+    create: (state) => compute(state, new Map()),
+    update: (value, tr) => {
+      if (!tr.docChanged && !tr.effects.length) return value;
+      // While a statement is compiling, which expressions there are is not
+      // known; the patches drawn a moment ago are carried along rather than
+      // taken away and put back, as the previews are.
+      if (tr.state.field(analyses).some((a) => a.state === 'pending'))
+        return {
+          ...value,
+          found: value.found.map((patch) => ({
+            ...patch,
+            from: tr.changes.mapPos(patch.from, 1),
+            to: tr.changes.mapPos(patch.to, -1),
+            at: tr.changes.mapPos(patch.at, -1),
+          })),
+          decorations: value.decorations.map(tr.changes),
+        };
+      return compute(tr.state, value.results);
+    },
+    provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
+  });
+  return [theme, field, marks(field)];
+}

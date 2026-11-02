@@ -85,7 +85,7 @@ export function lambada({
           compilation(config),
           config.showStatus ? statementStatus(config) : [],
           config.showDiagnostics ? diagnostics(config) : [],
-          config.showPreviews ? previews(config) : [],
+          config.showPreviews || config.expectTests ? previews(config) : [],
           config.showCompletions ? completions(config) : [],
         ]
       : [],

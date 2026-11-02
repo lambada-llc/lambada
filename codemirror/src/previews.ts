@@ -12,6 +12,7 @@ import {
   type DecorationSet,
 } from '@codemirror/view';
 
+import { expectations } from './expect';
 import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
@@ -19,14 +20,22 @@ import { dagLine, needed, type DagLine } from './dag';
 import { treeOf, type Tree, type Value } from './tree';
 
 /** A statement that is an expression, and the whole program that produces it. */
-interface Expression {
+export interface Expression {
   from: number;
   to: number;
   /** Everything above it, plus itself: a document the runtime can evaluate. */
   dag: string;
+  /**
+   * The same, through the `_to_string` the document defines above it, if it
+   * does: what an expect test records. Otherwise just `dag`.
+   */
+  rendered: string;
 }
 
 const isBare = (line: DagLine) => line.from.length === 0;
+
+/** What a source defines to say how its expect tests' results read. */
+const TO_STRING = '_to_string';
 
 /**
  * The statements that are expressions rather than definitions, each with the
@@ -49,6 +58,9 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
   // leaves defining them to whoever assembles what gets evaluated.
   const context: DagLine[] = [...config.prelude, ...config.environment];
   const found: Expression[] = [];
+  // The document's own, not the environment's: a test is rendered by the
+  // `_to_string` of the file it is in.
+  let rendersItself = false;
 
   for (const { statement, state: status } of state.field(config.analyses)) {
     if (status !== 'ok') {
@@ -60,17 +72,29 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
     const compilation = state.field(lambadaCompilations).get(statement.text);
     if (compilation?.status !== 'ok') continue;
     const lines = compilation.dagLines.filter((line) => line.trim()).map(dagLine);
-    if (lines.some(isBare))
+    const bare = lines.find(isBare);
+    if (bare) {
+      const program = (end: readonly DagLine[]) =>
+        needed(context.concat(lines.filter((line) => !isBare(line)), end))
+          .map((line) => line.text)
+          .join('\n');
+      const dag = program([bare]);
       found.push({
         from: statement.from,
         to: statement.to,
-        dag: needed(context.concat(lines))
-          .map((line) => line.text)
-          .join('\n'),
+        dag,
+        rendered: rendersItself
+          ? program([dagLine(`:rendered ${TO_STRING} ${bare.name}`), dagLine(':rendered')])
+          : dag,
       });
+    }
     // One at a time: a statement can compile to a hundred thousand lines, and
     // spreading that many arguments into `push` overflows the stack.
-    for (const line of lines) if (!isBare(line)) context.push(line);
+    for (const line of lines)
+      if (!isBare(line)) {
+        context.push(line);
+        if (line.name === TO_STRING) rendersItself = true;
+      }
   }
   return found;
 }
@@ -543,13 +567,14 @@ export function previews(config: Resolved): Extension {
   });
 
   return [
-    theme,
-    pressPast,
     evaluated.field,
     expressions,
-    decorations,
+    config.showPreviews ? [theme, pressPast, decorations] : [],
+    config.expectTests ? expectations(config.analyses, expressions, evaluated.field) : [],
     evaluated.keep(config, (state) =>
-      state.field(expressions).map((expression) => expression.dag),
+      state.field(expressions).flatMap((expression) =>
+        config.expectTests ? [expression.dag, expression.rendered] : [expression.dag],
+      ),
     ),
   ];
 }
