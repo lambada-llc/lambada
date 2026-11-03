@@ -472,20 +472,37 @@ const theme = EditorView.baseTheme({
   // No padding, font or colour of its own: its lines are `.cm-line`s and
   // their tokens are highlighted, so the theme sets them as it sets the code.
   '.cm-expect': { backgroundColor: '#30a46c1f' },
-  // The whole gutter cell is the control, most of it ✓: a finger's worth of
-  // target where a cursor's would do on a desktop.
-  '.cm-expect-accept': { display: 'flex', width: '100%', height: '100%' },
+  // One split button across the edge of the line-number gutter: ✓ fills the
+  // cell where the number would be, and ▾ hangs past the gutter's edge into
+  // the gap before the code — the line-number column has to let it show, and
+  // a number never overflows it.
+  '.cm-gutter.cm-lineNumbers': { overflow: 'visible' },
+  '.cm-expect-accept': { position: 'relative', display: 'block', height: '100%' },
   '.cm-expect-accept button': {
     font: 'inherit',
     lineHeight: 'inherit',
+    height: '100%',
     color: '#1a7f4b',
-    background: 'none',
+    backgroundColor: '#30a46c2e',
     border: 'none',
     padding: '0',
     cursor: 'pointer',
   },
-  '.cm-expect-accept button:first-child': { flex: '1', textAlign: 'right', fontWeight: 'bold' },
-  '.cm-expect-accept button:last-child': { width: '0.8em', fontSize: '75%' },
+  '.cm-expect-accept button:first-child': {
+    width: '100%',
+    borderRadius: '4px 0 0 4px',
+    fontWeight: 'bold',
+  },
+  '.cm-expect-accept button:last-child': {
+    position: 'absolute',
+    left: '100%',
+    top: '0',
+    width: '1em',
+    borderRadius: '0 4px 4px 0',
+    borderLeft: '1px solid #30a46c55',
+    fontSize: '80%',
+  },
+  '.cm-expect-accept button:hover': { backgroundColor: '#30a46c4d' },
   '.cm-expect-menu': {
     position: 'absolute',
     zIndex: '400',
