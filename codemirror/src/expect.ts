@@ -72,12 +72,18 @@ function file(tree: Tree): { name: string; bytes: Uint8Array } | null {
   }
 }
 
-/** What the build records for a test: a file by name and hash, else the text. */
-function recorded(raw: Value, rendered: Value): string | null {
+/** What the build records for a test, and whether that is a file's name and
+ * hash rather than the value itself. */
+interface Recorded {
+  result: string;
+  file: boolean;
+}
+
+function recorded(raw: Value, rendered: Value): Recorded | null {
   const written = file(treeOf(raw));
-  if (written) return `${written.name} sha256:${sha256(written.bytes)}`;
+  if (written) return { result: `${written.name} sha256:${sha256(written.bytes)}`, file: true };
   try {
-    return text(treeOf(rendered));
+    return { result: text(treeOf(rendered)), file: false };
   } catch {
     // Not a string: the build would fail on it, so there is no block to offer.
     return null;
@@ -138,7 +144,8 @@ export interface Patch {
 }
 
 /**
- * Every expression whose block below disagrees with what it evaluates to.
+ * Every expression whose block below disagrees with what it evaluates to, and
+ * the expressions whose value the block cannot say — see `Expectations`.
  *
  * An expression still being evaluated has no patch: what it will come to is
  * not known, and a patch that is a guess would be worse than none. `results`
@@ -149,24 +156,27 @@ function patches(
   state: EditorState,
   expressions: readonly Expression[],
   known: ReadonlyMap<string, Outcome<Value>>,
-  results: Map<string, string | null>,
-): readonly Patch[] {
+  results: Map<string, Recorded | null>,
+): Pick<Expectations, 'found' | 'unsaid'> {
   const doc = state.doc;
   const found: Patch[] = [];
+  const unsaid = new Set<string>();
   const live = new Set<string>();
   for (const { to, dag, rendered } of expressions) {
     const key = `${dag}\n\n${rendered}`;
     live.add(key);
+    const raw = known.get(dag);
     if (!results.has(key)) {
-      const raw = known.get(dag);
       const shown = known.get(rendered);
+      if (raw?.status === 'ok' && shown?.status === 'error') unsaid.add(dag);
       if (raw?.status !== 'ok' || shown?.status !== 'ok') continue;
       results.set(key, recorded(raw, shown));
     }
-    const result = results.get(key);
-    if (result == null) continue;
+    const record = results.get(key);
+    if (!record || record.file) unsaid.add(dag);
+    if (!record) continue;
 
-    const lines = block(result);
+    const lines = block(record.result);
     const end = doc.lineAt(to);
     const old: string[] = [];
     let last = end;
@@ -184,7 +194,7 @@ function patches(
     );
   }
   for (const key of results.keys()) if (!live.has(key)) results.delete(key);
-  return found;
+  return { found, unsaid };
 }
 
 const accept = (view: EditorView, chosen: readonly Patch[]) =>
@@ -269,7 +279,14 @@ function decorate(
 
 interface Expectations {
   found: readonly Patch[];
-  results: Map<string, string | null>;
+  /**
+   * The programs of the expressions whose value the block under them does not
+   * say: a file, which it names by hash, or a value it cannot record at all.
+   * Every other expression's result is right there in its block — or in the
+   * patch for it — so a preview at the end of the line would only repeat it.
+   */
+  unsaid: ReadonlySet<string>;
+  results: Map<string, Recorded | null>;
   decorations: DecorationSet;
 }
 
@@ -385,16 +402,18 @@ const theme = EditorView.baseTheme({
 
 /**
  * Patches for every expression whose `# = …` block is not what the build
- * would write, read off `expressions` and the values `evaluated` holds.
+ * would write, read off `expressions` and the values `evaluated` holds — and
+ * which expressions' values the blocks leave unsaid, for the previews to show.
  */
 export function expectations(
   analyses: StateField<readonly Analysis[]>,
   expressions: StateField<readonly Expression[]>,
   evaluated: StateField<ReadonlyMap<string, Outcome<Value>>>,
-): Extension {
-  const compute = (state: EditorState, results: Map<string, string | null>): Expectations => {
-    const found = patches(state, state.field(expressions), state.field(evaluated), results);
-    return { found, results, decorations: decorate(state, found, field) };
+): { extension: Extension; unsaid: (state: EditorState) => ReadonlySet<string> } {
+  const compute = (state: EditorState, results: Map<string, Recorded | null>): Expectations => {
+    const { found, unsaid } =
+      patches(state, state.field(expressions), state.field(evaluated), results);
+    return { found, unsaid, results, decorations: decorate(state, found, field) };
   };
   const field: StateField<Expectations> = StateField.define<Expectations>({
     create: (state) => compute(state, new Map()),
@@ -418,5 +437,8 @@ export function expectations(
     },
     provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
-  return [theme, field, marks(field)];
+  return {
+    extension: [theme, field, marks(field)],
+    unsaid: (state) => state.field(field).unsaid,
+  };
 }

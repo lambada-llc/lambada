@@ -107,7 +107,9 @@ as a patch: the old lines struck through, the new ones under them, and buttons
 to accept that one or all of them. Nothing is written unless accepted. A strip
 along the editor's right edge marks every patch in the document, and a click on
 a mark goes to it. An expression still evaluating, or one that does not come to
-a string, has no patch. Off by default: in a document that is not a tested
+a string, has no patch. The block says what an expression came to, so its
+preview at the end of the line is left out — except where the block cannot say
+it: a file, which it names by hash, or a value that is not a string. Off by default: in a document that is not a tested
 source, every expression would be offered a block it never asked for.
 
 Evaluating happens on a second worker. A compilation takes single-digit
