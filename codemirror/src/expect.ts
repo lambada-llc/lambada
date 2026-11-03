@@ -13,7 +13,12 @@ import {
   type ViewUpdate,
 } from '@codemirror/view';
 
+import { highlightingFor } from '@codemirror/language';
+import { highlightCode, type Tag } from '@lezer/highlight';
+
 import type { Analysis } from './analysis';
+import { inView } from './in-view';
+import { lambadaLanguage } from './language';
 import type { Expression } from './previews';
 import { treeOf, type Tree, type Value } from './tree';
 import type { Outcome } from './worker';
@@ -206,6 +211,36 @@ const accept = (view: EditorView, chosen: readonly Patch[]) =>
  * same, so the patch to apply is looked up when the button is pressed rather
  * than remembered from when it was drawn, by which time it may have moved.
  */
+/**
+ * `text` as the editor would show it were it in the document: a `.cm-line` per
+ * line, so the theme indents and sets it as it does every line, and its tokens
+ * classed by the language and whichever highlighter the editor has — so a
+ * `# = …` block reads as the comment it is, in any theme.
+ */
+function written(view: EditorView, text: string): HTMLElement[] {
+  const highlighter = { style: (tags: readonly Tag[]) => highlightingFor(view.state, tags) };
+  const lines: HTMLElement[] = [];
+  const next = () => {
+    const line = document.createElement('div');
+    line.className = 'cm-line';
+    lines.push(line);
+  };
+  next();
+  highlightCode(
+    text,
+    lambadaLanguage.parser.parse(text),
+    highlighter,
+    (code, classes) => {
+      const span = document.createElement('span');
+      span.className = classes;
+      span.textContent = code;
+      lines[lines.length - 1].append(classes ? span : code);
+    },
+    next,
+  );
+  return lines;
+}
+
 class Proposed extends WidgetType {
   constructor(
     readonly lines: string,
@@ -220,15 +255,14 @@ class Proposed extends WidgetType {
   }
 
   get estimatedHeight(): number {
-    return 20 * this.lines.split('\n').length;
+    // Its lines, and the row the buttons are on.
+    return 20 * (this.lines.split('\n').length + 1);
   }
 
   toDOM(view: EditorView): HTMLElement {
     const wrap = document.createElement('div');
     wrap.className = 'cm-expect';
-    const lines = document.createElement('div');
-    lines.className = 'cm-expect-lines';
-    lines.textContent = this.lines;
+    wrap.append(...written(view, this.lines));
     const button = (label: string, chosen: (all: readonly Patch[]) => readonly Patch[]) => {
       const dom = document.createElement('button');
       dom.type = 'button';
@@ -237,13 +271,17 @@ class Proposed extends WidgetType {
       dom.addEventListener('click', () => accept(view, chosen(view.state.field(this.field).found)));
       return dom;
     };
+    // A row of its own, held to what the editor shows: at the end of the
+    // lines it would be past the right edge of a narrow screen, as far out as
+    // the longest line in the document reaches.
     const actions = document.createElement('div');
     actions.className = 'cm-expect-actions';
     actions.append(
       button('accept', (all) => all.filter((patch) => patch.at === view.posAtDOM(wrap))),
       ...(this.count > 1 ? [button(`accept all ${this.count}`, (all) => all)] : []),
     );
-    wrap.append(lines, actions);
+    inView(actions);
+    wrap.append(actions);
     return wrap;
   }
 
@@ -360,24 +398,26 @@ const theme = EditorView.baseTheme({
     textDecoration: 'line-through',
     backgroundColor: '#e5484d1f',
   },
-  '.cm-expect': {
+  // No padding, font or colour of its own: its lines are `.cm-line`s and
+  // their tokens are highlighted, so the theme sets them as it sets the code.
+  '.cm-expect': { backgroundColor: '#30a46c1f' },
+  '.cm-expect-actions': {
     display: 'flex',
+    justifyContent: 'flex-end',
     flexWrap: 'wrap',
-    alignItems: 'baseline',
-    gap: '0 1ch',
-    backgroundColor: '#30a46c1f',
-    // The editor's own lines are indented by `.cm-line`'s padding.
-    padding: '0 2px 0 6px',
+    gap: '1ch',
+    boxSizing: 'border-box',
+    padding: '2px 6px 4px',
+    fontSize: '85%',
   },
-  '.cm-expect-lines': { whiteSpace: 'pre-wrap', flex: '1' },
-  '.cm-expect-actions': { display: 'flex', gap: '1ch', fontSize: '85%' },
   '.cm-expect-actions button': {
     font: 'inherit',
     color: 'inherit',
     background: 'none',
     border: '1px solid #8886',
     borderRadius: '4px',
-    padding: '0 6px',
+    // A finger's worth to aim at, not a cursor's.
+    padding: '2px 10px',
     cursor: 'pointer',
   },
   '.cm-expect-marks': {
