@@ -39,8 +39,12 @@ export interface CompileConfig {
    * would write as a patch to accept, never writing it unasked. Default: false,
    * since most documents are not tested sources and every expression in them
    * would be offered a block it never asked for.
+   *
+   * `{ render }` names a function the environment defines that writes any value
+   * as a string. Where a test fails the build because its result is not one,
+   * the patch offered is a `_to_string` definition using it, above the test.
    */
-  expectTests?: boolean;
+  expectTests?: boolean | { render?: string };
   /**
    * Offer the names in scope as completions. Default: true. Which names those
    * are depends on what the statements above compiled to, which is why this
@@ -77,6 +81,8 @@ export interface Resolved {
   showCompletions: boolean;
   showPreviews: boolean;
   expectTests: boolean;
+  /** `expectTests`' `render`, if the environment defines it. */
+  render: string | null;
   /** What to show for a value, defaulted to the tree itself. */
   preview: (value: Tree) => Preview;
 }
@@ -104,7 +110,12 @@ export function resolve(compile: boolean | CompileConfig): Resolved | null {
     // Whether to evaluate at all and what to show for the result are one
     // option to a host and two to everything here.
     showPreviews: config.previewResults !== false,
-    expectTests: config.expectTests === true,
+    expectTests: config.expectTests === true || typeof config.expectTests === 'object',
+    render:
+      typeof config.expectTests === 'object' && config.expectTests.render &&
+      scope.has(config.expectTests.render)
+        ? config.expectTests.render
+        : null,
     preview:
       typeof config.previewResults === 'function' ? config.previewResults : defaultPreview,
   };

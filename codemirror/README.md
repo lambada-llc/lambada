@@ -109,18 +109,21 @@ every patch in the document — so an editor showing patches wants
 `lineNumbers()`, which `basicSetup` includes. Nothing is written unless
 accepted.
 
-Where the build would write no block, the editor says what the build does
-instead, on a line under the expression. A result that is not a string stops
-the build, so it reads "The build fails here:" and the build's own message — the
-value is read the way the build's runtime reads it, step for step, so the
-message is the one the build prints. An expression the editor gave up on after
-its `timeout` is "Not worked out", since the build has no time limit and would
-not give up. A strip along the editor's right edge marks every patch and every
-failure in the document, and a click on a mark goes to it.
+A result that is not a string stops the build, and the editor shows it under
+the expression in red: the build's own message, word for word — the value is
+read the way the build's runtime reads it, step for step. With
+`expectTests: { render }`, naming a function the environment defines that
+writes any value as a string, the fix is offered as a patch: `_to_string =
+<render>` above the failing test (one for a run of them), and, where later tests
+are still rendered by the `_to_string` it overrides, that definition again after
+it, so nothing below changes. An expression the editor gave up on after its
+`timeout` says so in grey; the build has no time limit. A strip along the
+editor's right edge marks every patch and every failure in the document, and a
+click on a mark goes to it.
 
 The block says what an expression came to, so its preview at the end of the
-line is left out — except where the block cannot say it: a file, which it names
-by hash, or a value it has no block for. Off by default: in a document that is
+line is left out — except for a file, which the block names by hash. Off by
+default: in a document that is
 not a tested source, every expression would be offered a block it never asked
 for.
 

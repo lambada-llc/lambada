@@ -12,7 +12,7 @@ import {
   type DecorationSet,
 } from '@codemirror/view';
 
-import { expectations } from './expect';
+import { TO_STRING, expectations } from './expect';
 import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
@@ -30,12 +30,13 @@ export interface Expression {
    * does: what an expect test records. Otherwise just `dag`.
    */
   rendered: string;
+  /** That `_to_string` definition, or null: the same object for every
+   * expression it renders. */
+  renderer: { text: string } | null;
 }
 
 const isBare = (line: DagLine) => line.from.length === 0;
 
-/** What a source defines to say how its expect tests' results read. */
-const TO_STRING = '_to_string';
 
 /**
  * The statements that are expressions rather than definitions, each with the
@@ -60,7 +61,7 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
   const found: Expression[] = [];
   // The document's own, not the environment's: a test is rendered by the
   // `_to_string` of the file it is in.
-  let rendersItself = false;
+  let renderer: Expression['renderer'] = null;
 
   for (const { statement, state: status } of state.field(config.analyses)) {
     if (status !== 'ok') {
@@ -83,7 +84,8 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
         from: statement.from,
         to: statement.to,
         dag,
-        rendered: rendersItself
+        renderer,
+        rendered: renderer
           ? program([dagLine(`:rendered ${TO_STRING} ${bare.name}`), dagLine(':rendered')])
           : dag,
       });
@@ -93,7 +95,7 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
     for (const line of lines)
       if (!isBare(line)) {
         context.push(line);
-        if (line.name === TO_STRING) rendersItself = true;
+        if (line.name === TO_STRING) renderer = { text: statement.text };
       }
   }
   return found;
@@ -548,7 +550,7 @@ export function previews(config: Resolved): Extension {
   });
 
   const expect = config.expectTests
-    ? expectations(config.analyses, expressions, evaluated.field)
+    ? expectations(config.analyses, expressions, evaluated.field, config.render)
     : null;
   // With expect tests on, an expression's value is in the `# = …` block under
   // it — or in the patch for one — and it is shown there rather than twice.

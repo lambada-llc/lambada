@@ -1,8 +1,8 @@
 import {
-  RangeSetBuilder,
   StateField,
   type EditorState,
   type Extension,
+  type Text,
 } from '@codemirror/state';
 import {
   Decoration,
@@ -32,6 +32,9 @@ import type { Outcome } from './worker';
 // the same layout — and where the text below an expression disagrees, it shows
 // the block it would write as a patch. Nothing is written until the reader
 // accepts it: an edit the reader did not make is not the editor's to make.
+
+/** What a source defines to say how its expect tests' results read. */
+export const TO_STRING = '_to_string';
 
 /** Only these lines are an expect test's; anything else is the author's. */
 const HEAD = '# = ';
@@ -147,28 +150,69 @@ function sha256(bytes: Uint8Array): string {
 
 // ── patches ─────────────────────────────────────────────────────────────────
 
-/** One block the build would write differently, as the change that writes it. */
+/**
+ * One thing the build would have written differently, as the changes that write
+ * it, the lines it proposes where it proposes them (`side` -1: above the line
+ * starting at `at`; 1 or more: below the line ending there), and the lines it
+ * replaces.
+ */
 export interface Patch {
-  from: number;
-  to: number;
-  insert: string;
-  /** The lines the build would write. */
-  lines: readonly string[];
-  /** Where the block goes: the end of the expression's last line, or of the
-   * block it replaces. */
-  at: number;
+  changes: readonly { from: number; to: number; insert: string }[];
+  shown: readonly { at: number; side: number; lines: string }[];
+  replaces: { from: number; to: number } | null;
 }
 
 /**
  * What the build says about one expression when it writes no block for it:
- * that it stops there (`fails`), or — where the editor gave up waiting and the
- * build, which has no time limit, would not — that it is not known (`unknown`).
+ * the message it stops with (`fails`), or — where the editor gave up waiting and
+ * the build, which has no time limit, would not — why it is not known
+ * (`unknown`).
  */
 export interface Verdict {
   kind: 'fails' | 'unknown';
   message: string;
   /** The end of the expression's last line, which it is shown under. */
   at: number;
+}
+
+/** The `# = …` block under the line ending at `to`, if there is one. */
+function blockUnder(doc: Text, to: number): { lines: string[]; from: number; to: number } {
+  const end = doc.lineAt(to);
+  const lines: string[] = [];
+  let last = end;
+  for (let n = end.number + 1; n <= doc.lines; n++) {
+    const line = doc.line(n);
+    if (lines.length ? !line.text.startsWith(TAIL) : !line.text.startsWith(HEAD)) break;
+    lines.push(line.text);
+    last = line;
+  }
+  return { lines, from: lines.length ? doc.line(end.number + 1).from : end.to, to: last.to };
+}
+
+/**
+ * The patch that makes a run of failing tests ones the build can record: a
+ * `_to_string` using `render`, above the first of them — and, where later tests
+ * are still rendered by the `_to_string` this run was, that definition again
+ * after the last, so nothing below changes.
+ */
+function rendering(
+  doc: Text,
+  render: string,
+  run: readonly Expression[],
+  restore: Expression['renderer'] | undefined,
+): Patch {
+  const first = run[0];
+  const above = `${TO_STRING} = ${render}`;
+  const changes = [{ from: first.from, to: first.from, insert: `${above}\n` }];
+  const shown = [{ at: first.from, side: -1, lines: above }];
+  if (restore !== undefined) {
+    const again = restore?.text ?? `${TO_STRING} = \\x x`;
+    const at = blockUnder(doc, run[run.length - 1].to).to;
+    changes.push({ from: at, to: at, insert: `\n${again}` });
+    // After the failure said under the last test, which is at its line's end.
+    shown.push({ at, side: 2, lines: again });
+  }
+  return { changes, shown, replaces: null };
 }
 
 /**
@@ -186,13 +230,24 @@ function patches(
   expressions: readonly Expression[],
   known: ReadonlyMap<string, Outcome<Value>>,
   results: Map<string, Recorded>,
+  render: string | null,
 ): Pick<Expectations, 'found' | 'verdicts' | 'unsaid'> {
   const doc = state.doc;
   const found: Patch[] = [];
   const verdicts: Verdict[] = [];
   const unsaid = new Set<string>();
   const live = new Set<string>();
-  for (const { to, dag, rendered } of expressions) {
+  // Consecutive failing tests under one `_to_string` take one patch between them.
+  let run: Expression[] = [];
+  const close = (next: number) => {
+    if (!run.length || !render) return void (run = []);
+    const renderer = run[0].renderer;
+    const later = expressions.slice(next).some((expression) => expression.renderer === renderer);
+    found.push(rendering(doc, render, run, later ? renderer : undefined));
+    run = [];
+  };
+  expressions.forEach((expression, index) => {
+    const { to, dag, rendered } = expression;
     const key = `${dag}\n\n${rendered}`;
     live.add(key);
     const end = doc.lineAt(to);
@@ -200,43 +255,45 @@ function patches(
       const raw = known.get(dag);
       const shown = known.get(rendered);
       const gaveUp = [raw, shown].find((outcome) => outcome?.status === 'error');
-      if (gaveUp?.status === 'error') {
+      if (gaveUp?.status === 'error')
         verdicts.push({ kind: 'unknown', message: gaveUp.message, at: end.to });
-        unsaid.add(dag);
-      }
-      if (raw?.status !== 'ok' || shown?.status !== 'ok') continue;
+      if (raw?.status !== 'ok' || shown?.status !== 'ok') return close(index);
       results.set(key, recorded(raw, shown));
     }
     const record = results.get(key)!;
     if ('failure' in record) {
       verdicts.push({ kind: 'fails', message: record.failure, at: end.to });
-      unsaid.add(dag);
-      continue;
+      if (run.length && run[0].renderer !== expression.renderer) close(index);
+      run.push(expression);
+      return;
     }
+    close(index);
     if (record.file) unsaid.add(dag);
 
-    const lines = block(record.result);
-    const old: string[] = [];
-    let last = end;
-    for (let n = end.number + 1; n <= doc.lines; n++) {
-      const line = doc.line(n);
-      if (old.length ? !line.text.startsWith(TAIL) : !line.text.startsWith(HEAD)) break;
-      old.push(line.text);
-      last = line;
-    }
-    if (old.join('\n') === lines.join('\n')) continue;
+    const lines = block(record.result).join('\n');
+    const old = blockUnder(doc, to);
+    if (old.lines.join('\n') === lines) return;
     found.push(
-      old.length
-        ? { from: doc.line(end.number + 1).from, to: last.to, insert: lines.join('\n'), lines, at: last.to }
-        : { from: end.to, to: end.to, insert: `\n${lines.join('\n')}`, lines, at: end.to },
+      old.lines.length
+        ? {
+            changes: [{ from: old.from, to: old.to, insert: lines }],
+            shown: [{ at: old.to, side: 1, lines }],
+            replaces: old,
+          }
+        : {
+            changes: [{ from: end.to, to: end.to, insert: `\n${lines}` }],
+            shown: [{ at: end.to, side: 1, lines }],
+            replaces: null,
+          },
     );
-  }
+  });
+  close(expressions.length);
   for (const key of results.keys()) if (!live.has(key)) results.delete(key);
   return { found, verdicts, unsaid };
 }
 
 const accept = (view: EditorView, chosen: readonly Patch[]) =>
-  view.dispatch({ changes: chosen.map(({ from, to, insert }) => ({ from, to, insert })) });
+  view.dispatch({ changes: chosen.flatMap((patch) => patch.changes) });
 
 /**
  * `text` as the editor would show it were it in the document: a `.cm-line` per
@@ -302,22 +359,23 @@ interface Choice {
   run: () => void;
 }
 
-/** Open beside `anchor` until a choice is made, or anything else happens. */
+/**
+ * Open beside `anchor` until a choice is made, or the reader does anything
+ * else: presses elsewhere, types, or scrolls by wheel or finger. Not on every
+ * `scroll` event — results landing above it move the layout and fire those too,
+ * and the menu must not vanish from under a reader still reaching for it.
+ */
 function menu(view: EditorView, anchor: HTMLElement, choices: readonly Choice[]): void {
   const dom = document.createElement('div');
   dom.className = 'cm-expect-menu';
   dom.setAttribute('role', 'menu');
+  const gestures = ['pointerdown', 'keydown', 'wheel', 'touchmove'] as const;
   const close = () => {
     dom.remove();
-    removeEventListener('pointerdown', outside, true);
-    removeEventListener('keydown', escape, true);
-    view.scrollDOM.removeEventListener('scroll', close);
+    for (const type of gestures) removeEventListener(type, elsewhere, true);
   };
-  const outside = (event: Event) => {
+  const elsewhere = (event: Event) => {
     if (!dom.contains(event.target as Node)) close();
-  };
-  const escape = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') close();
   };
   for (const { symbol, label, run } of choices) {
     const item = document.createElement('button');
@@ -330,16 +388,14 @@ function menu(view: EditorView, anchor: HTMLElement, choices: readonly Choice[])
     });
     dom.append(item);
   }
-  // In the editor's own box, so it scrolls away with nothing left behind: a
-  // scroll closes it rather than leaving it pinned beside a line now elsewhere.
+  // In the editor's own box, so it goes with the editor rather than staying
+  // pinned to the page.
   const at = anchor.getBoundingClientRect();
   const box = view.dom.getBoundingClientRect();
   dom.style.left = `${at.left - box.left}px`;
   dom.style.top = `${at.bottom - box.top}px`;
   view.dom.append(dom);
-  addEventListener('pointerdown', outside, true);
-  addEventListener('keydown', escape, true);
-  view.scrollDOM.addEventListener('scroll', close);
+  for (const type of gestures) addEventListener(type, elsewhere, true);
 }
 
 const ACCEPT = '✓';
@@ -367,7 +423,8 @@ class Accept extends GutterMarker {
 
   toDOM(view: EditorView): Node {
     const found = () => view.state.field(this.field).found;
-    const one = () => accept(view, found().filter((patch) => patch.at === this.at));
+    const one = () =>
+      accept(view, found().filter((patch) => patch.shown.some((shown) => shown.at === this.at)));
     const button = (text: string, title: string, run: (dom: HTMLElement) => void) => {
       const dom = document.createElement('button');
       dom.type = 'button';
@@ -410,9 +467,7 @@ class Said extends WidgetType {
   toDOM(): HTMLElement {
     const line = document.createElement('div');
     line.className = `cm-line cm-expect-${this.verdict.kind}`;
-    line.textContent = this.verdict.kind === 'fails'
-      ? `The build fails here: ${this.verdict.message}`
-      : `Not worked out: ${this.verdict.message}. The build has no time limit.`;
+    line.textContent = this.verdict.message;
     return line;
   }
 }
@@ -442,33 +497,21 @@ function decorate(
   found: readonly Patch[],
   verdicts: readonly Verdict[],
 ): DecorationSet {
-  const builder = new RangeSetBuilder<Decoration>();
-  // In document order, which the builder requires: a verdict's expression has
-  // no patch, so the two never share a place.
-  const ranged: { at: number; patch?: Patch; verdict?: Verdict }[] = [
-    ...found.map((patch) => ({ at: patch.from, patch })),
-    ...verdicts.map((verdict) => ({ at: verdict.at, verdict })),
-  ].sort((a, b) => a.at - b.at);
-  for (const { patch, verdict } of ranged) {
-    if (verdict) {
-      builder.add(verdict.at, verdict.at, Decoration.widget({ side: 1, block: true, widget: new Said(verdict) }));
-      continue;
-    }
-    if (!patch) continue;
-    if (patch.to > patch.from)
-      for (let n = state.doc.lineAt(patch.from).number; n <= state.doc.lineAt(patch.to).number; n++)
-        builder.add(state.doc.line(n).from, state.doc.line(n).from, replaced);
-    builder.add(
-      patch.at,
-      patch.at,
-      Decoration.widget({
-        side: 1,
-        block: true,
-        widget: new Proposed(patch.lines.join('\n')),
-      }),
-    );
-  }
-  return builder.finish();
+  const ranges = [
+    ...found.flatMap(({ shown, replaces }) => [
+      ...(replaces
+        ? Array.from(
+            { length: state.doc.lineAt(replaces.to).number - state.doc.lineAt(replaces.from).number + 1 },
+            (_, i) => replaced.range(state.doc.line(state.doc.lineAt(replaces.from).number + i).from),
+          )
+        : []),
+      ...shown.map(({ at, side, lines }) =>
+        Decoration.widget({ side, block: true, widget: new Proposed(lines) }).range(at)),
+    ]),
+    ...verdicts.map((verdict) =>
+      Decoration.widget({ side: 1, block: true, widget: new Said(verdict) }).range(verdict.at)),
+  ];
+  return Decoration.set(ranges, true);
 }
 
 interface Expectations {
@@ -518,7 +561,7 @@ const marks = (field: StateField<Expectations>) =>
               top: view.scrollDOM.offsetTop,
               size: view.scrollDOM.clientHeight,
               at: [
-                ...view.state.field(field).found.map((patch) => [patch.from, ''] as const),
+                ...view.state.field(field).found.map((patch) => [patch.shown[0].at, ''] as const),
                 ...view.state.field(field).verdicts
                   .filter((verdict) => verdict.kind === 'fails')
                   .map((verdict) => [verdict.at, ' fails'] as const),
@@ -659,10 +702,11 @@ export function expectations(
   analyses: StateField<readonly Analysis[]>,
   expressions: StateField<readonly Expression[]>,
   evaluated: StateField<ReadonlyMap<string, Outcome<Value>>>,
+  render: string | null,
 ): { extension: Extension; unsaid: (state: EditorState) => ReadonlySet<string> } {
   const compute = (state: EditorState, results: Map<string, Recorded>): Expectations => {
     const { found, verdicts, unsaid } =
-      patches(state, state.field(expressions), state.field(evaluated), results);
+      patches(state, state.field(expressions), state.field(evaluated), results, render);
     return { found, verdicts, unsaid, results, decorations: decorate(state, found, verdicts) };
   };
   const field: StateField<Expectations> = StateField.define<Expectations>({
@@ -675,11 +719,12 @@ export function expectations(
       if (tr.state.field(analyses).some((a) => a.state === 'pending'))
         return {
           ...value,
-          found: value.found.map((patch) => ({
-            ...patch,
-            from: tr.changes.mapPos(patch.from, 1),
-            to: tr.changes.mapPos(patch.to, -1),
-            at: tr.changes.mapPos(patch.at, -1),
+          found: value.found.map(({ changes, shown, replaces }) => ({
+            changes: changes.map(({ from, to, insert }) =>
+              ({ from: tr.changes.mapPos(from, 1), to: tr.changes.mapPos(to, -1), insert })),
+            shown: shown.map((one) => ({ ...one, at: tr.changes.mapPos(one.at, one.side < 0 ? 1 : -1) })),
+            replaces: replaces &&
+              { from: tr.changes.mapPos(replaces.from, 1), to: tr.changes.mapPos(replaces.to, -1) },
           })),
           verdicts: value.verdicts.map((verdict) => ({ ...verdict, at: tr.changes.mapPos(verdict.at, -1) })),
           decorations: value.decorations.map(tr.changes),
