@@ -44,23 +44,36 @@ function block(result: string): string[] {
 }
 
 // ── reading a value ─────────────────────────────────────────────────────────
+//
+// As the build's runtime reads it, step for step: the whole list first, then
+// every element's bits, then the code points — so a value that is not a string
+// fails here with the message the build stops with, not merely somewhere.
 
-const fail = (what: string): never => {
-  throw new Error(`not ${what}`);
+const failed = (message: string): never => {
+  throw new Error(message);
 };
 
 function list(tree: Tree): Tree[] {
   const items: Tree[] = [];
   for (; tree.length === 2; tree = tree[1]) items.push(tree[0]);
-  return tree.length === 0 ? items : fail('a list');
+  return tree.length === 0 ? items : failed('tree is not a list');
 }
 
-/** Least significant bit first; a bit is the leaf or a stem. */
-const nat = (tree: Tree): number =>
-  list(tree).reduceRight((n, bit) => 2 * n + (bit.length === 2 ? fail('a bit') : bit.length), 0);
+const bool = (tree: Tree): boolean => (tree.length === 2 ? failed('tree is not a bool') : tree.length === 1);
 
-// A character at a time: a long string spread into one call overflows the stack.
-const text = (tree: Tree): string => list(tree).map((c) => String.fromCodePoint(nat(c))).join('');
+/** Least significant bit first. */
+const nat = (tree: Tree): bigint =>
+  list(tree).reduceRight((n, bit) => 2n * n + (bool(bit) ? 1n : 0n), 0n);
+
+/** A code point, refused in the words Node's own refusal uses. */
+function character(code: bigint): string {
+  const point = Number(code);
+  return Number.isInteger(point) && point >= 0 && point <= 0x10ffff
+    ? String.fromCodePoint(point)
+    : failed(`Invalid code point ${point}`);
+}
+
+const text = (tree: Tree): string => list(tree).map(nat).map(character).join('');
 
 /** Deliberately narrow — the build will write nothing else as a file. */
 const FILE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z0-9]+$/;
@@ -72,27 +85,24 @@ function file(tree: Tree): { name: string; bytes: Uint8Array } | null {
     const name = text(tree[0][0]);
     text(tree[0][1]);
     if (name.length > 255 || !FILE_NAME.test(name)) return null;
-    return { name, bytes: new Uint8Array(list(tree[1]).map(nat)) };
+    return { name, bytes: new Uint8Array(list(tree[1]).map(nat).map(Number)) };
   } catch {
     return null;
   }
 }
 
 /** What the build records for a test, and whether that is a file's name and
- * hash rather than the value itself. */
-interface Recorded {
-  result: string;
-  file: boolean;
-}
+ * hash rather than the value itself — or why the build stops at it instead. */
+type Recorded = { result: string; file: boolean } | { failure: string };
 
-function recorded(raw: Value, rendered: Value): Recorded | null {
+function recorded(raw: Value, rendered: Value): Recorded {
   const written = file(treeOf(raw));
   if (written) return { result: `${written.name} sha256:${sha256(written.bytes)}`, file: true };
   try {
     return { result: text(treeOf(rendered)), file: false };
-  } catch {
-    // Not a string: the build would fail on it, so there is no block to offer.
-    return null;
+  } catch (error) {
+    // Not a string: the build fails on it, and writes no block anywhere.
+    return { failure: (error as Error).message };
   }
 }
 
@@ -150,8 +160,21 @@ export interface Patch {
 }
 
 /**
- * Every expression whose block below disagrees with what it evaluates to, and
- * the expressions whose value the block cannot say — see `Expectations`.
+ * What the build says about one expression when it writes no block for it:
+ * that it stops there (`fails`), or — where the editor gave up waiting and the
+ * build, which has no time limit, would not — that it is not known (`unknown`).
+ */
+export interface Verdict {
+  kind: 'fails' | 'unknown';
+  message: string;
+  /** The end of the expression's last line, which it is shown under. */
+  at: number;
+}
+
+/**
+ * Every expression whose block below disagrees with what it evaluates to, the
+ * verdicts on those it has no block for, and the expressions whose value the
+ * block cannot say — see `Expectations`.
  *
  * An expression still being evaluated has no patch: what it will come to is
  * not known, and a patch that is a guess would be worse than none. `results`
@@ -162,28 +185,37 @@ function patches(
   state: EditorState,
   expressions: readonly Expression[],
   known: ReadonlyMap<string, Outcome<Value>>,
-  results: Map<string, Recorded | null>,
-): Pick<Expectations, 'found' | 'unsaid'> {
+  results: Map<string, Recorded>,
+): Pick<Expectations, 'found' | 'verdicts' | 'unsaid'> {
   const doc = state.doc;
   const found: Patch[] = [];
+  const verdicts: Verdict[] = [];
   const unsaid = new Set<string>();
   const live = new Set<string>();
   for (const { to, dag, rendered } of expressions) {
     const key = `${dag}\n\n${rendered}`;
     live.add(key);
-    const raw = known.get(dag);
+    const end = doc.lineAt(to);
     if (!results.has(key)) {
+      const raw = known.get(dag);
       const shown = known.get(rendered);
-      if (raw?.status === 'ok' && shown?.status === 'error') unsaid.add(dag);
+      const gaveUp = [raw, shown].find((outcome) => outcome?.status === 'error');
+      if (gaveUp?.status === 'error') {
+        verdicts.push({ kind: 'unknown', message: gaveUp.message, at: end.to });
+        unsaid.add(dag);
+      }
       if (raw?.status !== 'ok' || shown?.status !== 'ok') continue;
       results.set(key, recorded(raw, shown));
     }
-    const record = results.get(key);
-    if (!record || record.file) unsaid.add(dag);
-    if (!record) continue;
+    const record = results.get(key)!;
+    if ('failure' in record) {
+      verdicts.push({ kind: 'fails', message: record.failure, at: end.to });
+      unsaid.add(dag);
+      continue;
+    }
+    if (record.file) unsaid.add(dag);
 
     const lines = block(record.result);
-    const end = doc.lineAt(to);
     const old: string[] = [];
     let last = end;
     for (let n = end.number + 1; n <= doc.lines; n++) {
@@ -200,7 +232,7 @@ function patches(
     );
   }
   for (const key of results.keys()) if (!live.has(key)) results.delete(key);
-  return { found, unsaid };
+  return { found, verdicts, unsaid };
 }
 
 const accept = (view: EditorView, chosen: readonly Patch[]) =>
@@ -365,11 +397,64 @@ class Accept extends GutterMarker {
   }
 }
 
+/** A verdict, under its expression, set as a line of the editor's own. */
+class Said extends WidgetType {
+  constructor(readonly verdict: Pick<Verdict, 'kind' | 'message'>) {
+    super();
+  }
+
+  eq(other: Said): boolean {
+    return other.verdict.kind === this.verdict.kind && other.verdict.message === this.verdict.message;
+  }
+
+  toDOM(): HTMLElement {
+    const line = document.createElement('div');
+    line.className = `cm-line cm-expect-${this.verdict.kind}`;
+    line.textContent = this.verdict.kind === 'fails'
+      ? `The build fails here: ${this.verdict.message}`
+      : `Not worked out: ${this.verdict.message}. The build has no time limit.`;
+    return line;
+  }
+}
+
+/** Beside a verdict, in the gutter: what kind it is, at a glance. */
+class Mark extends GutterMarker {
+  constructor(readonly kind: Verdict['kind']) {
+    super();
+  }
+
+  eq(other: Mark): boolean {
+    return other.kind === this.kind;
+  }
+
+  toDOM(): Node {
+    const mark = document.createElement('span');
+    mark.className = `cm-expect-${this.kind}-mark`;
+    mark.textContent = this.kind === 'fails' ? '✗' : '…';
+    return mark;
+  }
+}
+
 const replaced = Decoration.line({ class: 'cm-expect-replaced' });
 
-function decorate(state: EditorState, found: readonly Patch[]): DecorationSet {
+function decorate(
+  state: EditorState,
+  found: readonly Patch[],
+  verdicts: readonly Verdict[],
+): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
-  for (const patch of found) {
+  // In document order, which the builder requires: a verdict's expression has
+  // no patch, so the two never share a place.
+  const ranged: { at: number; patch?: Patch; verdict?: Verdict }[] = [
+    ...found.map((patch) => ({ at: patch.from, patch })),
+    ...verdicts.map((verdict) => ({ at: verdict.at, verdict })),
+  ].sort((a, b) => a.at - b.at);
+  for (const { patch, verdict } of ranged) {
+    if (verdict) {
+      builder.add(verdict.at, verdict.at, Decoration.widget({ side: 1, block: true, widget: new Said(verdict) }));
+      continue;
+    }
+    if (!patch) continue;
     if (patch.to > patch.from)
       for (let n = state.doc.lineAt(patch.from).number; n <= state.doc.lineAt(patch.to).number; n++)
         builder.add(state.doc.line(n).from, state.doc.line(n).from, replaced);
@@ -388,6 +473,7 @@ function decorate(state: EditorState, found: readonly Patch[]): DecorationSet {
 
 interface Expectations {
   found: readonly Patch[];
+  verdicts: readonly Verdict[];
   /**
    * The programs of the expressions whose value the block under them does not
    * say: a file, which it names by hash, or a value it cannot record at all.
@@ -395,13 +481,14 @@ interface Expectations {
    * patch for it — so a preview at the end of the line would only repeat it.
    */
   unsaid: ReadonlySet<string>;
-  results: Map<string, Recorded | null>;
+  results: Map<string, Recorded>;
   decorations: DecorationSet;
 }
 
 /**
- * Where every patch is, down the editor's right edge, so a long source's are
- * found without scrolling for them; a click goes to one.
+ * Where every patch and every place the build fails is, down the editor's
+ * right edge, so a long source's are found without scrolling for them; a click
+ * goes to one.
  */
 const marks = (field: StateField<Expectations>) =>
   ViewPlugin.fromClass(
@@ -418,7 +505,7 @@ const marks = (field: StateField<Expectations>) =>
       update(update: ViewUpdate) {
         if (
           update.geometryChanged ||
-          update.startState.field(field).found !== update.state.field(field).found
+          update.startState.field(field).decorations !== update.state.field(field).decorations
         )
           this.draw();
       }
@@ -430,18 +517,21 @@ const marks = (field: StateField<Expectations>) =>
             return {
               top: view.scrollDOM.offsetTop,
               size: view.scrollDOM.clientHeight,
-              at: view.state
-                .field(field)
-                .found.map((patch) => [patch.from, view.lineBlockAt(patch.from).top / height] as const),
+              at: [
+                ...view.state.field(field).found.map((patch) => [patch.from, ''] as const),
+                ...view.state.field(field).verdicts
+                  .filter((verdict) => verdict.kind === 'fails')
+                  .map((verdict) => [verdict.at, ' fails'] as const),
+              ].map(([pos, kind]) => [pos, kind, view.lineBlockAt(pos).top / height] as const),
             };
           },
           write: ({ top, size, at }) => {
             this.strip.style.top = `${top}px`;
             this.strip.style.height = `${size}px`;
             this.strip.replaceChildren(
-              ...at.map(([pos, fraction]) => {
+              ...at.map(([pos, kind, fraction]) => {
                 const mark = document.createElement('div');
-                mark.className = 'cm-expect-mark';
+                mark.className = `cm-expect-mark${kind}`;
                 mark.style.top = `${fraction * 100}%`;
                 mark.addEventListener('mousedown', (event) => {
                   event.preventDefault();
@@ -533,6 +623,13 @@ const theme = EditorView.baseTheme({
   '.cm-expect-menu button:hover': { backgroundColor: '#30a46c26' },
   // One column for the symbols, as wide as the widest, so the labels line up.
   '.cm-expect-menu button span': { color: '#1a7f4b', fontWeight: 'bold', width: '1.6em' },
+  // A verdict is a message, not text the build would write: no comment
+  // colouring, and nothing to accept.
+  '.cm-expect-fails': { backgroundColor: '#e5484d1f', color: '#c62a2f', fontStyle: 'italic' },
+  '.cm-expect-unknown': { opacity: '0.6', fontStyle: 'italic' },
+  '.cm-expect-fails-mark': { color: '#c62a2f', fontWeight: 'bold' },
+  '.cm-expect-unknown-mark': { opacity: '0.6' },
+  '.cm-expect-mark.fails': { backgroundColor: '#e5484d' },
   '.cm-expect-marks': {
     position: 'absolute',
     right: '0',
@@ -563,10 +660,10 @@ export function expectations(
   expressions: StateField<readonly Expression[]>,
   evaluated: StateField<ReadonlyMap<string, Outcome<Value>>>,
 ): { extension: Extension; unsaid: (state: EditorState) => ReadonlySet<string> } {
-  const compute = (state: EditorState, results: Map<string, Recorded | null>): Expectations => {
-    const { found, unsaid } =
+  const compute = (state: EditorState, results: Map<string, Recorded>): Expectations => {
+    const { found, verdicts, unsaid } =
       patches(state, state.field(expressions), state.field(evaluated), results);
-    return { found, unsaid, results, decorations: decorate(state, found) };
+    return { found, verdicts, unsaid, results, decorations: decorate(state, found, verdicts) };
   };
   const field: StateField<Expectations> = StateField.define<Expectations>({
     create: (state) => compute(state, new Map()),
@@ -584,6 +681,7 @@ export function expectations(
             to: tr.changes.mapPos(patch.to, -1),
             at: tr.changes.mapPos(patch.at, -1),
           })),
+          verdicts: value.verdicts.map((verdict) => ({ ...verdict, at: tr.changes.mapPos(verdict.at, -1) })),
           decorations: value.decorations.map(tr.changes),
         };
       return compute(tr.state, value.results);
@@ -596,7 +694,9 @@ export function expectations(
       field,
       marks(field),
       lineNumberWidgetMarker.of((_, widget, block) =>
-        widget instanceof Proposed ? new Accept(block.from, field) : null),
+        widget instanceof Proposed ? new Accept(block.from, field)
+          : widget instanceof Said ? new Mark(widget.verdict.kind)
+          : null),
     ],
     unsaid: (state) => state.field(field).unsaid,
   };

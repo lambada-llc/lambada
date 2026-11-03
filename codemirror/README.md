@@ -107,13 +107,22 @@ as a patch: the old lines struck through, the new ones under them. Beside it,
 in the line-number gutter, ✓ accepts it and ▾ opens a menu that also accepts
 every patch in the document — so an editor showing patches wants
 `lineNumbers()`, which `basicSetup` includes. Nothing is written unless
-accepted. A strip
-along the editor's right edge marks every patch in the document, and a click on
-a mark goes to it. An expression still evaluating, or one that does not come to
-a string, has no patch. The block says what an expression came to, so its
-preview at the end of the line is left out — except where the block cannot say
-it: a file, which it names by hash, or a value that is not a string. Off by default: in a document that is not a tested
-source, every expression would be offered a block it never asked for.
+accepted.
+
+Where the build would write no block, the editor says what the build does
+instead, on a line under the expression. A result that is not a string stops
+the build, so it reads "The build fails here:" and the build's own message — the
+value is read the way the build's runtime reads it, step for step, so the
+message is the one the build prints. An expression the editor gave up on after
+its `timeout` is "Not worked out", since the build has no time limit and would
+not give up. A strip along the editor's right edge marks every patch and every
+failure in the document, and a click on a mark goes to it.
+
+The block says what an expression came to, so its preview at the end of the
+line is left out — except where the block cannot say it: a file, which it names
+by hash, or a value it has no block for. Off by default: in a document that is
+not a tested source, every expression would be offered a block it never asked
+for.
 
 Evaluating happens on a second worker. A compilation takes single-digit
 milliseconds and an evaluation need never finish, so sharing one would let a
