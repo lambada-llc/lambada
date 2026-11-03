@@ -103,8 +103,11 @@ under it. The editor works that block out the way `lambada build` writes it —
 through the `_to_string` the document defines above the expression, if any; a
 file as its name and `sha256:` hash; `#   ` continuing a multi-line result — and
 where the text under an expression disagrees, it shows the block it would write
-as a patch: the old lines struck through, the new ones under them, and buttons
-to accept that one or all of them. Nothing is written unless accepted. A strip
+as a patch: the old lines struck through, the new ones under them. Beside it,
+in the line-number gutter, ✓ accepts it and ▾ opens a menu that also accepts
+every patch in the document — so an editor showing patches wants
+`lineNumbers()`, which `basicSetup` includes. Nothing is written unless
+accepted. A strip
 along the editor's right edge marks every patch in the document, and a click on
 a mark goes to it. An expression still evaluating, or one that does not come to
 a string, has no patch. The block says what an expression came to, so its

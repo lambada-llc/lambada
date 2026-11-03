@@ -7,8 +7,10 @@ import {
 import {
   Decoration,
   EditorView,
+  GutterMarker,
   ViewPlugin,
   WidgetType,
+  lineNumberWidgetMarker,
   type DecorationSet,
   type ViewUpdate,
 } from '@codemirror/view';
@@ -17,7 +19,6 @@ import { highlightingFor } from '@codemirror/language';
 import { highlightCode, type Tag } from '@lezer/highlight';
 
 import type { Analysis } from './analysis';
-import { inView } from './in-view';
 import { lambadaLanguage } from './language';
 import type { Expression } from './previews';
 import { treeOf, type Tree, type Value } from './tree';
@@ -206,12 +207,6 @@ const accept = (view: EditorView, chosen: readonly Patch[]) =>
   view.dispatch({ changes: chosen.map(({ from, to, insert }) => ({ from, to, insert })) });
 
 /**
- * A patch, under the block it replaces. It holds what it shows and nothing
- * else: the editor keeps a widget's DOM for as long as `eq` says it is the
- * same, so the patch to apply is looked up when the button is pressed rather
- * than remembered from when it was drawn, by which time it may have moved.
- */
-/**
  * `text` as the editor would show it were it in the document: a `.cm-line` per
  * line, so the theme indents and sets it as it does every line, and its tokens
  * classed by the language and whichever highlighter the editor has — so a
@@ -241,47 +236,25 @@ function written(view: EditorView, text: string): HTMLElement[] {
   return lines;
 }
 
+/** A patch, under the block it replaces: the lines it would write, and only
+ * those — what accepts it is beside it, in the line-number gutter. */
 class Proposed extends WidgetType {
-  constructor(
-    readonly lines: string,
-    readonly count: number,
-    readonly field: StateField<Expectations>,
-  ) {
+  constructor(readonly lines: string) {
     super();
   }
 
   eq(other: Proposed): boolean {
-    return other.lines === this.lines && other.count === this.count;
+    return other.lines === this.lines;
   }
 
   get estimatedHeight(): number {
-    // Its lines, and the row the buttons are on.
-    return 20 * (this.lines.split('\n').length + 1);
+    return 20 * this.lines.split('\n').length;
   }
 
   toDOM(view: EditorView): HTMLElement {
     const wrap = document.createElement('div');
     wrap.className = 'cm-expect';
     wrap.append(...written(view, this.lines));
-    const button = (label: string, chosen: (all: readonly Patch[]) => readonly Patch[]) => {
-      const dom = document.createElement('button');
-      dom.type = 'button';
-      dom.textContent = label;
-      dom.addEventListener('mousedown', (event) => event.preventDefault());
-      dom.addEventListener('click', () => accept(view, chosen(view.state.field(this.field).found)));
-      return dom;
-    };
-    // A row of its own, held to what the editor shows: at the end of the
-    // lines it would be past the right edge of a narrow screen, as far out as
-    // the longest line in the document reaches.
-    const actions = document.createElement('div');
-    actions.className = 'cm-expect-actions';
-    actions.append(
-      button('accept', (all) => all.filter((patch) => patch.at === view.posAtDOM(wrap))),
-      ...(this.count > 1 ? [button(`accept all ${this.count}`, (all) => all)] : []),
-    );
-    inView(actions);
-    wrap.append(actions);
     return wrap;
   }
 
@@ -290,13 +263,111 @@ class Proposed extends WidgetType {
   }
 }
 
+/** One choice: a symbol, and the words that say what it does. */
+interface Choice {
+  symbol: string;
+  label: string;
+  run: () => void;
+}
+
+/** Open beside `anchor` until a choice is made, or anything else happens. */
+function menu(view: EditorView, anchor: HTMLElement, choices: readonly Choice[]): void {
+  const dom = document.createElement('div');
+  dom.className = 'cm-expect-menu';
+  dom.setAttribute('role', 'menu');
+  const close = () => {
+    dom.remove();
+    removeEventListener('pointerdown', outside, true);
+    removeEventListener('keydown', escape, true);
+    view.scrollDOM.removeEventListener('scroll', close);
+  };
+  const outside = (event: Event) => {
+    if (!dom.contains(event.target as Node)) close();
+  };
+  const escape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') close();
+  };
+  for (const { symbol, label, run } of choices) {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.setAttribute('role', 'menuitem');
+    item.append(Object.assign(document.createElement('span'), { textContent: symbol }), label);
+    item.addEventListener('click', () => {
+      close();
+      run();
+    });
+    dom.append(item);
+  }
+  // In the editor's own box, so it scrolls away with nothing left behind: a
+  // scroll closes it rather than leaving it pinned beside a line now elsewhere.
+  const at = anchor.getBoundingClientRect();
+  const box = view.dom.getBoundingClientRect();
+  dom.style.left = `${at.left - box.left}px`;
+  dom.style.top = `${at.bottom - box.top}px`;
+  view.dom.append(dom);
+  addEventListener('pointerdown', outside, true);
+  addEventListener('keydown', escape, true);
+  view.scrollDOM.addEventListener('scroll', close);
+}
+
+const ACCEPT = '✓';
+const ACCEPT_ALL = '✓✓';
+
+/**
+ * Beside a patch, in the line-number gutter: ✓ accepts it, and ▾ offers the
+ * same with its name spelled out, and accepting every patch in the document.
+ *
+ * Which patch is looked up when it is pressed, by where the gutter says the
+ * widget is, rather than remembered: the editor keeps a marker's DOM for as
+ * long as `eq` holds, by when the patch may have moved.
+ */
+class Accept extends GutterMarker {
+  constructor(
+    readonly at: number,
+    readonly field: StateField<Expectations>,
+  ) {
+    super();
+  }
+
+  eq(other: Accept): boolean {
+    return other.at === this.at;
+  }
+
+  toDOM(view: EditorView): Node {
+    const found = () => view.state.field(this.field).found;
+    const one = () => accept(view, found().filter((patch) => patch.at === this.at));
+    const button = (text: string, title: string, run: (dom: HTMLElement) => void) => {
+      const dom = document.createElement('button');
+      dom.type = 'button';
+      dom.textContent = text;
+      dom.title = title;
+      // A press here is not a press in the document: the cursor stays put.
+      dom.addEventListener('mousedown', (event) => event.preventDefault());
+      dom.addEventListener('click', () => run(dom));
+      return dom;
+    };
+    const wrap = document.createElement('span');
+    wrap.className = 'cm-expect-accept';
+    wrap.append(
+      button(ACCEPT, 'Accept this result', one),
+      button('▾', 'More', (dom) =>
+        menu(view, wrap.closest('.cm-gutterElement') ?? dom, [
+          { symbol: ACCEPT, label: 'Accept', run: one },
+          {
+            symbol: ACCEPT_ALL,
+            label: `Accept all ${found().length}`,
+            run: () => accept(view, found()),
+          },
+        ]),
+      ),
+    );
+    return wrap;
+  }
+}
+
 const replaced = Decoration.line({ class: 'cm-expect-replaced' });
 
-function decorate(
-  state: EditorState,
-  found: readonly Patch[],
-  field: StateField<Expectations>,
-): DecorationSet {
+function decorate(state: EditorState, found: readonly Patch[]): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
   for (const patch of found) {
     if (patch.to > patch.from)
@@ -308,7 +379,7 @@ function decorate(
       Decoration.widget({
         side: 1,
         block: true,
-        widget: new Proposed(patch.lines.join('\n'), found.length, field),
+        widget: new Proposed(patch.lines.join('\n')),
       }),
     );
   }
@@ -401,25 +472,50 @@ const theme = EditorView.baseTheme({
   // No padding, font or colour of its own: its lines are `.cm-line`s and
   // their tokens are highlighted, so the theme sets them as it sets the code.
   '.cm-expect': { backgroundColor: '#30a46c1f' },
-  '.cm-expect-actions': {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    flexWrap: 'wrap',
-    gap: '1ch',
-    boxSizing: 'border-box',
-    padding: '2px 6px 4px',
-    fontSize: '85%',
+  // The whole gutter cell is the control, most of it ✓: a finger's worth of
+  // target where a cursor's would do on a desktop.
+  '.cm-expect-accept': { display: 'flex', width: '100%', height: '100%' },
+  '.cm-expect-accept button': {
+    font: 'inherit',
+    lineHeight: 'inherit',
+    color: '#1a7f4b',
+    background: 'none',
+    border: 'none',
+    padding: '0',
+    cursor: 'pointer',
   },
-  '.cm-expect-actions button': {
+  '.cm-expect-accept button:first-child': { flex: '1', textAlign: 'right', fontWeight: 'bold' },
+  '.cm-expect-accept button:last-child': { width: '0.8em', fontSize: '75%' },
+  '.cm-expect-menu': {
+    position: 'absolute',
+    zIndex: '400',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '3px',
+    backgroundColor: 'Canvas',
+    color: 'CanvasText',
+    border: '1px solid #8886',
+    borderRadius: '6px',
+    boxShadow: '0 4px 12px #0003',
+  },
+  '.cm-expect-menu button': {
+    display: 'flex',
+    gap: '1ch',
+    alignItems: 'baseline',
     font: 'inherit',
     color: 'inherit',
     background: 'none',
-    border: '1px solid #8886',
+    border: 'none',
     borderRadius: '4px',
     // A finger's worth to aim at, not a cursor's.
-    padding: '2px 10px',
+    padding: '6px 10px',
+    textAlign: 'left',
+    whiteSpace: 'nowrap',
     cursor: 'pointer',
   },
+  '.cm-expect-menu button:hover': { backgroundColor: '#30a46c26' },
+  // One column for the symbols, as wide as the widest, so the labels line up.
+  '.cm-expect-menu button span': { color: '#1a7f4b', fontWeight: 'bold', width: '1.6em' },
   '.cm-expect-marks': {
     position: 'absolute',
     right: '0',
@@ -453,7 +549,7 @@ export function expectations(
   const compute = (state: EditorState, results: Map<string, Recorded | null>): Expectations => {
     const { found, unsaid } =
       patches(state, state.field(expressions), state.field(evaluated), results);
-    return { found, unsaid, results, decorations: decorate(state, found, field) };
+    return { found, unsaid, results, decorations: decorate(state, found) };
   };
   const field: StateField<Expectations> = StateField.define<Expectations>({
     create: (state) => compute(state, new Map()),
@@ -478,7 +574,13 @@ export function expectations(
     provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
   return {
-    extension: [theme, field, marks(field)],
+    extension: [
+      theme,
+      field,
+      marks(field),
+      lineNumberWidgetMarker.of((_, widget, block) =>
+        widget instanceof Proposed ? new Accept(block.from, field) : null),
+    ],
     unsaid: (state) => state.field(field).unsaid,
   };
 }
