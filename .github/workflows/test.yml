@@ -1,5 +1,6 @@
 # Runs the build tool's own tests. They also compile the playground's snippets
-# with the compiler shipped here, so a change to either reruns them.
+# with the compiler shipped here, so a change to either reruns them. And it
+# holds the editor's statement splitting to the compiler's, over the examples.
 name: test
 
 on:
@@ -8,13 +9,19 @@ on:
     paths:
       - 'bin/**'
       - 'compiler/**'
-      - 'examples/snippets/**'
+      - 'examples/**'
+      - 'codemirror/src/split.ts'
+      - 'codemirror/src/runtime/machine.js'
+      - 'codemirror/scripts/statements-agree.mjs'
       - '.github/workflows/test.yml'
   pull_request:
     paths:
       - 'bin/**'
       - 'compiler/**'
-      - 'examples/snippets/**'
+      - 'examples/**'
+      - 'codemirror/src/split.ts'
+      - 'codemirror/src/runtime/machine.js'
+      - 'codemirror/scripts/statements-agree.mjs'
       - '.github/workflows/test.yml'
   workflow_dispatch:
 
@@ -31,3 +38,6 @@ jobs:
           node-version: 22
       # No dependencies to install: the tool is Node and nothing else.
       - run: node bin/test.js
+      # No dependencies either: the splitter is imported as TypeScript, whose
+      # types Node 22.18+ strips by itself.
+      - run: node codemirror/scripts/statements-agree.mjs
