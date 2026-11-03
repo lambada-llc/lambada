@@ -491,12 +491,14 @@ function build(
   expressions: readonly Expression[],
   shown: Map<string, Shown>,
   expanded: Set<string>,
+  said: (dag: string) => boolean,
 ): Previews {
   const builder = new RangeSetBuilder<Decoration>();
   const known = state.field(evaluated.field);
   const live = new Set<string>();
   for (const expression of expressions) {
     live.add(expression.dag);
+    if (said(expression.dag)) continue;
     // What was shown for this program is asked for first, and not only to save
     // rebuilding a host's element: a program is its own answer, so a preview
     // once drawn for it stays true, and it outlives the moment between the
@@ -545,9 +547,19 @@ export function previews(config: Resolved): Extension {
       tr.docChanged || tr.effects.length ? expressionsIn(tr.state, config) : value,
   });
 
+  const expect = config.expectTests
+    ? expectations(config.analyses, expressions, evaluated.field)
+    : null;
+  // With expect tests on, an expression's value is in the `# = …` block under
+  // it — or in the patch for one — and it is shown there rather than twice.
+  const said = (state: EditorState) => {
+    const unsaid = expect?.unsaid(state);
+    return (dag: string) => unsaid !== undefined && !unsaid.has(dag);
+  };
+
   const decorations = StateField.define<Previews>({
     create: (state) =>
-      build(state, config, state.field(expressions), new Map(), new Set()),
+      build(state, config, state.field(expressions), new Map(), new Set(), said(state)),
     update: (value, tr) => {
       if (!tr.docChanged && !tr.effects.length) return value;
       const expanded = new Set(value.expanded);
@@ -561,7 +573,8 @@ export function previews(config: Resolved): Extension {
       // briefly out of date.
       if (tr.state.field(config.analyses).some((a) => a.state === 'pending'))
         return { ...value, expanded, decorations: value.decorations.map(tr.changes) };
-      return build(tr.state, config, tr.state.field(expressions), value.shown, expanded);
+      return build(
+        tr.state, config, tr.state.field(expressions), value.shown, expanded, said(tr.state));
     },
     provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
@@ -570,7 +583,7 @@ export function previews(config: Resolved): Extension {
     evaluated.field,
     expressions,
     config.showPreviews ? [theme, pressPast, decorations] : [],
-    config.expectTests ? expectations(config.analyses, expressions, evaluated.field) : [],
+    expect?.extension ?? [],
     evaluated.keep(config, (state) =>
       state.field(expressions).flatMap((expression) =>
         config.expectTests ? [expression.dag, expression.rendered] : [expression.dag],
