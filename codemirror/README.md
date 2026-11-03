@@ -75,6 +75,7 @@ lambada({ compile: { showDiagnostics: false } })  // mark, but do not report nam
 lambada({ compile: { showCompletions: false } })  // do not offer names
 lambada({ compile: { previewResults: false } })   // do not evaluate anything
 lambada({ compile: { previewResults: show } })    // what to show for a value
+lambada({ compile: { expectTests: true } })       // offer `# = …` blocks as patches
 lambada({ compile: { compiler, timeout } })       // a compiler of your own
 lambada({ compile: { environment } })             // what is in scope to begin with
 ```
@@ -95,6 +96,19 @@ right-click, or a long press on a touch screen, expands it under the expression:
 more of the value, its size in nodes (written out, and distinct), the steps it
 took, and buttons to copy the tree — or the value, as the preview's `copy`
 has it, where the host gives one.
+
+`expectTests` is for documents that are tested sources, where every bare
+expression is an expect test and carries a `# = …` comment block with its result
+under it. The editor works that block out the way `lambada build` writes it —
+through the `_to_string` the document defines above the expression, if any; a
+file as its name and `sha256:` hash; `#   ` continuing a multi-line result — and
+where the text under an expression disagrees, it shows the block it would write
+as a patch: the old lines struck through, the new ones under them, and buttons
+to accept that one or all of them. Nothing is written unless accepted. A strip
+along the editor's right edge marks every patch in the document, and a click on
+a mark goes to it. An expression still evaluating, or one that does not come to
+a string, has no patch. Off by default: in a document that is not a tested
+source, every expression would be offered a block it never asked for.
 
 Evaluating happens on a second worker. A compilation takes single-digit
 milliseconds and an evaluation need never finish, so sharing one would let a

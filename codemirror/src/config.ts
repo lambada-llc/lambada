@@ -34,6 +34,14 @@ export interface CompileConfig {
    */
   previewResults?: boolean | ((value: Tree) => Preview);
   /**
+   * Hold each expression's `# = …` comment to what it evaluates to, the way
+   * an expect test does — and where they disagree, offer the block the build
+   * would write as a patch to accept, never writing it unasked. Default: false,
+   * since most documents are not tested sources and every expression in them
+   * would be offered a block it never asked for.
+   */
+  expectTests?: boolean;
+  /**
    * Offer the names in scope as completions. Default: true. Which names those
    * are depends on what the statements above compiled to, which is why this
    * lives here.
@@ -68,6 +76,7 @@ export interface Resolved {
   showDiagnostics: boolean;
   showCompletions: boolean;
   showPreviews: boolean;
+  expectTests: boolean;
   /** What to show for a value, defaulted to the tree itself. */
   preview: (value: Tree) => Preview;
 }
@@ -95,6 +104,7 @@ export function resolve(compile: boolean | CompileConfig): Resolved | null {
     // Whether to evaluate at all and what to show for the result are one
     // option to a host and two to everything here.
     showPreviews: config.previewResults !== false,
+    expectTests: config.expectTests === true,
     preview:
       typeof config.previewResults === 'function' ? config.previewResults : defaultPreview,
   };
