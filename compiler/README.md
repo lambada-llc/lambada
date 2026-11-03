@@ -1,6 +1,6 @@
 ## Source
 
-`compile_file.dag`, `compile_to_dag.dag` and `compile_to_dag_with_spans.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
+`compile_file.dag`, `compile_to_dag.dag`, `compile_to_dag_with_spans.dag` and `statements.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
 by [arboretum's build](https://github.com/lambada-llc/arboretum/blob/main/build.sh), which extracts them
 from the library it just compiled and writes them here.
 
@@ -8,6 +8,12 @@ from the library it just compiled and writes them here.
 indentation, compiles each, and names each bare expression's value
 `:line.<n>` after the code line it ends on, which is what an expect test is
 named by. A statement it cannot compile it records as `:fail.<n>`.
+
+`statements` is the first half of that on its own: a source's statements,
+each with the code line it ends on. Nothing compiles with it; it is what
+[`codemirror/scripts/statements-agree.mjs`](../codemirror/scripts/statements-agree.mjs)
+holds the editor's own splitting to, since an editor that split differently
+would compile text the build never does.
 
 `compile_to_dag` compiles one statement, which is what an editor wants as the
 text changes. The spanned variant emits the same DAG plus `X::s,e Y` alias

@@ -1,4 +1,5 @@
 import { LanguageSupport } from '@codemirror/language';
+import { EditorState } from '@codemirror/state';
 
 import { initialScope } from './analysis';
 import { compilation, lambadaCompilations } from './compilation';
@@ -73,6 +74,11 @@ export function lambada({
   // Statements are not optional: read-only they cost a pass over a document
   // that never changes, and editable there is little to be done without them.
   return new LanguageSupport(lambadaLanguage, [
+    // A line ends at `\n` and nowhere else, as it does to the compiler: left to
+    // itself the editor also ends one at `\r\n` and drops the `\r`, which in a
+    // string that spans lines is a different value from the one the build
+    // computes. Held to the compiler by scripts/statements-agree.mjs.
+    EditorState.lineSeparator.of('\n'),
     nodeKeymap(keys),
     lambadaStatements,
     highlightSymbols ? symbolHighlights() : [],
