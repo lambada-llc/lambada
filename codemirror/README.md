@@ -75,7 +75,7 @@ lambada({ compile: { showDiagnostics: false } })  // mark, but do not report nam
 lambada({ compile: { showCompletions: false } })  // do not offer names
 lambada({ compile: { previewResults: false } })   // do not evaluate anything
 lambada({ compile: { previewResults: show } })    // what to show for a value
-lambada({ compile: { expectTests: true } })       // offer `# = …` blocks as patches
+lambada({ compile: { expectTests: true } })       // work out each test as the build would
 lambada({ compile: { compiler, timeout } })       // a compiler of your own
 lambada({ compile: { environment } })             // what is in scope to begin with
 ```
@@ -99,33 +99,27 @@ has it, where the host gives one.
 
 `expectTests` is for documents that are tested sources, where every bare
 expression is an expect test and carries a `# = …` comment block with its result
-under it. The editor works that block out the way `lambada build` writes it —
-through the `_to_string` the document defines above the expression, if any; a
-file as its name and `sha256:` hash; `#   ` continuing a multi-line result — and
-where the text under an expression disagrees, it shows the block it would write
-as a patch: the old lines struck through, the new ones under them. Beside it,
-in the line-number gutter, ✓ accepts it and ▾ opens a menu that also accepts
-every patch in the document — so an editor showing patches wants
-`lineNumbers()`, which `basicSetup` includes. Nothing is written unless
-accepted.
+under it. The editor works out what `lambada build` would do with each one, and
+keeps it in the editor's state; it writes nothing to the document and draws
+nothing. `expectTests(state)` reads it: one `ExpectTest` per bare expression,
+in document order, saying where the expression and the block under it are, which
+`_to_string` definition its result is read through, and its `outcome`:
 
-A result that is not a string stops the build, and the editor shows it under
-the expression in red: the build's own message, word for word — the value is
-read the way the build's runtime reads it, step for step. With
-`expectTests: { render }`, naming a function the environment defines that
-writes any value as a string, the fix is offered as a patch: `_to_string =
-<render>` above the failing test (one for a run of them), and, where later tests
-are still rendered by the `_to_string` it overrides, that definition again after
-it, so nothing below changes. An expression the editor gave up on after its
-`timeout` says so in grey; the build has no time limit. A strip along the
-editor's right edge marks every patch and every failure in the document, and a
-click on a mark goes to it.
+- `recorded` — the block the build writes, a line at a time: through the
+  `_to_string` the document defines above the expression, if any; a file as
+  its name and `sha256:` hash; `#   ` continuing a multi-line result. Where the
+  document has something else there, `edit` is the change that writes it.
+- `fails` — the build stops here, and `message` is what it says, word for word:
+  the value is read the way the build's runtime reads it, step for step.
+- `unknown` — the editor gave up after its `timeout`. The build has no time
+  limit, so this is the editor's, not the build's.
+- `pending` — not evaluated yet.
 
-The block says what an expression came to, so its preview at the end of the
-line is left out — except for a file, which the block names by hash. Off by
-default: in a document that is
-not a tested source, every expression would be offered a block it never asked
-for.
+What to make of it — patches to accept, messages, markers — is the host's, from
+its own state field or view plugin; a new array means something changed. The
+same test is handed to `previewResults` as its second argument, which may return
+`null` to show nothing: a result the block already says need not be said twice.
+Off by default: most documents are not tested sources.
 
 Evaluating happens on a second worker. A compilation takes single-digit
 milliseconds and an evaluation need never finish, so sharing one would let a

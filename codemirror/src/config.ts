@@ -3,6 +3,7 @@ import type { StateField } from '@codemirror/state';
 import { analyses, initialScope, type Analysis } from './analysis';
 import { dagLines, type DagLine } from './dag';
 import { defaultCompiler, defaultPrelude } from './generated/compiler';
+import type { ExpectTest } from './expect';
 import { defaultPreview, type Preview } from './previews';
 import type { Tree } from './tree';
 
@@ -31,20 +32,19 @@ export interface CompileConfig {
    *
    * On a worker of its own: evaluating is unbounded and must not hold up the
    * compiling that marks the document.
-   */
-  previewResults?: boolean | ((value: Tree) => Preview);
-  /**
-   * Hold each expression's `# = …` comment to what it evaluates to, the way
-   * an expect test does — and where they disagree, offer the block the build
-   * would write as a patch to accept, never writing it unasked. Default: false,
-   * since most documents are not tested sources and every expression in them
-   * would be offered a block it never asked for.
    *
-   * `{ render }` names a function the environment defines that writes any value
-   * as a string. Where a test fails the build because its result is not one,
-   * the patch offered is a `_to_string` definition using it, above the test.
+   * A function is handed the value and, with `expectTests` on, the expression's
+   * test — what the build makes of it — and may return null to show nothing:
+   * a result its `# = …` block already says need not be said twice.
    */
-  expectTests?: boolean | { render?: string };
+  previewResults?: boolean | ((value: Tree, test: ExpectTest | null) => Preview | null);
+  /**
+   * Work out each bare expression's expect test the way the build does — the
+   * `# = …` block it would write, or the message it would stop with — and keep
+   * it for the host to read with `expectTests(state)`. What to show of it is
+   * the host's. Default: false: most documents are not tested sources.
+   */
+  expectTests?: boolean;
   /**
    * Offer the names in scope as completions. Default: true. Which names those
    * are depends on what the statements above compiled to, which is why this
@@ -81,10 +81,8 @@ export interface Resolved {
   showCompletions: boolean;
   showPreviews: boolean;
   expectTests: boolean;
-  /** `expectTests`' `render`, if the environment defines it. */
-  render: string | null;
   /** What to show for a value, defaulted to the tree itself. */
-  preview: (value: Tree) => Preview;
+  preview: (value: Tree, test: ExpectTest | null) => Preview | null;
 }
 
 /** The defaults, in one place. `null` is compiling turned off altogether. */
@@ -110,12 +108,7 @@ export function resolve(compile: boolean | CompileConfig): Resolved | null {
     // Whether to evaluate at all and what to show for the result are one
     // option to a host and two to everything here.
     showPreviews: config.previewResults !== false,
-    expectTests: config.expectTests === true || typeof config.expectTests === 'object',
-    render:
-      typeof config.expectTests === 'object' && config.expectTests.render &&
-      scope.has(config.expectTests.render)
-        ? config.expectTests.render
-        : null,
+    expectTests: config.expectTests === true,
     preview:
       typeof config.previewResults === 'function' ? config.previewResults : defaultPreview,
   };
