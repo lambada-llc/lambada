@@ -23,12 +23,12 @@ not true
 
 If the file defines `_to_string`, it is applied to the result before rendering; otherwise identity is assumed. Only `# = ` lines and their `#   ` continuations are machine-owned — your own comments are left alone, and multi-line results wrap onto the continuation lines.
 
-An expression that evaluates to a [file](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#files) — `△ (△ <name> <media type>) <bytes>` — is written into a sibling `out/` directory instead (`--out` names another), and the comment identifies it by name and content hash:
+An expression that evaluates to a [file](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#files) — `△ (△ <name> <media type>) <bytes>` — is written into a sibling `out/` directory instead (`--out` names another), and the comment says what it is — name, media type, size and content hash:
 
 ```
 # src/expect_test.lamb
 file "hello.txt" "text/plain" "Hello, LambAda!"
-# = hello.txt sha256:169f0107cf1f…
+# = hello.txt text/plain 15 bytes sha256:169f0107cf1f…
 ```
 
 Results are placed by line, so they are only ever written into the sources the bundle was compiled from: compiling fingerprints each source's code lines into its module, and `expect-test` fails outright on a source that has changed since, rather than commenting it in the wrong places. Comments and blank lines are not part of that fingerprint — writing results back is not a change.

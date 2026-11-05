@@ -480,8 +480,9 @@ interface Shown {
 }
 
 /** What of a test the host's choice can turn on, as a key. */
+// Not the file: its lines name it by hash already, and its bytes may be many.
 const told = (test: ExpectTest | null): string =>
-  test ? JSON.stringify({ ...test.outcome, edit: undefined }) : '';
+  test ? JSON.stringify({ ...test.outcome, edit: undefined, file: undefined }) : '';
 
 /**
  * The decorations, the previews they were built from, and which of those are

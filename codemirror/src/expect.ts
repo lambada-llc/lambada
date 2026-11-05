@@ -63,28 +63,39 @@ const text = (tree: Tree): string => list(tree).map(nat).map(character).join('')
 /** Deliberately narrow — the build will write nothing else as a file. */
 const FILE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z0-9]+$/;
 
+/** A file the build writes for a test: what it is called, what it is, and its
+ * contents. */
+export interface ExpectFile {
+  name: string;
+  mediaType: string;
+  bytes: Uint8Array;
+}
+
 /** `△ (△ name media-type) bytes`, read as the build reads it, or null. */
-function file(tree: Tree): { name: string; bytes: Uint8Array } | null {
+function file(tree: Tree): ExpectFile | null {
   if (tree.length !== 2 || tree[0].length !== 2) return null;
   try {
     const name = text(tree[0][0]);
-    text(tree[0][1]);
+    const mediaType = text(tree[0][1]);
     if (name.length > 255 || !FILE_NAME.test(name)) return null;
-    return { name, bytes: new Uint8Array(list(tree[1]).map(nat).map(Number)) };
+    return { name, mediaType, bytes: new Uint8Array(list(tree[1]).map(nat).map(Number)) };
   } catch {
     return null;
   }
 }
 
-/** What the build records for a test, and whether that is a file's name and
- * hash rather than the value itself — or why the build stops at it instead. */
-type Recorded = { result: string; file: boolean } | { failure: string };
+/** What the build records for a test, and the file it writes rather than say
+ * the value, if it does — or why the build stops at it instead. */
+type Recorded = { result: string; file: ExpectFile | null } | { failure: string };
 
 function recorded(raw: Value, rendered: Value): Recorded {
   const written = file(treeOf(raw));
-  if (written) return { result: `${written.name} sha256:${sha256(written.bytes)}`, file: true };
+  if (written) {
+    const { name, mediaType, bytes } = written;
+    return { result: `${name} ${mediaType} ${bytes.length} bytes sha256:${sha256(bytes)}`, file: written };
+  }
   try {
-    return { result: text(treeOf(rendered)), file: false };
+    return { result: text(treeOf(rendered)), file: null };
   } catch (error) {
     // Not a string: the build fails on it, and writes no block anywhere.
     return { failure: (error as Error).message };
@@ -142,14 +153,14 @@ export type ExpectOutcome =
   /** The build stops here, with this message: the result is not a string. */
   | { kind: 'fails'; message: string }
   /**
-   * The block the build writes, a line at a time; whether it names a file
-   * rather than saying the value; and, where the document has something else
-   * there, the edit that writes it.
+   * The block the build writes, a line at a time; the file it writes, where
+   * the block describes one rather than saying the value; and, where the
+   * document has something else there, the edit that writes it.
    */
   | {
       kind: 'recorded';
       lines: readonly string[];
-      file: boolean;
+      file: ExpectFile | null;
       edit: { from: number; to: number; insert: string } | null;
     };
 

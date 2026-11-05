@@ -107,8 +107,9 @@ in document order, saying where the expression and the block under it are, which
 
 - `recorded` — the block the build writes, a line at a time: through the
   `_to_string` the document defines above the expression, if any; a file as
-  its name and `sha256:` hash; `#   ` continuing a multi-line result. Where the
-  document has something else there, `edit` is the change that writes it.
+  one line of name, media type, size and `sha256:` hash, with the file itself
+  in `file`; `#   ` continuing a multi-line result. Where the document has
+  something else there, `edit` is the change that writes it.
 - `fails` — the build stops here, and `message` is what it says, word for word:
   the value is read the way the build's runtime reads it, step for step.
 - `unknown` — the editor gave up after its `timeout`. The build has no time
