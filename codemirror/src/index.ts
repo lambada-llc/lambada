@@ -14,6 +14,7 @@ import { lambadaStatements } from './statements';
 import { statementStatus } from './status';
 import { symbolHighlights, symbolRanges } from './symbols';
 import { dagOf } from './dag';
+import { TO_STRING, expectTests } from './expect';
 
 export {
   lambadaLanguage,
@@ -23,11 +24,14 @@ export {
   dagOf,
   defaultPreview,
   symbolRanges,
+  expectTests,
+  TO_STRING,
 };
 export type { Statement } from './statements';
 export type { Compilation } from './compilation';
 export type { Preview } from './previews';
 export type { Tree } from './tree';
+export type { ExpectOutcome, ExpectTest } from './expect';
 export type { GotoDefinitionConfig } from './definitions';
 
 export interface LambadaConfig {

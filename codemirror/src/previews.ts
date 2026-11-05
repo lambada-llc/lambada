@@ -12,7 +12,7 @@ import {
   type DecorationSet,
 } from '@codemirror/view';
 
-import { expectations } from './expect';
+import { TO_STRING, expectTests, expectations, type ExpectTest } from './expect';
 import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
@@ -30,12 +30,13 @@ export interface Expression {
    * does: what an expect test records. Otherwise just `dag`.
    */
   rendered: string;
+  /** That `_to_string` definition, or null: the same object for every
+   * expression it renders. */
+  renderer: { text: string } | null;
 }
 
 const isBare = (line: DagLine) => line.from.length === 0;
 
-/** What a source defines to say how its expect tests' results read. */
-const TO_STRING = '_to_string';
 
 /**
  * The statements that are expressions rather than definitions, each with the
@@ -60,7 +61,7 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
   const found: Expression[] = [];
   // The document's own, not the environment's: a test is rendered by the
   // `_to_string` of the file it is in.
-  let rendersItself = false;
+  let renderer: Expression['renderer'] = null;
 
   for (const { statement, state: status } of state.field(config.analyses)) {
     if (status !== 'ok') {
@@ -83,7 +84,8 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
         from: statement.from,
         to: statement.to,
         dag,
-        rendered: rendersItself
+        renderer,
+        rendered: renderer
           ? program([dagLine(`:rendered ${TO_STRING} ${bare.name}`), dagLine(':rendered')])
           : dag,
       });
@@ -93,7 +95,7 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
     for (const line of lines)
       if (!isBare(line)) {
         context.push(line);
-        if (line.name === TO_STRING) rendersItself = true;
+        if (line.name === TO_STRING) renderer = { text: statement.text };
       }
   }
   return found;
@@ -294,14 +296,15 @@ function sizes({ nodes, root }: Value): { total: bigint; distinct: number } {
  * made of, and the copying. */
 class Details extends WidgetType {
   constructor(
-    readonly shown: Shown<Inline>,
+    readonly preview: Inline,
+    readonly value: Value,
     readonly dag: string,
   ) {
     super();
   }
 
   eq(other: Details): boolean {
-    return other.shown === this.shown && other.dag === this.dag;
+    return other.preview === this.preview && other.value === this.value && other.dag === this.dag;
   }
 
   get estimatedHeight(): number {
@@ -309,7 +312,7 @@ class Details extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    const { preview, value } = this.shown;
+    const { preview, value } = this;
     const tree = () => written(treeOf(value), copied);
     const { copy } = preview;
     const text = (copy ?? tree)();
@@ -468,10 +471,17 @@ const theme = EditorView.baseTheme({
 });
 
 /** What was shown for a program, and the value it was shown for. */
-interface Shown<P extends Preview = Preview> {
-  preview: P;
+interface Shown {
+  /** Null where the host chose to show nothing. */
+  preview: Preview | null;
   value: Value;
+  /** What the host was told of the test, in short: a change asks again. */
+  told: string;
 }
+
+/** What of a test the host's choice can turn on, as a key. */
+const told = (test: ExpectTest | null): string =>
+  test ? JSON.stringify({ ...test.outcome, edit: undefined }) : '';
 
 /**
  * The decorations, the previews they were built from, and which of those are
@@ -491,26 +501,28 @@ function build(
   expressions: readonly Expression[],
   shown: Map<string, Shown>,
   expanded: Set<string>,
-  said: (dag: string) => boolean,
 ): Previews {
   const builder = new RangeSetBuilder<Decoration>();
   const known = state.field(evaluated.field);
   const live = new Set<string>();
-  for (const expression of expressions) {
+  // One test per expression, in the same order, read off the same list.
+  const tests = expectTests(state);
+  expressions.forEach((expression, index) => {
+    const test = tests?.[index] ?? null;
     live.add(expression.dag);
-    if (said(expression.dag)) continue;
     // What was shown for this program is asked for first, and not only to save
     // rebuilding a host's element: a program is its own answer, so a preview
     // once drawn for it stays true, and it outlives the moment between the
     // statements settling and the value being published again.
     let entry = shown.get(expression.dag);
-    if (!entry) {
+    if (!entry || entry.told !== told(test)) {
       const evaluation = known.get(expression.dag);
-      if (evaluation?.status !== 'ok') continue;
-      entry = { preview: config.preview(treeOf(evaluation)), value: evaluation };
+      if (evaluation?.status !== 'ok') return;
+      entry = { preview: config.preview(treeOf(evaluation), test), value: evaluation, told: told(test) };
       shown.set(expression.dag, entry);
     }
     const { preview } = entry;
+    if (!preview) return;
     const at = (widget: Decoration) => builder.add(expression.to, expression.to, widget);
     if (preview.type === 'block') {
       at(
@@ -520,7 +532,7 @@ function build(
           widget: new BlockPreview(preview.element, preview.height_px),
         }),
       );
-      continue;
+      return;
     }
     at(Decoration.widget({ side: 1, widget: new InlinePreview(preview, expression.dag) }));
     if (expanded.has(expression.dag))
@@ -528,10 +540,10 @@ function build(
         Decoration.widget({
           side: 1,
           block: true,
-          widget: new Details(entry as Shown<Inline>, expression.dag),
+          widget: new Details(preview, entry.value, expression.dag),
         }),
       );
-  }
+  });
   for (const dag of shown.keys()) if (!live.has(dag)) shown.delete(dag);
   for (const dag of expanded) if (!live.has(dag)) expanded.delete(dag);
   return { shown, expanded, decorations: builder.finish() };
@@ -547,19 +559,9 @@ export function previews(config: Resolved): Extension {
       tr.docChanged || tr.effects.length ? expressionsIn(tr.state, config) : value,
   });
 
-  const expect = config.expectTests
-    ? expectations(config.analyses, expressions, evaluated.field)
-    : null;
-  // With expect tests on, an expression's value is in the `# = …` block under
-  // it — or in the patch for one — and it is shown there rather than twice.
-  const said = (state: EditorState) => {
-    const unsaid = expect?.unsaid(state);
-    return (dag: string) => unsaid !== undefined && !unsaid.has(dag);
-  };
-
   const decorations = StateField.define<Previews>({
     create: (state) =>
-      build(state, config, state.field(expressions), new Map(), new Set(), said(state)),
+      build(state, config, state.field(expressions), new Map(), new Set()),
     update: (value, tr) => {
       if (!tr.docChanged && !tr.effects.length) return value;
       const expanded = new Set(value.expanded);
@@ -573,8 +575,7 @@ export function previews(config: Resolved): Extension {
       // briefly out of date.
       if (tr.state.field(config.analyses).some((a) => a.state === 'pending'))
         return { ...value, expanded, decorations: value.decorations.map(tr.changes) };
-      return build(
-        tr.state, config, tr.state.field(expressions), value.shown, expanded, said(tr.state));
+      return build(tr.state, config, tr.state.field(expressions), value.shown, expanded);
     },
     provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
@@ -583,7 +584,7 @@ export function previews(config: Resolved): Extension {
     evaluated.field,
     expressions,
     config.showPreviews ? [theme, pressPast, decorations] : [],
-    expect?.extension ?? [],
+    config.expectTests ? expectations(config.analyses, expressions, evaluated.field) : [],
     evaluated.keep(config, (state) =>
       state.field(expressions).flatMap((expression) =>
         config.expectTests ? [expression.dag, expression.rendered] : [expression.dag],

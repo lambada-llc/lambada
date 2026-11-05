@@ -1,31 +1,22 @@
-import {
-  RangeSetBuilder,
-  StateField,
-  type EditorState,
-  type Extension,
-} from '@codemirror/state';
-import {
-  Decoration,
-  EditorView,
-  ViewPlugin,
-  WidgetType,
-  type DecorationSet,
-  type ViewUpdate,
-} from '@codemirror/view';
+import { Facet, StateField, type EditorState, type Extension, type Text } from '@codemirror/state';
 
 import type { Analysis } from './analysis';
 import type { Expression } from './previews';
 import { treeOf, type Tree, type Value } from './tree';
 import type { Outcome } from './worker';
 
-// Expect tests, offered rather than written.
+// Expect tests: what the build would write under each bare expression of a
+// tested source, or what it would do instead.
 //
 // A source's bare expressions are its tests, and the build writes what each
-// evaluates to back under it as a `# = …` comment. Here the editor works that
-// block out as the build would — the same `_to_string`, the same file rule,
-// the same layout — and where the text below an expression disagrees, it shows
-// the block it would write as a patch. Nothing is written until the reader
-// accepts it: an edit the reader did not make is not the editor's to make.
+// evaluates to back under it as a `# = …` comment. Here that block is worked
+// out as the build would — the same `_to_string`, the same file rule, the same
+// layout, the same messages when it cannot — and kept in the editor's state for
+// the host to read with `expectTests`. What to show of it, and when, is the
+// host's: this writes nothing to the document, and draws nothing.
+
+/** What a source defines to say how its expect tests' results read. */
+export const TO_STRING = '_to_string';
 
 /** Only these lines are an expect test's; anything else is the author's. */
 const HEAD = '# = ';
@@ -38,23 +29,36 @@ function block(result: string): string[] {
 }
 
 // ── reading a value ─────────────────────────────────────────────────────────
+//
+// As the build's runtime reads it, step for step: the whole list first, then
+// every element's bits, then the code points — so a value that is not a string
+// fails here with the message the build stops with, not merely somewhere.
 
-const fail = (what: string): never => {
-  throw new Error(`not ${what}`);
+const failed = (message: string): never => {
+  throw new Error(message);
 };
 
 function list(tree: Tree): Tree[] {
   const items: Tree[] = [];
   for (; tree.length === 2; tree = tree[1]) items.push(tree[0]);
-  return tree.length === 0 ? items : fail('a list');
+  return tree.length === 0 ? items : failed('tree is not a list');
 }
 
-/** Least significant bit first; a bit is the leaf or a stem. */
-const nat = (tree: Tree): number =>
-  list(tree).reduceRight((n, bit) => 2 * n + (bit.length === 2 ? fail('a bit') : bit.length), 0);
+const bool = (tree: Tree): boolean => (tree.length === 2 ? failed('tree is not a bool') : tree.length === 1);
 
-// A character at a time: a long string spread into one call overflows the stack.
-const text = (tree: Tree): string => list(tree).map((c) => String.fromCodePoint(nat(c))).join('');
+/** Least significant bit first. */
+const nat = (tree: Tree): bigint =>
+  list(tree).reduceRight((n, bit) => 2n * n + (bool(bit) ? 1n : 0n), 0n);
+
+/** A code point, refused in the words Node's own refusal uses. */
+function character(code: bigint): string {
+  const point = Number(code);
+  return Number.isInteger(point) && point >= 0 && point <= 0x10ffff
+    ? String.fromCodePoint(point)
+    : failed(`Invalid code point ${point}`);
+}
+
+const text = (tree: Tree): string => list(tree).map(nat).map(character).join('');
 
 /** Deliberately narrow — the build will write nothing else as a file. */
 const FILE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z0-9]+$/;
@@ -66,27 +70,24 @@ function file(tree: Tree): { name: string; bytes: Uint8Array } | null {
     const name = text(tree[0][0]);
     text(tree[0][1]);
     if (name.length > 255 || !FILE_NAME.test(name)) return null;
-    return { name, bytes: new Uint8Array(list(tree[1]).map(nat)) };
+    return { name, bytes: new Uint8Array(list(tree[1]).map(nat).map(Number)) };
   } catch {
     return null;
   }
 }
 
 /** What the build records for a test, and whether that is a file's name and
- * hash rather than the value itself. */
-interface Recorded {
-  result: string;
-  file: boolean;
-}
+ * hash rather than the value itself — or why the build stops at it instead. */
+type Recorded = { result: string; file: boolean } | { failure: string };
 
-function recorded(raw: Value, rendered: Value): Recorded | null {
+function recorded(raw: Value, rendered: Value): Recorded {
   const written = file(treeOf(raw));
   if (written) return { result: `${written.name} sha256:${sha256(written.bytes)}`, file: true };
   try {
     return { result: text(treeOf(rendered)), file: false };
-  } catch {
-    // Not a string: the build would fail on it, so there is no block to offer.
-    return null;
+  } catch (error) {
+    // Not a string: the build fails on it, and writes no block anywhere.
+    return { failure: (error as Error).message };
   }
 }
 
@@ -129,316 +130,152 @@ function sha256(bytes: Uint8Array): string {
   return [...h].map((x) => x.toString(16).padStart(8, '0')).join('');
 }
 
-// ── patches ─────────────────────────────────────────────────────────────────
+// ── what the build would do ─────────────────────────────────────────────────
 
-/** One block the build would write differently, as the change that writes it. */
-export interface Patch {
+/** What the build makes of one test. */
+export type ExpectOutcome =
+  /** Not evaluated yet. */
+  | { kind: 'pending' }
+  /** The editor gave up on it, and `message` says why. The build has no time
+   * limit, so this is the editor's, not the build's. */
+  | { kind: 'unknown'; message: string }
+  /** The build stops here, with this message: the result is not a string. */
+  | { kind: 'fails'; message: string }
+  /**
+   * The block the build writes, a line at a time; whether it names a file
+   * rather than saying the value; and, where the document has something else
+   * there, the edit that writes it.
+   */
+  | {
+      kind: 'recorded';
+      lines: readonly string[];
+      file: boolean;
+      edit: { from: number; to: number; insert: string } | null;
+    };
+
+/** One test of a tested source, and what the build makes of it. */
+export interface ExpectTest {
+  /** The expression: the start of its first line, the end of its last. */
   from: number;
   to: number;
-  insert: string;
-  /** The lines the build would write. */
-  lines: readonly string[];
-  /** Where the block goes: the end of the expression's last line, or of the
-   * block it replaces. */
-  at: number;
+  /** The `# = …` block under it as the document has it — empty, at `to`, if
+   * there is none. */
+  block: { from: number; to: number; lines: readonly string[] };
+  /** The `_to_string` definition its result is read through, or null for
+   * none: one object per definition, shared by every test it reads. */
+  renderer: { text: string } | null;
+  outcome: ExpectOutcome;
+}
+
+/** The `# = …` block under the line ending at `to`, if there is one. */
+function blockUnder(doc: Text, to: number): ExpectTest['block'] {
+  const end = doc.lineAt(to);
+  const lines: string[] = [];
+  let last = end;
+  for (let n = end.number + 1; n <= doc.lines; n++) {
+    const line = doc.line(n);
+    if (lines.length ? !line.text.startsWith(TAIL) : !line.text.startsWith(HEAD)) break;
+    lines.push(line.text);
+    last = line;
+  }
+  return { from: lines.length ? doc.line(end.number + 1).from : end.to, to: last.to, lines };
 }
 
 /**
- * Every expression whose block below disagrees with what it evaluates to, and
- * the expressions whose value the block cannot say — see `Expectations`.
- *
- * An expression still being evaluated has no patch: what it will come to is
- * not known, and a patch that is a guess would be worse than none. `results`
- * keeps what was read out of each pair of programs, so a value is only read —
- * and a file only hashed — once.
+ * Every test, and what the build makes of it. `results` keeps what was read
+ * out of each pair of programs, so a value is only read — and a file only
+ * hashed — once.
  */
-function patches(
-  state: EditorState,
+function tests(
+  doc: Text,
   expressions: readonly Expression[],
   known: ReadonlyMap<string, Outcome<Value>>,
-  results: Map<string, Recorded | null>,
-): Pick<Expectations, 'found' | 'unsaid'> {
-  const doc = state.doc;
-  const found: Patch[] = [];
-  const unsaid = new Set<string>();
+  results: Map<string, Recorded>,
+): readonly ExpectTest[] {
   const live = new Set<string>();
-  for (const { to, dag, rendered } of expressions) {
+  const found = expressions.map(({ from, to, dag, rendered, renderer }): ExpectTest => {
     const key = `${dag}\n\n${rendered}`;
     live.add(key);
-    const raw = known.get(dag);
+    const under = blockUnder(doc, to);
+    const test = (outcome: ExpectOutcome) => ({ from, to, block: under, renderer, outcome });
     if (!results.has(key)) {
+      const raw = known.get(dag);
       const shown = known.get(rendered);
-      if (raw?.status === 'ok' && shown?.status === 'error') unsaid.add(dag);
-      if (raw?.status !== 'ok' || shown?.status !== 'ok') continue;
+      const gaveUp = [raw, shown].find((outcome) => outcome?.status === 'error');
+      if (gaveUp?.status === 'error') return test({ kind: 'unknown', message: gaveUp.message });
+      if (raw?.status !== 'ok' || shown?.status !== 'ok') return test({ kind: 'pending' });
       results.set(key, recorded(raw, shown));
     }
-    const record = results.get(key);
-    if (!record || record.file) unsaid.add(dag);
-    if (!record) continue;
-
+    const record = results.get(key)!;
+    if ('failure' in record) return test({ kind: 'fails', message: record.failure });
     const lines = block(record.result);
-    const end = doc.lineAt(to);
-    const old: string[] = [];
-    let last = end;
-    for (let n = end.number + 1; n <= doc.lines; n++) {
-      const line = doc.line(n);
-      if (old.length ? !line.text.startsWith(TAIL) : !line.text.startsWith(HEAD)) break;
-      old.push(line.text);
-      last = line;
-    }
-    if (old.join('\n') === lines.join('\n')) continue;
-    found.push(
-      old.length
-        ? { from: doc.line(end.number + 1).from, to: last.to, insert: lines.join('\n'), lines, at: last.to }
-        : { from: end.to, to: end.to, insert: `\n${lines.join('\n')}`, lines, at: end.to },
-    );
-  }
+    const insert = lines.join('\n');
+    // A block replaces the one under the expression, or goes in on a line of
+    // its own straight after it.
+    const edit = under.lines.join('\n') === insert ? null
+      : under.lines.length ? { from: under.from, to: under.to, insert }
+      : { from: to, to, insert: `\n${insert}` };
+    return test({ kind: 'recorded', lines, file: record.file, edit });
+  });
   for (const key of results.keys()) if (!live.has(key)) results.delete(key);
-  return { found, unsaid };
+  return found;
 }
 
-const accept = (view: EditorView, chosen: readonly Patch[]) =>
-  view.dispatch({ changes: chosen.map(({ from, to, insert }) => ({ from, to, insert })) });
-
-/**
- * A patch, under the block it replaces. It holds what it shows and nothing
- * else: the editor keeps a widget's DOM for as long as `eq` says it is the
- * same, so the patch to apply is looked up when the button is pressed rather
- * than remembered from when it was drawn, by which time it may have moved.
- */
-class Proposed extends WidgetType {
-  constructor(
-    readonly lines: string,
-    readonly count: number,
-    readonly field: StateField<Expectations>,
-  ) {
-    super();
-  }
-
-  eq(other: Proposed): boolean {
-    return other.lines === this.lines && other.count === this.count;
-  }
-
-  get estimatedHeight(): number {
-    return 20 * this.lines.split('\n').length;
-  }
-
-  toDOM(view: EditorView): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.className = 'cm-expect';
-    const lines = document.createElement('div');
-    lines.className = 'cm-expect-lines';
-    lines.textContent = this.lines;
-    const button = (label: string, chosen: (all: readonly Patch[]) => readonly Patch[]) => {
-      const dom = document.createElement('button');
-      dom.type = 'button';
-      dom.textContent = label;
-      dom.addEventListener('mousedown', (event) => event.preventDefault());
-      dom.addEventListener('click', () => accept(view, chosen(view.state.field(this.field).found)));
-      return dom;
-    };
-    const actions = document.createElement('div');
-    actions.className = 'cm-expect-actions';
-    actions.append(
-      button('accept', (all) => all.filter((patch) => patch.at === view.posAtDOM(wrap))),
-      ...(this.count > 1 ? [button(`accept all ${this.count}`, (all) => all)] : []),
-    );
-    wrap.append(lines, actions);
-    return wrap;
-  }
-
-  ignoreEvent(): boolean {
-    return true;
-  }
-}
-
-const replaced = Decoration.line({ class: 'cm-expect-replaced' });
-
-function decorate(
-  state: EditorState,
-  found: readonly Patch[],
-  field: StateField<Expectations>,
-): DecorationSet {
-  const builder = new RangeSetBuilder<Decoration>();
-  for (const patch of found) {
-    if (patch.to > patch.from)
-      for (let n = state.doc.lineAt(patch.from).number; n <= state.doc.lineAt(patch.to).number; n++)
-        builder.add(state.doc.line(n).from, state.doc.line(n).from, replaced);
-    builder.add(
-      patch.at,
-      patch.at,
-      Decoration.widget({
-        side: 1,
-        block: true,
-        widget: new Proposed(patch.lines.join('\n'), found.length, field),
-      }),
-    );
-  }
-  return builder.finish();
-}
-
-interface Expectations {
-  found: readonly Patch[];
-  /**
-   * The programs of the expressions whose value the block under them does not
-   * say: a file, which it names by hash, or a value it cannot record at all.
-   * Every other expression's result is right there in its block — or in the
-   * patch for it — so a preview at the end of the line would only repeat it.
-   */
-  unsaid: ReadonlySet<string>;
-  results: Map<string, Recorded | null>;
-  decorations: DecorationSet;
-}
-
-/**
- * Where every patch is, down the editor's right edge, so a long source's are
- * found without scrolling for them; a click goes to one.
- */
-const marks = (field: StateField<Expectations>) =>
-  ViewPlugin.fromClass(
-    class {
-      strip: HTMLElement;
-      constructor(readonly view: EditorView) {
-        this.strip = document.createElement('div');
-        this.strip.className = 'cm-expect-marks';
-        this.strip.setAttribute('aria-hidden', 'true');
-        view.dom.appendChild(this.strip);
-        this.draw();
-      }
-
-      update(update: ViewUpdate) {
-        if (
-          update.geometryChanged ||
-          update.startState.field(field).found !== update.state.field(field).found
-        )
-          this.draw();
-      }
-
-      draw() {
-        this.view.requestMeasure({
-          read: (view) => {
-            const height = view.contentHeight || 1;
-            return {
-              top: view.scrollDOM.offsetTop,
-              size: view.scrollDOM.clientHeight,
-              at: view.state
-                .field(field)
-                .found.map((patch) => [patch.from, view.lineBlockAt(patch.from).top / height] as const),
-            };
-          },
-          write: ({ top, size, at }) => {
-            this.strip.style.top = `${top}px`;
-            this.strip.style.height = `${size}px`;
-            this.strip.replaceChildren(
-              ...at.map(([pos, fraction]) => {
-                const mark = document.createElement('div');
-                mark.className = 'cm-expect-mark';
-                mark.style.top = `${fraction * 100}%`;
-                mark.addEventListener('mousedown', (event) => {
-                  event.preventDefault();
-                  this.view.dispatch({
-                    selection: { anchor: pos },
-                    effects: EditorView.scrollIntoView(pos, { y: 'center' }),
-                  });
-                  this.view.focus();
-                });
-                return mark;
-              }),
-            );
-          },
-        });
-      }
-
-      destroy() {
-        this.strip.remove();
-      }
-    },
-  );
-
-const theme = EditorView.baseTheme({
-  '.cm-expect-replaced': {
-    textDecoration: 'line-through',
-    backgroundColor: '#e5484d1f',
-  },
-  '.cm-expect': {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'baseline',
-    gap: '0 1ch',
-    backgroundColor: '#30a46c1f',
-    // The editor's own lines are indented by `.cm-line`'s padding.
-    padding: '0 2px 0 6px',
-  },
-  '.cm-expect-lines': { whiteSpace: 'pre-wrap', flex: '1' },
-  '.cm-expect-actions': { display: 'flex', gap: '1ch', fontSize: '85%' },
-  '.cm-expect-actions button': {
-    font: 'inherit',
-    color: 'inherit',
-    background: 'none',
-    border: '1px solid #8886',
-    borderRadius: '4px',
-    padding: '0 6px',
-    cursor: 'pointer',
-  },
-  '.cm-expect-marks': {
-    position: 'absolute',
-    right: '0',
-    width: '6px',
-    pointerEvents: 'none',
-    zIndex: '300',
-  },
-  '.cm-expect-mark': {
-    position: 'absolute',
-    left: '0',
-    right: '0',
-    height: '4px',
-    marginTop: '-2px',
-    backgroundColor: '#30a46c',
-    borderRadius: '1px',
-    pointerEvents: 'auto',
-    cursor: 'pointer',
-  },
+/** Which field holds the tests, if this editor has one. */
+const holder = Facet.define<StateField<Held>, StateField<Held> | null>({
+  combine: (fields) => fields[0] ?? null,
 });
 
+interface Held {
+  tests: readonly ExpectTest[];
+  results: Map<string, Recorded>;
+}
+
 /**
- * Patches for every expression whose `# = …` block is not what the build
- * would write, read off `expressions` and the values `evaluated` holds — and
- * which expressions' values the blocks leave unsaid, for the previews to show.
+ * Every test of the document and what the build makes of it, in document
+ * order — or null where `expectTests` is off. Read it from a host's own state
+ * field or view plugin to decide what to show; a new array means something
+ * changed.
  */
+export function expectTests(state: EditorState): readonly ExpectTest[] | null {
+  const field = state.facet(holder);
+  return field && state.field(field).tests;
+}
+
+/** The tests, kept up to date from `expressions` and the values `evaluated` holds. */
 export function expectations(
   analyses: StateField<readonly Analysis[]>,
   expressions: StateField<readonly Expression[]>,
   evaluated: StateField<ReadonlyMap<string, Outcome<Value>>>,
-): { extension: Extension; unsaid: (state: EditorState) => ReadonlySet<string> } {
-  const compute = (state: EditorState, results: Map<string, Recorded | null>): Expectations => {
-    const { found, unsaid } =
-      patches(state, state.field(expressions), state.field(evaluated), results);
-    return { found, unsaid, results, decorations: decorate(state, found, field) };
-  };
-  const field: StateField<Expectations> = StateField.define<Expectations>({
+): Extension {
+  const compute = (state: EditorState, results: Map<string, Recorded>): Held => ({
+    tests: tests(state.doc, state.field(expressions), state.field(evaluated), results),
+    results,
+  });
+  const field: StateField<Held> = StateField.define<Held>({
     create: (state) => compute(state, new Map()),
     update: (value, tr) => {
       if (!tr.docChanged && !tr.effects.length) return value;
       // While a statement is compiling, which expressions there are is not
-      // known; the patches drawn a moment ago are carried along rather than
-      // taken away and put back, as the previews are.
-      if (tr.state.field(analyses).some((a) => a.state === 'pending'))
-        return {
-          ...value,
-          found: value.found.map((patch) => ({
-            ...patch,
-            from: tr.changes.mapPos(patch.from, 1),
-            to: tr.changes.mapPos(patch.to, -1),
-            at: tr.changes.mapPos(patch.at, -1),
-          })),
-          decorations: value.decorations.map(tr.changes),
-        };
-      return compute(tr.state, value.results);
+      // known; the tests of a moment ago are carried along, mapped, rather than
+      // taken away and put back.
+      if (!tr.state.field(analyses).some((a) => a.state === 'pending'))
+        return compute(tr.state, value.results);
+      if (!tr.docChanged) return value;
+      const at = (pos: number, assoc: number) => tr.changes.mapPos(pos, assoc);
+      return {
+        ...value,
+        tests: value.tests.map((test) => ({
+          ...test,
+          from: at(test.from, 1),
+          to: at(test.to, -1),
+          block: { ...test.block, from: at(test.block.from, 1), to: at(test.block.to, -1) },
+          outcome: test.outcome.kind === 'recorded' && test.outcome.edit
+            ? { ...test.outcome, edit: { ...test.outcome.edit, from: at(test.outcome.edit.from, 1), to: at(test.outcome.edit.to, -1) } }
+            : test.outcome,
+        })),
+      };
     },
-    provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
-  return {
-    extension: [theme, field, marks(field)],
-    unsaid: (state) => state.field(field).unsaid,
-  };
+  return [field, holder.of(field)];
 }

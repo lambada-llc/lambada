@@ -75,7 +75,7 @@ lambada({ compile: { showDiagnostics: false } })  // mark, but do not report nam
 lambada({ compile: { showCompletions: false } })  // do not offer names
 lambada({ compile: { previewResults: false } })   // do not evaluate anything
 lambada({ compile: { previewResults: show } })    // what to show for a value
-lambada({ compile: { expectTests: true } })       // offer `# = …` blocks as patches
+lambada({ compile: { expectTests: true } })       // work out each test as the build would
 lambada({ compile: { compiler, timeout } })       // a compiler of your own
 lambada({ compile: { environment } })             // what is in scope to begin with
 ```
@@ -99,18 +99,27 @@ has it, where the host gives one.
 
 `expectTests` is for documents that are tested sources, where every bare
 expression is an expect test and carries a `# = …` comment block with its result
-under it. The editor works that block out the way `lambada build` writes it —
-through the `_to_string` the document defines above the expression, if any; a
-file as its name and `sha256:` hash; `#   ` continuing a multi-line result — and
-where the text under an expression disagrees, it shows the block it would write
-as a patch: the old lines struck through, the new ones under them, and buttons
-to accept that one or all of them. Nothing is written unless accepted. A strip
-along the editor's right edge marks every patch in the document, and a click on
-a mark goes to it. An expression still evaluating, or one that does not come to
-a string, has no patch. The block says what an expression came to, so its
-preview at the end of the line is left out — except where the block cannot say
-it: a file, which it names by hash, or a value that is not a string. Off by default: in a document that is not a tested
-source, every expression would be offered a block it never asked for.
+under it. The editor works out what `lambada build` would do with each one, and
+keeps it in the editor's state; it writes nothing to the document and draws
+nothing. `expectTests(state)` reads it: one `ExpectTest` per bare expression,
+in document order, saying where the expression and the block under it are, which
+`_to_string` definition its result is read through, and its `outcome`:
+
+- `recorded` — the block the build writes, a line at a time: through the
+  `_to_string` the document defines above the expression, if any; a file as
+  its name and `sha256:` hash; `#   ` continuing a multi-line result. Where the
+  document has something else there, `edit` is the change that writes it.
+- `fails` — the build stops here, and `message` is what it says, word for word:
+  the value is read the way the build's runtime reads it, step for step.
+- `unknown` — the editor gave up after its `timeout`. The build has no time
+  limit, so this is the editor's, not the build's.
+- `pending` — not evaluated yet.
+
+What to make of it — patches to accept, messages, markers — is the host's, from
+its own state field or view plugin; a new array means something changed. The
+same test is handed to `previewResults` as its second argument, which may return
+`null` to show nothing: a result the block already says need not be said twice.
+Off by default: most documents are not tested sources.
 
 Evaluating happens on a second worker. A compilation takes single-digit
 milliseconds and an evaluation need never finish, so sharing one would let a
