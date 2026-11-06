@@ -48,10 +48,10 @@ Commands:
   repl [file]... [--eval <source>]... [--format <f>] [--timeout <s>]
                                 An interactive session against the given DAG
                                 files (a bundle, modules, ...), linked into one
-                                environment, with the .lamb sources among them
-                                loaded in order: definitions persist,
-                                expressions are evaluated and shown. With
-                                --eval, or input piped in, it shows those
+                                environment, with the definitions of the .lamb
+                                sources among them loaded in order: definitions
+                                persist, expressions are evaluated and shown.
+                                With --eval, or input piped in, it shows those
                                 expressions and exits.
 
 Options:
@@ -63,9 +63,11 @@ Options:
                         Repeat it for several.
   --eval, -e <source>   For repl: evaluate this and exit, instead of reading
                         input. Repeat it for several, in order.
-  --format <f>          For repl: how results are shown when the session does
-                        not define _to_string: term (the default), nat, string,
-                        bool, ternary, dag or minbin.
+  --format <f>          For repl: how results are shown. auto (the default)
+                        shows them as expect tests do: through _to_string when
+                        one is in scope, a file described, otherwise a term.
+                        term, nat, string, bool, ternary, dag or minbin show
+                        the value itself in that format.
   --timeout <s>         For repl: stop an expression that runs longer than
                         this many seconds, and carry on with the next.
   --jobs <n>            Compile this many sources, or evaluate this many tests,
