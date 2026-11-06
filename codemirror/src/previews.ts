@@ -12,7 +12,7 @@ import {
   type DecorationSet,
 } from '@codemirror/view';
 
-import { TO_STRING, expectTests, expectations, type ExpectTest } from './expect';
+import { TO_STRING, expectAsks, expectTests, expectations, type ExpectTest, type Proposer } from './expect';
 import { results } from './worker';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
@@ -99,6 +99,32 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
       }
   }
   return found;
+}
+
+/**
+ * The program that reads a test's value through the function the host names
+ * for it, as the build would were that the `_to_string` above the test: the
+ * test's own program, ending instead on that function applied to its value.
+ * Only a name the environment defines — the program is put together from the
+ * environment, not from the document, which may yet define it differently.
+ */
+function proposer(config: Resolved): Proposer | null {
+  const { fix } = config;
+  if (!fix) return null;
+  return (dag, value) => {
+    const renderer = fix(value);
+    if (!renderer || !config.initialScope.has(renderer)) return null;
+    const lines = dag.split('\n').map(dagLine);
+    const bare = lines.pop()!;
+    const program = needed([
+      ...config.prelude,
+      ...config.environment,
+      ...lines,
+      dagLine(`:proposed ${renderer} ${bare.name}`),
+      dagLine(':proposed'),
+    ]);
+    return { renderer, program: program.map((line) => line.text).join('\n') };
+  };
 }
 
 /**
@@ -481,8 +507,15 @@ interface Shown {
 
 /** What of a test the host's choice can turn on, as a key. */
 // Not the file: its lines name it by hash already, and its bytes may be many.
-const told = (test: ExpectTest | null): string =>
-  test ? JSON.stringify({ ...test.outcome, edit: undefined, file: undefined }) : '';
+const told = (test: ExpectTest | null): string => {
+  if (!test) return '';
+  const { outcome } = test;
+  return JSON.stringify([
+    outcome.kind,
+    'lines' in outcome ? outcome.lines : null,
+    'message' in outcome ? outcome.message : null,
+  ]);
+};
 
 /**
  * The decorations, the previews they were built from, and which of those are
@@ -585,11 +618,12 @@ export function previews(config: Resolved): Extension {
     evaluated.field,
     expressions,
     config.showPreviews ? [theme, pressPast, decorations] : [],
-    config.expectTests ? expectations(config.analyses, expressions, evaluated.field) : [],
-    evaluated.keep(config, (state) =>
-      state.field(expressions).flatMap((expression) =>
+    config.expectTests ? expectations(config.analyses, expressions, evaluated.field, proposer(config)) : [],
+    evaluated.keep(config, (state) => [
+      ...state.field(expressions).flatMap((expression) =>
         config.expectTests ? [expression.dag, expression.rendered] : [expression.dag],
       ),
-    ),
+      ...expectAsks(state),
+    ]),
   ];
 }

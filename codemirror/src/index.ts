@@ -31,7 +31,7 @@ export type { Statement } from './statements';
 export type { Compilation } from './compilation';
 export type { Preview } from './previews';
 export type { Tree } from './tree';
-export type { ExpectFile, ExpectOutcome, ExpectTest } from './expect';
+export type { ExpectFile, ExpectFixOutcome, ExpectOutcome, ExpectTest } from './expect';
 export type { GotoDefinitionConfig } from './definitions';
 
 export interface LambadaConfig {
