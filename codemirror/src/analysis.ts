@@ -176,8 +176,10 @@ export const analyses = (
 ): StateField<readonly Analysis[]> =>
   StateField.define<readonly Analysis[]>({
     create: (state) => analyze(state, initial),
-    // Compilations arrive as effects, and a statement's state is what they
-    // decide, so an effect is as much of a change here as an edit is.
+    // A statement's state is what its compilation decides, so a compilation
+    // arriving is as much of a change here as an edit is; nothing else is.
     update: (value, tr) =>
-      tr.docChanged || tr.effects.length ? analyze(tr.state, initial) : value,
+      tr.docChanged || tr.state.field(lambadaCompilations) !== tr.startState.field(lambadaCompilations)
+        ? analyze(tr.state, initial)
+        : value,
   });

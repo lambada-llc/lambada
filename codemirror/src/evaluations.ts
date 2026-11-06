@@ -1,7 +1,7 @@
 import { Facet, type EditorState, type StateField } from '@codemirror/state';
 
 import { lambadaCompilations } from './compilation';
-import { dagLine, needed, type DagLine } from './dag';
+import { dagLine, type Bindings } from './dag';
 import { treeOf, type Tree, type Value } from './tree';
 import { results, type Outcome } from './worker';
 
@@ -30,8 +30,8 @@ export const requested = (state: EditorState): readonly Evaluation[] =>
 /** The definitions in scope down the document. */
 export interface Scope {
   /** The prelude, the environment, then every definition the document makes,
-   * in order. A program is a prefix of these and what it evaluates. */
-  lines: readonly DagLine[];
+   * in order. A program is what a prefix of these and an expression need. */
+  lines: Bindings;
   /** How many of `lines` are the prelude's and the environment's. */
   base: number;
   /** After each statement whose definitions are in `lines`: where it ends,
@@ -50,6 +50,10 @@ export const scopeHolder = Facet.define<StateField<{ scope: Scope }>, StateField
 /** A program's evaluation, keyed by the program's text. */
 export const evaluated = results<Value>('run');
 
+/** Programs already put together, per scope: a request is asked after on every
+ * answer a worker brings, and the scope only changes with the statements. */
+const made = new WeakMap<Scope, Map<string, string | null>>();
+
 /** The program that evaluates `request`, or why there is none (yet). */
 export function programOf(state: EditorState, { at, source }: Evaluation): Outcome<{ program: string }> {
   const field = state.facet(scopeHolder);
@@ -58,17 +62,23 @@ export function programOf(state: EditorState, { at, source }: Evaluation): Outco
   if (compiled.status === 'error') return compiled;
   const { scope } = state.field(field);
   if (at > scope.known) return { status: 'pending' };
-  const lines = compiled.dagLines.filter((line) => line.trim()).map(dagLine);
-  const bare = lines.find((line) => line.from.length === 0);
-  if (!bare) return { status: 'error', message: 'not an expression' };
   let length = scope.base;
   for (const mark of scope.marks) if (mark.to <= at) length = mark.length;
-  const program = needed([
-    ...scope.lines.slice(0, length),
-    ...lines.filter((line) => line !== bare),
-    bare,
-  ]);
-  return { status: 'ok', program: program.map((line) => line.text).join('\n') };
+  let programs = made.get(scope);
+  if (!programs) made.set(scope, (programs = new Map()));
+  const key = `${length}\n${source}`;
+  let program = programs.get(key);
+  if (program === undefined) {
+    const lines = compiled.dagLines.filter((line) => line.trim()).map(dagLine);
+    const bare = lines.find((line) => line.from.length === 0);
+    // Null: it compiled to definitions, which have no value to evaluate.
+    program = bare
+      ? scope.lines.needed(length, [...lines.filter((line) => line !== bare), bare])
+          .map((line) => line.text).join('\n')
+      : null;
+    programs.set(key, program);
+  }
+  return program === null ? { status: 'error', message: 'not an expression' } : { status: 'ok', program };
 }
 
 /** What `request` evaluated to: pending until it is known, and an error where
