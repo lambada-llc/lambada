@@ -4,17 +4,19 @@
 // DAG files.
 //
 // A session is a DAG that grows, one step at a time: an input compiled on its
-// own, or a DAG file as it is. In a DAG a reference means the definition above
-// it, so steps simply follow one another — earlier definitions are in scope and
-// a later one hides an earlier one of the same name, exactly as in a file —
-// and `:undo` takes the last ones back. What a step adds as bare expressions is
-// evaluated and shown. Names a step uses but neither it, the session nor the
-// environment defines are reported before anything runs.
+// own, or a file — a .lamb source compiled, a DAG as it is. In a DAG a
+// reference means the definition above it, so steps simply follow one another
+// — earlier definitions are in scope and a later one hides an earlier one of
+// the same name, exactly as in a file — and `:undo` takes the last ones back.
+// The bare expressions an input adds are evaluated and shown; a file's are its
+// tests, which are expect-test's business, so a file brings definitions only.
+// Names a step uses but neither it, the session nor the environment defines
+// are reported before anything runs.
 //
-// A result is shown through `_to_string` when the session defines one, as an
-// expect test is, and otherwise in a format of the runtime's (`term` unless
-// asked otherwise). A file — △ (△ <name> <media type>) <bytes> — is described
-// rather than dumped.
+// A result is shown as an expect test shows it — through `_to_string` when one
+// is in scope, a file — △ (△ <name> <media type>) <bytes> — described, and
+// otherwise as a term — unless a format of the runtime's is asked for, which
+// shows the value itself.
 //
 // Evaluation runs in a worker thread holding the environment, so a term that
 // does not finish can be stopped (Ctrl-C, or --timeout) without losing the
@@ -30,17 +32,17 @@ const { is_lamb_file, physical_lines } = require('./project.js');
 const LINE = /^:line\.(\d+)$/;
 const FAIL = /^:fail\.(\d+) /gm;
 
-// The runtime's text formats; `buffer` is bytes, not text.
-const FORMATS = ['term', 'nat', 'string', 'bool', 'ternary', 'dag', 'minbin'];
+// `auto`, then the runtime's text formats; `buffer` is bytes, not text.
+const FORMATS = ['auto', 'term', 'nat', 'string', 'bool', 'ternary', 'dag', 'minbin'];
 
 const HELP = `Enter a definition (name = expression) or an expression to evaluate.
 An input that ends unfinished continues on an indented line (..), until it
 compiles or an empty line ends it. Alt-Enter starts a new line without running
 the input, and a pasted block runs as one input.
   :format <f>       show results as ${FORMATS.join(', ')} (now: %FORMAT%);
-                    a definition of _to_string takes precedence, as in expect tests
+                    auto shows them as expect tests do, through _to_string
   :names [prefix]   the names in scope, or those starting with prefix
-  :load <file>      a .lamb source or a DAG file, as the next step
+  :load <file>      a .lamb source or a DAG file's definitions, as the next step
   :undo [n]         take back the last step (input or :load), or the last n
   :quit             leave (also Ctrl-D)
 Ctrl-C stops an evaluation that does not finish, or drops an unfinished input.`;
@@ -124,16 +126,18 @@ function session_evaluator({ runtime, environment: paths, compiler, prelude: pre
 
   /** One prepared expression, evaluated and shown as text. */
   function show({ module, value, pair }, format) {
+    const auto = format === 'auto';
     const reduce = symbol => get.reduce(module.extract([symbol]).toString());
-    const [raw, shown] = pair ? halves(reduce(pair)) : [reduce(value), null];
-    const file = to_file(evaluator, raw);
+    const [raw, shown] = auto && pair ? halves(reduce(pair)) : [reduce(value), null];
+    const file = auto && to_file(evaluator, raw);
     if (file) return `file ${file.name} (${file.media_type}, ${file.bytes.length} bytes)`;
     if (shown) return marshal.to_string(shown);
+    const as = auto ? 'term' : format;
     try {
-      return text_of(formatters[format].to(raw));
+      return text_of(formatters[as].to(raw));
     } catch (error) {
-      if (format === 'term') throw error;
-      throw new Error(`not a ${format} (${error.message}); as a term: ${text_of(formatters.term.to(raw))}`);
+      if (as === 'term') throw error;
+      throw new Error(`not a ${as} (${error.message}); as a term: ${text_of(formatters.term.to(raw))}`);
     }
   }
 
@@ -222,8 +226,10 @@ function worker_pool(options) {
 
 // ---- the session ------------------------------------------------------------
 
-async function repl({ files = [], compiler, prelude, format = 'term', evals = [], timeout, tree_calculus }) {
+async function repl({ files = [], compiler, prelude, format = 'auto', evals = [], timeout, tree_calculus }) {
   if (!FORMATS.includes(format)) throw new Error(`unknown format ${format} (one of ${FORMATS.join(', ')})`);
+  // Whatever reads the output may stop early (`| head`); that ends the session.
+  process.stdout.on('error', error => { if (error.code === 'EPIPE') process.exit(); else throw error; });
   const interactive = !evals.length && process.stdin.isTTY;
   // The DAG files given form the environment the session starts from; the
   // .lamb sources among them are then its first steps, in order.
@@ -247,14 +253,15 @@ async function repl({ files = [], compiler, prelude, format = 'term', evals = []
   // Run one step to the end: show each of its expressions, and on a stopped
   // one (timeout, Ctrl-C) start a fresh worker and carry on after it. With
   // `more`, an unfinished input is left unreported and answered 'more'. A
-  // step loaded from a file is reported, and undone, by the file's name.
+  // step loaded from a file shows none of its expressions, and is reported,
+  // and undone, by the file's name.
   let stop_current = null;
   async function run(step, more = false, file = null) {
     if (!(step.source ?? step.dag).trim()) return;
     const before = session();
     const report = text => say_error(file ? `${file}: ${text}` : text);
     let accepted = false;
-    let from = 0;
+    let from = file ? Infinity : 0;
     for (;;) {
       const outcome = await new Promise(settle => {
         const id = next_id++;

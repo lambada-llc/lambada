@@ -202,7 +202,8 @@ check('repl: definitions persist, and only the input\'s own expressions are show
     assert.deepEqual(first.expressions.map(e => e.line), [2]);
     const shown = repl.prepare(first.dag, { source: '_to_string = \\s s\npick "ab" "c"\nPair.second "x" "yz"\n' }).expressions;
     assert.deepEqual(shown.map(e => e.line), [2, 3], 'lines are the input\'s own');
-    assert.deepEqual(shown.map(e => repl.show(e, 'term')), ['ab', 'yz'], 'through _to_string, as an expect test is');
+    assert.deepEqual(shown.map(e => repl.show(e, 'auto')), ['ab', 'yz'], 'through _to_string, as an expect test is');
+    assert.strictEqual(repl.show(shown[0], 'string'), 'ab', 'unless a format is asked for');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -268,16 +269,16 @@ check('repl: an expression that does not finish is stopped, and the ones after i
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-check('repl: .lamb sources given with the environment are loaded into the session', async () => {
+check('repl: .lamb sources given with the environment have their definitions loaded', async () => {
   const runtime = load();
   const { dir, env } = await repl_environment(runtime);
   try {
     const [source, broken] = [join(dir, 'pick.lamb'), join(dir, 'broken.lamb')];
-    writeFileSync(source, 'pick = Pair.first\npick 6 0\n');
+    writeFileSync(source, 'pick = Pair.first\npick "a test" 0\n');
     writeFileSync(broken, 'fine = △\nbad = (\n');
     const run = spawnSync(process.execPath, [resolve(__dirname, 'lambada.js'), 'repl', source, broken, env, '--format', 'nat', '-e', 'pick 7 0'],
       { encoding: 'utf8', env: process.env });
-    assert.strictEqual(run.stdout, '6\n7\n', 'after the environment, whatever order they are given in');
+    assert.strictEqual(run.stdout, '7\n', 'after the environment, whatever order they are given in, without their tests');
     assert.strictEqual(run.stderr, `${broken}: line 2: the statement ending here does not compile\n`);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
