@@ -43,12 +43,8 @@ export interface CompileConfig {
    * `# = …` block it would write, or the message it would stop with — and keep
    * it for the host to read with `expectTests(state)`. What to show of it is
    * the host's. Default: false: most documents are not tested sources.
-   *
-   * `fix` is asked, for a test the build would fail, which function in scope
-   * could serve as its `_to_string` — by name, or null for none — and what
-   * the build would make of the test under it is worked out too.
    */
-  expectTests?: boolean | { fix?: (value: Tree) => string | null };
+  expectTests?: boolean;
   /**
    * Offer the names in scope as completions. Default: true. Which names those
    * are depends on what the statements above compiled to, which is why this
@@ -85,8 +81,6 @@ export interface Resolved {
   showCompletions: boolean;
   showPreviews: boolean;
   expectTests: boolean;
-  /** Which function in scope to propose as a failing test's `_to_string`. */
-  fix: ((value: Tree) => string | null) | null;
   /** What to show for a value, defaulted to the tree itself. */
   preview: (value: Tree, test: ExpectTest | null) => Preview | null;
 }
@@ -114,8 +108,7 @@ export function resolve(compile: boolean | CompileConfig): Resolved | null {
     // Whether to evaluate at all and what to show for the result are one
     // option to a host and two to everything here.
     showPreviews: config.previewResults !== false,
-    expectTests: config.expectTests === true || typeof config.expectTests === 'object',
-    fix: (typeof config.expectTests === 'object' && config.expectTests.fix) || null,
+    expectTests: config.expectTests === true,
     preview:
       typeof config.previewResults === 'function' ? config.previewResults : defaultPreview,
   };

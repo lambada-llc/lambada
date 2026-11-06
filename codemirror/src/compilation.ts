@@ -3,6 +3,7 @@ import type { EditorState, Extension, StateField } from '@codemirror/state';
 import { results, type Outcome } from './worker';
 import type { Resolved } from './config';
 import { lambadaStatements } from './statements';
+import { requested } from './evaluations';
 import type { Compiled } from './dag';
 
 /** What the compiler produced for one statement. */
@@ -18,8 +19,11 @@ const compiled = results<Compiled>('compile');
 export const lambadaCompilations: StateField<ReadonlyMap<string, Compilation>> =
   compiled.field;
 
-const statementTexts = (state: EditorState): Iterable<string> =>
-  state.field(lambadaStatements).map((statement) => statement.text);
+// The document's statements, and whatever the host asks to have evaluated.
+const statementTexts = (state: EditorState): Iterable<string> => [
+  ...state.field(lambadaStatements).map((statement) => statement.text),
+  ...requested(state).map((request) => request.source),
+];
 
 // The analyses come with the compilations because they are made of them, and
 // after them, because a state field may only read one defined before it.

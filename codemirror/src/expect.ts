@@ -86,41 +86,33 @@ function file(tree: Tree): ExpectFile | null {
 
 /** What the build records for a test, and the file it writes rather than say
  * the value, if it does — or why the build stops at it instead. */
-type Recorded =
-  | { result: string; file: ExpectFile | null }
-  | { failure: string; value: Tree; rendered: Tree; fix: Proposal | null };
-
-/** The text a rendered value reads as, or why the build cannot read it as text. */
-function said(rendered: Tree): { result: string } | { failure: string } {
-  try {
-    return { result: text(rendered) };
-  } catch (error) {
-    // Not a string: the build fails on it, and writes no block anywhere.
-    return { failure: (error as Error).message };
-  }
-}
-
-function recorded(raw: Value, rendered: Value, propose: (value: Tree) => Proposal | null): Recorded {
-  const value = treeOf(raw);
-  const written = file(value);
-  if (written) {
-    const { name, mediaType, bytes } = written;
-    return { result: `${name} ${mediaType} ${bytes.length} bytes sha256:${sha256(bytes)}`, file: written };
-  }
-  const shown = treeOf(rendered);
-  const read = said(shown);
-  return 'result' in read
-    ? { result: read.result, file: null }
-    : { failure: read.failure, value, rendered: shown, fix: propose(value) };
-}
+type Recorded = { lines: readonly string[]; file: ExpectFile | null } | { failure: string; tree: Tree };
 
 /**
- * A `_to_string` to try on a test the build would fail: the function in scope
- * it would name, and the program that applies it to the test's value.
+ * What the build writes under a test whose `_to_string` gave `rendered`: the
+ * block, a line at a time — or, where `rendered` is not a string, the message
+ * the build stops with instead.
  */
-export interface Proposal {
-  renderer: string;
-  program: string;
+export function recording(
+  rendered: Tree,
+): { kind: 'recorded'; lines: readonly string[] } | { kind: 'fails'; message: string } {
+  try {
+    return { kind: 'recorded', lines: block(text(rendered)) };
+  } catch (error) {
+    // Not a string: the build fails on it, and writes no block anywhere.
+    return { kind: 'fails', message: (error as Error).message };
+  }
+}
+
+function recorded(raw: Value, rendered: Value): Recorded {
+  const written = file(treeOf(raw));
+  if (written) {
+    const { name, mediaType, bytes } = written;
+    return { lines: block(`${name} ${mediaType} ${bytes.length} bytes sha256:${sha256(bytes)}`), file: written };
+  }
+  const tree = treeOf(rendered);
+  const read = recording(tree);
+  return read.kind === 'recorded' ? { lines: read.lines, file: null } : { failure: read.message, tree };
 }
 
 // SHA-256, because the build names a file's content by it and the editor needs
@@ -171,19 +163,9 @@ export type ExpectOutcome =
   /** The editor gave up on it, and `message` says why. The build has no time
    * limit, so this is the editor's, not the build's. */
   | { kind: 'unknown'; message: string }
-  /**
-   * The build stops here, with this message: the result is not a string. The
-   * value, and what `_to_string` made of it — the tree the build could not
-   * read — and `fix`, where the host offered a function to read it with: what
-   * the build would make of the test were that the `_to_string` above it.
-   */
-  | {
-      kind: 'fails';
-      message: string;
-      value: Tree;
-      rendered: Tree;
-      fix: { renderer: string; outcome: ExpectFixOutcome } | null;
-    }
+  /** The build stops here, with this message: `tree`, what `_to_string`
+   * made of the value, is not a string. */
+  | { kind: 'fails'; message: string; tree: Tree }
   /**
    * The block the build writes, a line at a time; the file it writes, where
    * the block describes one rather than saying the value; and, where the
@@ -195,13 +177,6 @@ export type ExpectOutcome =
       file: ExpectFile | null;
       edit: { from: number; to: number; insert: string } | null;
     };
-
-/** What the build would make of a test under a proposed `_to_string`. */
-export type ExpectFixOutcome =
-  | { kind: 'pending' }
-  | { kind: 'unknown'; message: string }
-  | { kind: 'fails'; message: string }
-  | { kind: 'recorded'; lines: readonly string[] };
 
 /** One test of a tested source, and what the build makes of it. */
 export interface ExpectTest {
@@ -232,31 +207,17 @@ function blockUnder(doc: Text, to: number): ExpectTest['block'] {
 }
 
 /**
- * What a proposed `_to_string` makes of a test, from the evaluation of the
- * program that applies it.
- */
-function fixed(answer: Outcome<Value> | undefined): ExpectFixOutcome {
-  if (answer?.status === 'error') return { kind: 'unknown', message: answer.message };
-  if (answer?.status !== 'ok') return { kind: 'pending' };
-  const read = said(treeOf(answer));
-  return 'result' in read ? { kind: 'recorded', lines: block(read.result) } : { kind: 'fails', message: read.failure };
-}
-
-/**
- * Every test, and what the build makes of it; and the programs it takes to
- * know what each proposed `_to_string` would make of its test. `results` keeps
- * what was read out of each pair of programs, so a value is only read — and a
- * file only hashed — once.
+ * Every test, and what the build makes of it. `results` keeps what was read
+ * out of each pair of programs, so a value is only read — and a file only
+ * hashed — once.
  */
 function tests(
   doc: Text,
   expressions: readonly Expression[],
   known: ReadonlyMap<string, Outcome<Value>>,
   results: Map<string, Recorded>,
-  propose: Proposer | null,
-): Pick<Held, 'tests' | 'asks'> {
+): readonly ExpectTest[] {
   const live = new Set<string>();
-  const asks: string[] = [];
   const found = expressions.map(({ from, to, dag, rendered, renderer }): ExpectTest => {
     const key = `${dag}\n\n${rendered}`;
     live.add(key);
@@ -268,21 +229,11 @@ function tests(
       const gaveUp = [raw, shown].find((outcome) => outcome?.status === 'error');
       if (gaveUp?.status === 'error') return test({ kind: 'unknown', message: gaveUp.message });
       if (raw?.status !== 'ok' || shown?.status !== 'ok') return test({ kind: 'pending' });
-      results.set(key, recorded(raw, shown, (value) => propose?.(dag, value) ?? null));
+      results.set(key, recorded(raw, shown));
     }
     const record = results.get(key)!;
-    if ('failure' in record) {
-      const { failure, value, rendered: unread, fix } = record;
-      if (fix) asks.push(fix.program);
-      return test({
-        kind: 'fails',
-        message: failure,
-        value,
-        rendered: unread,
-        fix: fix && { renderer: fix.renderer, outcome: fixed(known.get(fix.program)) },
-      });
-    }
-    const lines = block(record.result);
+    if ('failure' in record) return test({ kind: 'fails', message: record.failure, tree: record.tree });
+    const { lines } = record;
     const insert = lines.join('\n');
     // A block replaces the one under the expression, or goes in on a line of
     // its own straight after it.
@@ -292,11 +243,8 @@ function tests(
     return test({ kind: 'recorded', lines, file: record.file, edit });
   });
   for (const key of results.keys()) if (!live.has(key)) results.delete(key);
-  return { tests: found, asks };
+  return found;
 }
-
-/** A `_to_string` to try on the value of the test `dag` evaluates, if any. */
-export type Proposer = (dag: string, value: Tree) => Proposal | null;
 
 /** Which field holds the tests, if this editor has one. */
 const holder = Facet.define<StateField<Held>, StateField<Held> | null>({
@@ -305,8 +253,6 @@ const holder = Facet.define<StateField<Held>, StateField<Held> | null>({
 
 interface Held {
   tests: readonly ExpectTest[];
-  /** The programs that say what each proposed `_to_string` makes of its test. */
-  asks: readonly string[];
   results: Map<string, Recorded>;
 }
 
@@ -321,21 +267,14 @@ export function expectTests(state: EditorState): readonly ExpectTest[] | null {
   return field && state.field(field).tests;
 }
 
-/** The programs the tests need evaluated beyond their own: their proposed fixes'. */
-export function expectAsks(state: EditorState): readonly string[] {
-  const field = state.facet(holder);
-  return field ? state.field(field).asks : [];
-}
-
 /** The tests, kept up to date from `expressions` and the values `evaluated` holds. */
 export function expectations(
   analyses: StateField<readonly Analysis[]>,
-  expressions: StateField<readonly Expression[]>,
+  expressions: StateField<{ expressions: readonly Expression[] }>,
   evaluated: StateField<ReadonlyMap<string, Outcome<Value>>>,
-  propose: Proposer | null,
 ): Extension {
   const compute = (state: EditorState, results: Map<string, Recorded>): Held => ({
-    ...tests(state.doc, state.field(expressions), state.field(evaluated), results, propose),
+    tests: tests(state.doc, state.field(expressions).expressions, state.field(evaluated), results),
     results,
   });
   const field: StateField<Held> = StateField.define<Held>({
