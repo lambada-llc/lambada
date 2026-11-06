@@ -8,22 +8,25 @@ import {
 import {
   Decoration,
   EditorView,
+  ViewPlugin,
   WidgetType,
   type DecorationSet,
+  type ViewUpdate,
 } from '@codemirror/view';
 
 import { TO_STRING, expectTests, expectations, type ExpectTest } from './expect';
 import { evaluated, programOf, requested, scopeHolder, type Scope } from './evaluations';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
-import { dagLine, needed, type DagLine } from './dag';
+import { Bindings, dagLine, type DagLine } from './dag';
 import { treeOf, type Tree, type Value } from './tree';
 
 /** A statement that is an expression, and the whole program that produces it. */
 export interface Expression {
   from: number;
   to: number;
-  /** Everything above it, plus itself: a document the runtime can evaluate. */
+  /** Everything above it, plus itself: a document the runtime can evaluate.
+   * Empty until it is put together; see `building`. */
   dag: string;
   /**
    * The same, through the `_to_string` the document defines above it, if it
@@ -54,10 +57,8 @@ const isBare = (line: DagLine) => line.from.length === 0;
  * only ever recomputed when something it truly depends on changes — and the
  * program is smaller to send and to read, which is the part that is.
  */
-function expressionsIn(state: EditorState, config: Resolved): Walked {
-  // The prelude first: a compiled chunk refers to the combinator labels and
-  // leaves defining them to whoever assembles what gets evaluated.
-  const context: DagLine[] = [...config.prelude, ...config.environment];
+function expressionsIn(state: EditorState, config: Resolved, before: Walked | null): Walked {
+  const context = new Bindings(baseOf(config));
   const base = context.length;
   const marks: { to: number; length: number }[] = [];
   let known = state.doc.length;
@@ -65,6 +66,15 @@ function expressionsIn(state: EditorState, config: Resolved): Walked {
   // The document's own, not the environment's: a test is rendered by the
   // `_to_string` of the file it is in.
   let renderer: Expression['renderer'] = null;
+  // An expression's programs are decided by its own text and the statements
+  // above it, so they are kept under that chain and asked for again only when
+  // it changes — not on every answer a worker brings, nor for every expression
+  // when one statement is edited.
+  const chains = new Map<string, number>();
+  const programs = new Map<number, Programs>();
+  const unbuilt: Unbuilt[] = [];
+  let next = before?.memo.next ?? 1;
+  let chain = 0;
 
   for (const { statement, state: status } of state.field(config.analyses)) {
     if (status !== 'ok') {
@@ -78,26 +88,30 @@ function expressionsIn(state: EditorState, config: Resolved): Walked {
     }
     const compilation = state.field(lambadaCompilations).get(statement.text);
     if (compilation?.status !== 'ok') continue;
-    const lines = compilation.dagLines.filter((line) => line.trim()).map(dagLine);
+    const link = `${chain}\n${statement.text}`;
+    const id = chains.get(link) ?? before?.memo.chains.get(link) ?? next++;
+    chains.set(link, id);
+    const lines = linesOf(compilation);
     const bare = lines.find(isBare);
-    if (bare) {
-      const program = (end: readonly DagLine[]) =>
-        needed(context.concat(lines.filter((line) => !isBare(line)), end))
-          .map((line) => line.text)
-          .join('\n');
-      const dag = program([bare]);
-      found.push({
-        from: statement.from,
-        to: statement.to,
-        dag,
-        renderer,
-        rendered: renderer
-          ? program([dagLine(`:rendered ${TO_STRING} ${bare.name}`), dagLine(':rendered')])
-          : dag,
-      });
+    // Only a definition is in the chain: what an expression compiles to beside
+    // its value are names of the compiler's, which whatever comes after binds
+    // again before it uses them — so editing a test leaves the programs of the
+    // tests below it as they were.
+    if (!bare) chain = id;
+    else {
+      const made = before?.memo.programs.get(id);
+      if (made) programs.set(id, made);
+      else
+        unbuilt.push({
+          id,
+          from: statement.from,
+          length: context.length,
+          own: lines.filter((line) => !isBare(line)),
+          bare,
+          rendered: renderer !== null,
+        });
+      found.push({ from: statement.from, to: statement.to, renderer, ...(made ?? NOT_BUILT) });
     }
-    // One at a time: a statement can compile to a hundred thousand lines, and
-    // spreading that many arguments into `push` overflows the stack.
     for (const line of lines)
       if (!isBare(line)) {
         context.push(line);
@@ -105,13 +119,123 @@ function expressionsIn(state: EditorState, config: Resolved): Walked {
       }
     marks.push({ to: statement.to, length: context.length });
   }
-  return { expressions: found, scope: { lines: context, base, marks, known } };
+  return {
+    expressions: found,
+    scope: { lines: context, base, marks, known },
+    memo: { chains, programs, next },
+    unbuilt,
+  };
 }
 
-/** The document's expressions, and the scope they were found in. */
+/** An expression whose programs are not put together yet: see `building`. */
+interface Unbuilt {
+  id: number;
+  from: number;
+  /** How many of the scope's lines are above it. */
+  length: number;
+  own: readonly DagLine[];
+  bare: DagLine;
+  /** Whether a `_to_string` above it reads its value. */
+  rendered: boolean;
+}
+
+/** The programs of an expression not put together yet: empty, which nothing
+ * evaluates, so the expression reads as pending until they are. */
+const NOT_BUILT: Programs = { dag: '', rendered: '' };
+
+function programsOf(lines: Bindings, { length, own, bare, rendered }: Unbuilt): Programs {
+  const program = (end: readonly DagLine[]) =>
+    lines.needed(length, [...own, ...end]).map((line) => line.text).join('\n');
+  const dag = program([bare]);
+  return {
+    dag,
+    rendered: rendered ? program([dagLine(`:rendered ${TO_STRING} ${bare.name}`), dagLine(':rendered')]) : dag,
+  };
+}
+
+/** Programs put together since the walk that found their expressions. */
+const built = StateEffect.define<ReadonlyMap<number, Programs>>();
+
+/**
+ * Puts together the programs a walk left unbuilt, a slice at a time while the
+ * page is idle, those in view first.
+ *
+ * Not in the walk itself: a program reaches tens of thousands of lines, and an
+ * edit to a definition near the top changes every one below it — built in the
+ * keystroke, that is a second of typing that does not show. Until it is built
+ * an expression is pending, which is what it is.
+ */
+const building = (field: StateField<Walked>) =>
+  ViewPlugin.fromClass(
+    class {
+      timer: ReturnType<typeof setTimeout> | null = null;
+
+      constructor(readonly view: EditorView) {
+        this.schedule();
+      }
+
+      update(update: ViewUpdate) {
+        if (update.state.field(field) !== update.startState.field(field)) this.schedule();
+      }
+
+      schedule() {
+        if (this.timer === null && this.view.state.field(field).unbuilt.length)
+          this.timer = setTimeout(() => this.slice(), 0);
+      }
+
+      slice() {
+        this.timer = null;
+        const { unbuilt, scope } = this.view.state.field(field);
+        const { from, to } = this.view.viewport;
+        const shown = (expression: Unbuilt) => (expression.from >= from && expression.from <= to ? 0 : 1);
+        const order = [...unbuilt].sort((a, b) => shown(a) - shown(b) || a.from - b.from);
+        const done = new Map<number, Programs>();
+        const start = performance.now();
+        for (const expression of order) {
+          done.set(expression.id, programsOf(scope.lines, expression));
+          if (performance.now() - start > SLICE) break;
+        }
+        this.view.dispatch({ effects: built.of(done) });
+      }
+
+      destroy() {
+        if (this.timer !== null) clearTimeout(this.timer);
+      }
+    },
+  );
+
+/** How long one slice of building may hold the page, in milliseconds. */
+const SLICE = 30;
+
+/** The two programs an expression is evaluated as; see `Expression`. */
+type Programs = Pick<Expression, 'dag' | 'rendered'>;
+
+/** The document's expressions, the scope they were found in, and what the
+ * next walk can reuse. */
 interface Walked {
   expressions: readonly Expression[];
   scope: Scope;
+  memo: { chains: ReadonlyMap<string, number>; programs: ReadonlyMap<number, Programs>; next: number };
+  /** Expressions whose programs are left for `building`. */
+  unbuilt: readonly Unbuilt[];
+}
+
+/** The prelude and the environment, indexed once per configuration: they are
+ * long, and they never change. A compiled chunk refers to the prelude's
+ * combinator labels and leaves defining them to whoever assembles a program. */
+const bases = new WeakMap<Resolved, Bindings>();
+function baseOf(config: Resolved): Bindings {
+  let base = bases.get(config);
+  if (!base) bases.set(config, (base = new Bindings(null, [...config.prelude, ...config.environment])));
+  return base;
+}
+
+/** A compilation's lines, read once. */
+const read = new WeakMap<object, readonly DagLine[]>();
+function linesOf(compilation: { dagLines: readonly string[] }): readonly DagLine[] {
+  let lines = read.get(compilation);
+  if (!lines) read.set(compilation, (lines = compilation.dagLines.filter((line) => line.trim()).map(dagLine)));
+  return lines;
 }
 
 /**
@@ -529,6 +653,7 @@ function build(
   const tests = expectTests(state);
   expressions.forEach((expression, index) => {
     const test = tests?.[index] ?? null;
+    if (!expression.dag) return;
     live.add(expression.dag);
     // What was shown for this program is asked for first, and not only to save
     // rebuilding a host's element: a program is its own answer, so a preview
@@ -573,10 +698,17 @@ export function previews(config: Resolved): Extension {
   // In the state rather than worked out per reader: the decorations, the
   // evaluations asked for and the evaluations published all want the same list,
   // and finding it means writing out a program per expression.
+  // Walked again only when what the statements came to has: an answer from
+  // the evaluating worker changes no expression.
   const expressions = StateField.define<Walked>({
-    create: (state) => expressionsIn(state, config),
-    update: (value, tr) =>
-      tr.docChanged || tr.effects.length ? expressionsIn(tr.state, config) : value,
+    create: (state) => expressionsIn(state, config, null),
+    update: (value, tr) => {
+      const made = tr.effects.filter((effect) => effect.is(built)).map((effect) => effect.value as ReadonlyMap<number, Programs>);
+      if (!made.length && tr.state.field(config.analyses) === tr.startState.field(config.analyses)) return value;
+      const programs = new Map(value.memo.programs);
+      for (const done of made) for (const [id, program] of done) programs.set(id, program);
+      return expressionsIn(tr.state, config, { ...value, memo: { ...value.memo, programs } });
+    },
   });
 
   const decorations = StateField.define<Previews>({
@@ -604,11 +736,12 @@ export function previews(config: Resolved): Extension {
     evaluated.field,
     expressions,
     scopeHolder.of(expressions),
+    building(expressions),
     config.showPreviews ? [theme, pressPast, decorations] : [],
     config.expectTests ? expectations(config.analyses, expressions, evaluated.field) : [],
     evaluated.keep(config, (state) => [
       ...state.field(expressions).expressions.flatMap((expression) =>
-        config.expectTests ? [expression.dag, expression.rendered] : [expression.dag],
+        !expression.dag ? [] : config.expectTests ? [expression.dag, expression.rendered] : [expression.dag],
       ),
       ...requested(state).flatMap((request) => {
         const program = programOf(state, request);

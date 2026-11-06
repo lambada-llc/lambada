@@ -64,35 +64,110 @@ export const dagLines = (document: string): readonly DagLine[] =>
   document.split(/\r?\n/).map(dagLine);
 
 /**
- * Just the lines that decide the value the document ends with, in the order
- * they were written.
+ * Lines in scope, in order — a base shared by every document, then whatever a
+ * document adds as it is walked — with where each name is bound. `needed` can
+ * then be asked of any prefix of them, as often as there are expressions, at
+ * the cost of what it keeps rather than of everything in scope: an environment
+ * runs to a hundred thousand lines, and an expression reaches a fraction.
  *
- * A DAG is a chain of `let`s, so this walks upwards from the end: the binding
- * that answers a use is the nearest one above it, and a binding some later one
- * shadowed is left behind along with everything only it needed. The compiler
- * reuses its names — `:t`, `0` — across statements, so which binding a name
- * means is a question about where it stands, not about the name.
- *
- * A name no line binds stays wanted and is simply not mentioned again, which is
- * how a reference reaches whatever the reader has in scope to begin with.
+ * A base is not added to once something is built on it.
  */
-export function needed(lines: readonly DagLine[]): readonly DagLine[] {
-  const end = lines.findIndex((line) => line.name && !line.from.length);
-  // Nothing names a value, so nothing can be dropped on that basis.
-  if (end < 0) return lines;
+export class Bindings {
+  readonly #lines: DagLine[] = [];
+  /** Where each name is bound, in increasing order: indices into the whole. */
+  readonly #at = new Map<string, number[]>();
+  readonly #offset: number;
 
-  const wanted = new Set([lines[end].name]);
-  const keep: DagLine[] = [lines[end]];
-  for (let i = end - 1; i >= 0; i--) {
-    const line = lines[i];
-    if (!line.from.length || !wanted.has(line.name)) continue;
-    keep.push(line);
-    // Satisfied here, so a binding further up is one this line shadowed —
-    // unless what it is built from names it again, which the adding restores.
-    wanted.delete(line.name);
-    for (const name of line.from) wanted.add(name);
+  constructor(
+    readonly base: Bindings | null = null,
+    lines: Iterable<DagLine> = [],
+  ) {
+    this.#offset = base?.length ?? 0;
+    for (const line of lines) this.push(line);
   }
-  return keep.reverse();
+
+  get length(): number {
+    return this.#offset + this.#lines.length;
+  }
+
+  push(line: DagLine): void {
+    if (line.from.length) {
+      const at = this.#at.get(line.name);
+      if (at) at.push(this.length);
+      else this.#at.set(line.name, [this.length]);
+    }
+    this.#lines.push(line);
+  }
+
+  line(index: number): DagLine {
+    return index < this.#offset ? this.base!.line(index) : this.#lines[index - this.#offset];
+  }
+
+  /** The nearest line above `limit` that binds `name`, or -1. */
+  #bound(name: string, limit: number): number {
+    const at = this.#at.get(name);
+    // Most names are bound once, and asked about from below that.
+    if (at && at[at.length - 1] < limit) return at[at.length - 1];
+    if (at && at[0] < limit) {
+      let low = 0;
+      let high = at.length - 1;
+      while (low < high) {
+        const middle = (low + high + 1) >> 1;
+        if (at[middle] < limit) low = middle;
+        else high = middle - 1;
+      }
+      return at[low];
+    }
+    return this.base ? this.base.#bound(name, Math.min(limit, this.#offset)) : -1;
+  }
+
+  /**
+   * Just the lines that decide the value `tail` ends with, reading the first
+   * `length` lines in scope and then `tail`, in the order they were written.
+   *
+   * A DAG is a chain of `let`s: the binding that answers a use is the nearest
+   * one above it, and a binding some later one shadowed is left behind along
+   * with everything only it needed. The compiler reuses its names — `:t`, `0`
+   * — across statements, so which binding a name means is a question about
+   * where it stands, not about the name. Each use is followed to that binding
+   * here, rather than walking every line upward: a program reaches a fraction
+   * of what is in scope.
+   *
+   * A name no line binds is simply not mentioned again, which is how a
+   * reference reaches whatever the reader has in scope to begin with.
+   */
+  needed(length: number, tail: readonly DagLine[]): readonly DagLine[] {
+    const end = tail.findIndex((line) => line.name && !line.from.length);
+    if (end < 0) return [...Array.from({ length }, (_, i) => this.line(i)), ...tail];
+    // Which of the lines in scope are kept, one byte each: a program reaches
+    // tens of thousands of them, and reading them back in order is a scan.
+    const here = new Uint8Array(length);
+    const there = new Set<number>([end]);
+    const uses: [string, number][] = [[tail[end].name, length + end]];
+    while (uses.length) {
+      const [name, at] = uses.pop()!;
+      let found = -1;
+      for (let i = at - length - 1; i >= 0; i--)
+        if (tail[i].from.length && tail[i].name === name) {
+          found = length + i;
+          break;
+        }
+      if (found < 0) found = this.#bound(name, Math.min(at, length));
+      if (found < 0) continue;
+      if (found < length) {
+        if (here[found]) continue;
+        here[found] = 1;
+      } else {
+        if (there.has(found - length)) continue;
+        there.add(found - length);
+      }
+      for (const used of (found < length ? this.line(found) : tail[found - length]).from) uses.push([used, found]);
+    }
+    const kept: DagLine[] = [];
+    for (let index = 0; index < length; index++) if (here[index]) kept.push(this.line(index));
+    for (let index = 0; index < tail.length; index++) if (there.has(index)) kept.push(tail[index]);
+    return kept;
+  }
 }
 
 /**

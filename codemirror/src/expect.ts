@@ -208,7 +208,7 @@ function blockUnder(doc: Text, to: number): ExpectTest['block'] {
 
 /**
  * Every test, and what the build makes of it. `results` keeps what was read
- * out of each pair of programs, so a value is only read — and a file only
+ * out of each test's programs, so a value is only read — and a file only
  * hashed — once.
  */
 function tests(
@@ -219,10 +219,14 @@ function tests(
 ): readonly ExpectTest[] {
   const live = new Set<string>();
   const found = expressions.map(({ from, to, dag, rendered, renderer }): ExpectTest => {
-    const key = `${dag}\n\n${rendered}`;
+    // The program through `_to_string` holds the one without, so it decides
+    // both values. Not the two joined: a program runs to megabytes, and the
+    // string kept here is hashed once, where a fresh one would be every time.
+    const key = rendered;
     live.add(key);
     const under = blockUnder(doc, to);
     const test = (outcome: ExpectOutcome) => ({ from, to, block: under, renderer, outcome });
+    if (!key) return test({ kind: 'pending' });
     if (!results.has(key)) {
       const raw = known.get(dag);
       const shown = known.get(rendered);
