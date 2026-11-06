@@ -19,6 +19,8 @@ const { compile, emit } = require('./compile.js');
 const { expect_test } = require('./expect-test.js');
 const { build } = require('./build.js');
 const { load } = require('./runtime.js');
+const { session_evaluator, InputError } = require('./repl.js');
+const { spawnSync } = require('child_process');
 
 // Run in the order written, one at a time, so an async check finishes before
 // the next starts.
@@ -175,6 +177,109 @@ check('build links a library under its own names, and leaves its tests alone', a
     assert.strictEqual(readFileSync(join(dir, 'src/b/b.lamb'), 'utf8'), 'Pair.first "hi" "no"\n# = hi\n');
     assert.strictEqual(readFileSync(join(dir, 'lib/pair/pair.lamb'), 'utf8'), library);
     assert.ok(existsSync(join(dir, 'src/.dag-bundle-linked')));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// An environment for the repl: a library compiled and linked as `build` would,
+// in a directory of its own.
+function repl_environment(runtime) {
+  const dir = mkdtempSync(join(tmpdir(), 'lambada-test-'));
+  mkdirSync(join(dir, 'lib/pair'), { recursive: true });
+  writeFileSync(join(dir, 'lib/pair/pair.lamb'), 'first = \\x \\_ x\nsecond = \\_ \\y y\n');
+  return compile({ runtime, root: join(dir, 'lib'), compiler, prelude, cwd: dir, jobs: 1 }).then(() => {
+    const module = join(dir, 'lib/pair/.pair.dag');
+    writeFileSync(join(dir, 'env.dag'), runtime.link([{ name: module, text: readFileSync(module, 'utf8') }]));
+    return { dir, env: join(dir, 'env.dag') };
+  });
+}
+
+check('repl: definitions persist, and only the input\'s own expressions are shown', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    const first = repl.prepare('', { source: 'pick = Pair.first\npick "old" "x"\n' });
+    assert.deepEqual(first.expressions.map(e => e.line), [2]);
+    const shown = repl.prepare(first.dag, { source: '_to_string = \\s s\npick "ab" "c"\nPair.second "x" "yz"\n' }).expressions;
+    assert.deepEqual(shown.map(e => e.line), [2, 3], 'lines are the input\'s own');
+    assert.deepEqual(shown.map(e => repl.show(e, 'auto')), ['ab', 'yz'], 'through _to_string, as an expect test is');
+    assert.strictEqual(repl.show(shown[0], 'string'), 'ab', 'unless a format is asked for');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: a name nothing defines is reported before anything runs', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    assert.throws(() => repl.prepare('', { source: 'Pair.third 1 2\n' }), e => e instanceof InputError && /not defined: Pair\.third$/.test(e.message));
+    assert.throws(() => repl.prepare('', { dag: 'x Pair.third\n' }), /not defined: Pair\.third$/, 'in a DAG step too');
+    const { dag } = repl.prepare('', { source: 'a = △\nb = a\n' });
+    assert.throws(() => repl.prepare(dag, { source: 'c = b\nd = (\n' }), /^Error: line 2: the statement ending here does not compile$/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: a DAG is a step like any other: in scope after it, hiding what came before', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    const term = (session, source) => repl.show(repl.prepare(session, { source }).expressions[0], 'term');
+    let session = '';
+    for (const step of [{ source: 'f = Pair.first\ng = f\n' }, { dag: repl.prepare('', { source: 'f = Pair.second\n' }).dag }])
+      session += repl.prepare(session, step).dag;
+    assert.strictEqual(term(session, '[g 6 0, f 0 7]'), term('', '[6, 7]'), 'g keeps the f it was defined with');
+    assert.deepEqual(repl.names_in(session, 'f'), ['f']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: an input is unfinished when its last statement does not compile', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    assert.throws(() => repl.prepare('', { source: 'f = \\x\n' }), e => e.unfinished === true);
+    assert.deepEqual(repl.prepare('', { source: 'f = \\x\n  x\nf 1\n' }).expressions.map(e => e.line), [3], 'an indented line continues it');
+    assert.throws(() => repl.prepare('', { source: 'x = (\ny = 2\n' }), e => e.unfinished === false, 'no line after can mend an earlier statement');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: a result is shown in the format asked for, or as a term when it is not one', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const repl = session_evaluator({ runtime, environment: [env], compiler, prelude });
+    const [number, text] = repl.prepare('', { source: 'Pair.first 6 0\nPair.second 0 "hi"\n' }).expressions;
+    assert.strictEqual(repl.show(number, 'nat'), '6');
+    assert.strictEqual(repl.show(text, 'string'), 'hi');
+    assert.throws(() => repl.show(text, 'bool'), /^Error: not a bool .*; as a term: /);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: an expression that does not finish is stopped, and the ones after it still run', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const input = '_to_string = \\s s\nloop = (\\x x x) (\\x x x)\nloop\nPair.second loop "after"\n"last"\n';
+    const run = spawnSync(process.execPath, [resolve(__dirname, 'lambada.js'), 'repl', env, '--timeout', '2'],
+      { input, encoding: 'utf8', env: process.env });
+    assert.strictEqual(run.stdout, 'after\nlast\n');
+    assert.match(run.stderr, /^line 3: did not finish within 2 s$/m);
+    assert.strictEqual(run.status, 1, 'a stopped expression is a failure');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('repl: .lamb sources given with the environment have their definitions loaded', async () => {
+  const runtime = load();
+  const { dir, env } = await repl_environment(runtime);
+  try {
+    const [source, broken] = [join(dir, 'pick.lamb'), join(dir, 'broken.lamb')];
+    writeFileSync(source, 'pick = Pair.first\npick "a test" 0\n');
+    writeFileSync(broken, 'fine = △\nbad = (\n');
+    const run = spawnSync(process.execPath, [resolve(__dirname, 'lambada.js'), 'repl', source, broken, env, '--format', 'nat', '-e', 'pick 7 0'],
+      { encoding: 'utf8', env: process.env });
+    assert.strictEqual(run.stdout, '7\n', 'after the environment, whatever order they are given in, without their tests');
+    assert.strictEqual(run.stderr, `${broken}: line 2: the statement ending here does not compile\n`);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
