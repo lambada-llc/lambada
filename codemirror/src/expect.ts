@@ -63,32 +63,56 @@ const text = (tree: Tree): string => list(tree).map(nat).map(character).join('')
 /** Deliberately narrow — the build will write nothing else as a file. */
 const FILE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z0-9]+$/;
 
+/** A file the build writes for a test: what it is called, what it is, and its
+ * contents. */
+export interface ExpectFile {
+  name: string;
+  mediaType: string;
+  bytes: Uint8Array;
+}
+
 /** `△ (△ name media-type) bytes`, read as the build reads it, or null. */
-function file(tree: Tree): { name: string; bytes: Uint8Array } | null {
+function file(tree: Tree): ExpectFile | null {
   if (tree.length !== 2 || tree[0].length !== 2) return null;
   try {
     const name = text(tree[0][0]);
-    text(tree[0][1]);
+    const mediaType = text(tree[0][1]);
     if (name.length > 255 || !FILE_NAME.test(name)) return null;
-    return { name, bytes: new Uint8Array(list(tree[1]).map(nat).map(Number)) };
+    return { name, mediaType, bytes: new Uint8Array(list(tree[1]).map(nat).map(Number)) };
   } catch {
     return null;
   }
 }
 
-/** What the build records for a test, and whether that is a file's name and
- * hash rather than the value itself — or why the build stops at it instead. */
-type Recorded = { result: string; file: boolean } | { failure: string };
+/** What the build records for a test, and the file it writes rather than say
+ * the value, if it does — or why the build stops at it instead. */
+type Recorded = { lines: readonly string[]; file: ExpectFile | null } | { failure: string; tree: Tree };
+
+/**
+ * What the build writes under a test whose `_to_string` gave `rendered`: the
+ * block, a line at a time — or, where `rendered` is not a string, the message
+ * the build stops with instead.
+ */
+export function recording(
+  rendered: Tree,
+): { kind: 'recorded'; lines: readonly string[] } | { kind: 'fails'; message: string } {
+  try {
+    return { kind: 'recorded', lines: block(text(rendered)) };
+  } catch (error) {
+    // Not a string: the build fails on it, and writes no block anywhere.
+    return { kind: 'fails', message: (error as Error).message };
+  }
+}
 
 function recorded(raw: Value, rendered: Value): Recorded {
   const written = file(treeOf(raw));
-  if (written) return { result: `${written.name} sha256:${sha256(written.bytes)}`, file: true };
-  try {
-    return { result: text(treeOf(rendered)), file: false };
-  } catch (error) {
-    // Not a string: the build fails on it, and writes no block anywhere.
-    return { failure: (error as Error).message };
+  if (written) {
+    const { name, mediaType, bytes } = written;
+    return { lines: block(`${name} ${mediaType} ${bytes.length} bytes sha256:${sha256(bytes)}`), file: written };
   }
+  const tree = treeOf(rendered);
+  const read = recording(tree);
+  return read.kind === 'recorded' ? { lines: read.lines, file: null } : { failure: read.message, tree };
 }
 
 // SHA-256, because the build names a file's content by it and the editor needs
@@ -139,17 +163,18 @@ export type ExpectOutcome =
   /** The editor gave up on it, and `message` says why. The build has no time
    * limit, so this is the editor's, not the build's. */
   | { kind: 'unknown'; message: string }
-  /** The build stops here, with this message: the result is not a string. */
-  | { kind: 'fails'; message: string }
+  /** The build stops here, with this message: `tree`, what `_to_string`
+   * made of the value, is not a string. */
+  | { kind: 'fails'; message: string; tree: Tree }
   /**
-   * The block the build writes, a line at a time; whether it names a file
-   * rather than saying the value; and, where the document has something else
-   * there, the edit that writes it.
+   * The block the build writes, a line at a time; the file it writes, where
+   * the block describes one rather than saying the value; and, where the
+   * document has something else there, the edit that writes it.
    */
   | {
       kind: 'recorded';
       lines: readonly string[];
-      file: boolean;
+      file: ExpectFile | null;
       edit: { from: number; to: number; insert: string } | null;
     };
 
@@ -207,8 +232,8 @@ function tests(
       results.set(key, recorded(raw, shown));
     }
     const record = results.get(key)!;
-    if ('failure' in record) return test({ kind: 'fails', message: record.failure });
-    const lines = block(record.result);
+    if ('failure' in record) return test({ kind: 'fails', message: record.failure, tree: record.tree });
+    const { lines } = record;
     const insert = lines.join('\n');
     // A block replaces the one under the expression, or goes in on a line of
     // its own straight after it.
@@ -245,11 +270,11 @@ export function expectTests(state: EditorState): readonly ExpectTest[] | null {
 /** The tests, kept up to date from `expressions` and the values `evaluated` holds. */
 export function expectations(
   analyses: StateField<readonly Analysis[]>,
-  expressions: StateField<readonly Expression[]>,
+  expressions: StateField<{ expressions: readonly Expression[] }>,
   evaluated: StateField<ReadonlyMap<string, Outcome<Value>>>,
 ): Extension {
   const compute = (state: EditorState, results: Map<string, Recorded>): Held => ({
-    tests: tests(state.doc, state.field(expressions), state.field(evaluated), results),
+    tests: tests(state.doc, state.field(expressions).expressions, state.field(evaluated), results),
     results,
   });
   const field: StateField<Held> = StateField.define<Held>({

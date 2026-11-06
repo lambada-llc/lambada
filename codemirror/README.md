@@ -107,10 +107,12 @@ in document order, saying where the expression and the block under it are, which
 
 - `recorded` — the block the build writes, a line at a time: through the
   `_to_string` the document defines above the expression, if any; a file as
-  its name and `sha256:` hash; `#   ` continuing a multi-line result. Where the
-  document has something else there, `edit` is the change that writes it.
+  one line of name, media type, size and `sha256:` hash, with the file itself
+  in `file`; `#   ` continuing a multi-line result. Where the document has
+  something else there, `edit` is the change that writes it.
 - `fails` — the build stops here, and `message` is what it says, word for word:
   the value is read the way the build's runtime reads it, step for step.
+  `tree` is what it could not read: the value, through `_to_string`.
 - `unknown` — the editor gave up after its `timeout`. The build has no time
   limit, so this is the editor's, not the build's.
 - `pending` — not evaluated yet.
@@ -120,6 +122,26 @@ its own state field or view plugin; a new array means something changed. The
 same test is handed to `previewResults` as its second argument, which may return
 `null` to show nothing: a result the block already says need not be said twice.
 Off by default: most documents are not tested sources.
+
+`recording(tree)` is the build's rule on its own: what it writes under a test
+whose `_to_string` gave `tree` — the block's lines, or the message it stops
+with.
+
+### Evaluating anything
+
+A host can have any expression evaluated, in the scope of any place in the
+document — every definition above it, and the environment — by the same
+compiler and worker as the document's own:
+
+``` ts
+lambadaEvaluations.of((state) => [{ at, source: 'Nat.to_string (f 3)' }])
+evaluation(state, { at, source })  // pending, { tree }, or an error
+```
+
+Each function is asked of every state; what it names is compiled and
+evaluated, and kept for as long as it is still named. It is asked outside any
+state update, so it can read the document's tests and the answers so far: a
+host can ask about what an earlier answer said.
 
 Evaluating happens on a second worker. A compilation takes single-digit
 milliseconds and an evaluation need never finish, so sharing one would let a

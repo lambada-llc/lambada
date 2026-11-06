@@ -13,7 +13,7 @@ import {
 } from '@codemirror/view';
 
 import { TO_STRING, expectTests, expectations, type ExpectTest } from './expect';
-import { results } from './worker';
+import { evaluated, programOf, requested, scopeHolder, type Scope } from './evaluations';
 import { lambadaCompilations } from './compilation';
 import type { Resolved } from './config';
 import { dagLine, needed, type DagLine } from './dag';
@@ -54,10 +54,13 @@ const isBare = (line: DagLine) => line.from.length === 0;
  * only ever recomputed when something it truly depends on changes — and the
  * program is smaller to send and to read, which is the part that is.
  */
-function expressionsIn(state: EditorState, config: Resolved): readonly Expression[] {
+function expressionsIn(state: EditorState, config: Resolved): Walked {
   // The prelude first: a compiled chunk refers to the combinator labels and
   // leaves defining them to whoever assembles what gets evaluated.
   const context: DagLine[] = [...config.prelude, ...config.environment];
+  const base = context.length;
+  const marks: { to: number; length: number }[] = [];
+  let known = state.doc.length;
   const found: Expression[] = [];
   // The document's own, not the environment's: a test is rendered by the
   // `_to_string` of the file it is in.
@@ -67,7 +70,10 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
     if (status !== 'ok') {
       // Nothing below a statement that did not compile can be evaluated
       // either: its definitions are missing from everything that follows.
-      if (status !== 'blocked') break;
+      if (status !== 'blocked') {
+        known = statement.from;
+        break;
+      }
       continue;
     }
     const compilation = state.field(lambadaCompilations).get(statement.text);
@@ -97,8 +103,15 @@ function expressionsIn(state: EditorState, config: Resolved): readonly Expressio
         context.push(line);
         if (line.name === TO_STRING) renderer = { text: statement.text };
       }
+    marks.push({ to: statement.to, length: context.length });
   }
-  return found;
+  return { expressions: found, scope: { lines: context, base, marks, known } };
+}
+
+/** The document's expressions, and the scope they were found in. */
+interface Walked {
+  expressions: readonly Expression[];
+  scope: Scope;
 }
 
 /**
@@ -171,10 +184,9 @@ function written(tree: Tree, limit: number): string {
   return text.length > limit ? `${text.slice(0, limit)}…` : text;
 }
 
-// A worker of its own. Evaluating is unbounded, and a program that will not
-// finish must not hold up the compilations that mark the document and feed the
-// completions.
-const evaluated = results<Value>('run');
+// `evaluated` is a worker of its own. Evaluating is unbounded, and a program
+// that will not finish must not hold up the compilations that mark the document
+// and feed the completions.
 
 class InlinePreview extends WidgetType {
   constructor(
@@ -480,8 +492,16 @@ interface Shown {
 }
 
 /** What of a test the host's choice can turn on, as a key. */
-const told = (test: ExpectTest | null): string =>
-  test ? JSON.stringify({ ...test.outcome, edit: undefined }) : '';
+// Not the file: its lines name it by hash already, and its bytes may be many.
+const told = (test: ExpectTest | null): string => {
+  if (!test) return '';
+  const { outcome } = test;
+  return JSON.stringify([
+    outcome.kind,
+    'lines' in outcome ? outcome.lines : null,
+    'message' in outcome ? outcome.message : null,
+  ]);
+};
 
 /**
  * The decorations, the previews they were built from, and which of those are
@@ -553,7 +573,7 @@ export function previews(config: Resolved): Extension {
   // In the state rather than worked out per reader: the decorations, the
   // evaluations asked for and the evaluations published all want the same list,
   // and finding it means writing out a program per expression.
-  const expressions = StateField.define<readonly Expression[]>({
+  const expressions = StateField.define<Walked>({
     create: (state) => expressionsIn(state, config),
     update: (value, tr) =>
       tr.docChanged || tr.effects.length ? expressionsIn(tr.state, config) : value,
@@ -561,7 +581,7 @@ export function previews(config: Resolved): Extension {
 
   const decorations = StateField.define<Previews>({
     create: (state) =>
-      build(state, config, state.field(expressions), new Map(), new Set()),
+      build(state, config, state.field(expressions).expressions, new Map(), new Set()),
     update: (value, tr) => {
       if (!tr.docChanged && !tr.effects.length) return value;
       const expanded = new Set(value.expanded);
@@ -575,7 +595,7 @@ export function previews(config: Resolved): Extension {
       // briefly out of date.
       if (tr.state.field(config.analyses).some((a) => a.state === 'pending'))
         return { ...value, expanded, decorations: value.decorations.map(tr.changes) };
-      return build(tr.state, config, tr.state.field(expressions), value.shown, expanded);
+      return build(tr.state, config, tr.state.field(expressions).expressions, value.shown, expanded);
     },
     provide: (field) => EditorView.decorations.from(field, (value) => value.decorations),
   });
@@ -583,12 +603,17 @@ export function previews(config: Resolved): Extension {
   return [
     evaluated.field,
     expressions,
+    scopeHolder.of(expressions),
     config.showPreviews ? [theme, pressPast, decorations] : [],
     config.expectTests ? expectations(config.analyses, expressions, evaluated.field) : [],
-    evaluated.keep(config, (state) =>
-      state.field(expressions).flatMap((expression) =>
+    evaluated.keep(config, (state) => [
+      ...state.field(expressions).expressions.flatMap((expression) =>
         config.expectTests ? [expression.dag, expression.rendered] : [expression.dag],
       ),
-    ),
+      ...requested(state).flatMap((request) => {
+        const program = programOf(state, request);
+        return program.status === 'ok' ? [program.program] : [];
+      }),
+    ]),
   ];
 }

@@ -51,6 +51,15 @@ function comment_block(result) {
 }
 
 /**
+ * What a file result is recorded as: everything the file is, on one line — the
+ * hash unabbreviated, so `shasum -a 256 <file>` reproduces it.
+ */
+function file_result(name, media_type, bytes) {
+  const hash = createHash('sha256').update(bytes).digest('hex');
+  return `${name} ${media_type} ${bytes.length} bytes sha256:${hash}`;
+}
+
+/**
  * Replace the machine-owned comment block below each tested line of `path`.
  *
  * Blocks are keyed by the code lines the test symbols were named after, so this
@@ -187,7 +196,7 @@ function test_dag({ box, LEAF }, own, expression, symbol) {
 // What a test produced, kept by the runtime beside its reductions and under
 // the same address: the fingerprint of the test's term, which decides its
 // result. The name carries the format; bump it when an entry's meaning changes.
-const RESULT_STORE = 'expect-v1';
+const RESULT_STORE = 'expect-v2';
 
 /**
  * Evaluate `tests` against `library`, `jobs` at a time, each thread holding a
@@ -256,9 +265,7 @@ function serve({ tree_calculus, library, bundle_path }) {
       const [raw, rendered] = halves(get.reduce(text));
       const file = to_file(evaluator, raw);
       const answer = file
-        // Unabbreviated and named, so `shasum -a 256 <file>` reproduces it.
-        ? { result: `${file.name} sha256:${createHash('sha256').update(file.bytes).digest('hex')}`,
-            file: { name: file.name, bytes: Buffer.from(file.bytes).toString('base64') } }
+        ? { file: { name: file.name, media_type: file.media_type, bytes: Buffer.from(file.bytes).toString('base64') } }
         : { result: marshal.to_string(rendered) };
       parentPort.postMessage({ index, answer });
     } catch (error) {
@@ -339,6 +346,7 @@ async function expect_test({ runtime, root, out = 'out', bundle_path, jobs = 1, 
   const blocks = new Map([...contents.keys()].map(path => [path, new Map()]));
   for (const { source_path, code_line, key } of tests) {
     const { result, file } = answers.get(key.toString('hex'));
+    const bytes = file && Buffer.from(file.bytes, 'base64');
     if (file) {
       const file_directory = resolve(by_source.get(source_path).directory, out);
       const path = resolve(file_directory, file.name);
@@ -347,10 +355,10 @@ async function expect_test({ runtime, root, out = 'out', bundle_path, jobs = 1, 
       }
       written_by.set(path, source_path);
       mkdirSync(file_directory, { recursive: true });
-      writeFileSync(path, Buffer.from(file.bytes, 'base64'));
+      writeFileSync(path, bytes);
       stale.delete(path);
     }
-    blocks.get(source_path).set(code_line, comment_block(result));
+    blocks.get(source_path).set(code_line, comment_block(file ? file_result(file.name, file.media_type, bytes) : result));
   }
   for (const [source_path, content] of contents) {
     write_results(source_path, content, blocks.get(source_path));
