@@ -8,9 +8,10 @@ import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { workerSource } from './generated/worker-source';
 
-/** Asked for, then either what came back or why nothing did. */
+/** Asked for, then either what came back or why nothing did. A pending one
+ * being worked on says since when, as `Date.now()` had it. */
 export type Outcome<T> =
-  | { status: 'pending' }
+  | { status: 'pending'; since?: number }
   | ({ status: 'ok' } & T)
   | { status: 'error'; message: string };
 
@@ -21,6 +22,9 @@ export type Outcome<T> =
  * to everything it has ever been shown.
  */
 const spares = 32;
+
+/** A duration, as a person reads one. */
+const seconds = (ms: number): string => (ms < 10_000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms / 1000)} s`);
 
 /** Told once per page: both workers fail for the same reason, together. */
 let blamed = false;
@@ -43,19 +47,19 @@ class Jobs<T> {
   #url: string;
   #dag: string;
   #action: 'compile' | 'run';
-  #timeoutMs: number;
+  #timeoutMs: number | null;
   #onChange: () => void;
 
   #results = new Map<string, Outcome<T>>();
   #spare = new Map<string, Outcome<T>>();
   #queue: string[] = [];
-  #inFlight: { text: string; timer: ReturnType<typeof setTimeout> } | null = null;
+  #inFlight: { text: string; timer: ReturnType<typeof setTimeout> | undefined; since: number } | null = null;
   #loaded = false;
   #destroyed = false;
 
   constructor(
     dag: string,
-    timeoutMs: number,
+    timeoutMs: number | null,
     onChange: () => void,
     action: 'compile' | 'run' = 'compile',
   ) {
@@ -71,7 +75,27 @@ class Jobs<T> {
 
   /** What is known about this input, if anything. */
   get(text: string): Outcome<T> | undefined {
-    return this.#results.get(text);
+    const known = this.#results.get(text);
+    return known?.status === 'pending' && this.#inFlight?.text === text
+      ? { status: 'pending', since: this.#inFlight.since }
+      : known;
+  }
+
+  /** Stop what is being worked on, and say so — after how long — as its answer. */
+  stop(): void {
+    const current = this.#inFlight;
+    if (!current) return;
+    this.#kill();
+    this.#settle(current.text, { status: 'error', message: `stopped after ${seconds(Date.now() - current.since)}` });
+    this.#spawn();
+  }
+
+  /** Forget the answers to `texts`, so that asking again works them out anew. */
+  forget(texts: Iterable<string>): void {
+    for (const text of texts) {
+      this.#results.delete(text);
+      this.#spare.delete(text);
+    }
   }
 
   /** Ask, unless the answer is already to hand. */
@@ -102,6 +126,13 @@ class Jobs<T> {
    * ask for it again.
    */
   retain(keep: ReadonlySet<string>): void {
+    // An evaluation nobody wants any more is stopped rather than waited out:
+    // with no time limit it may never end, and every question behind it waits.
+    // Not a compilation, which costs less than starting a worker again does.
+    if (this.#action === 'run' && this.#inFlight && !keep.has(this.#inFlight.text)) {
+      this.#kill();
+      this.#spawn();
+    }
     for (const [text, value] of this.#results)
       if (!keep.has(text)) {
         this.#results.delete(text);
@@ -193,17 +224,25 @@ class Jobs<T> {
       this.#pump();
       return;
     }
-    const timer = setTimeout(() => this.#timeOut(), this.#timeoutMs);
-    this.#inFlight = { text, timer };
+    const timer = this.#timeoutMs === null ? undefined : setTimeout(() => this.#timeOut(), this.#timeoutMs);
+    this.#inFlight = { text, timer, since: Date.now() };
     this.#worker!.postMessage({ id: this.#action, type: this.#action, payload: text });
+    // Started on is news too: what is being worked on, and since when.
+    this.#onChange();
+  }
+
+  /** The worker, and what it was working on, gone: the only way to stop it. */
+  #kill(): void {
+    this.#clearTimer();
+    this.#worker?.removeEventListener('message', this.#onMessage);
+    this.#worker?.removeEventListener('error', this.#onError);
+    this.#worker?.terminate();
+    this.#worker = null;
   }
 
   #timeOut(): void {
     const current = this.#inFlight;
-    this.#inFlight = null;
-    this.#worker?.removeEventListener('message', this.#onMessage);
-    this.#worker?.removeEventListener('error', this.#onError);
-    this.#worker?.terminate();
+    this.#kill();
     if (current)
       this.#settle(current.text, {
         status: 'error',
@@ -237,9 +276,14 @@ export function results<T>(action: 'compile' | 'run') {
     },
   });
 
+  /** Stops what is being worked on; its answer says it was stopped. */
+  const stop = StateEffect.define<null>();
+  /** Forgets these answers, so they are worked out again. */
+  const forget = StateEffect.define<readonly string[]>();
+
   /** Keep [field] holding an answer for everything `wanted` names, and nothing else. */
   const keep = (
-    { compiler, timeout }: { compiler: string; timeout: number },
+    { compiler, timeout }: { compiler: string; timeout: number | null },
     wanted: (state: EditorState) => Iterable<string>,
   ): Extension =>
     ViewPlugin.fromClass(
@@ -257,6 +301,11 @@ export function results<T>(action: 'compile' | 'run') {
         // so can an answer landing, which arrives as an effect: the expressions
         // worth evaluating are the ones the compilations turned out to be.
         update(update: ViewUpdate) {
+          for (const tr of update.transactions)
+            for (const effect of tr.effects) {
+              if (effect.is(stop)) this.jobs.stop();
+              if (effect.is(forget)) this.jobs.forget(effect.value);
+            }
           if (update.docChanged || update.transactions.some((tr) => tr.effects.length))
             this.sync();
         }
@@ -301,7 +350,7 @@ export function results<T>(action: 'compile' | 'run') {
       },
     );
 
-  return { field, keep };
+  return { field, keep, stop, forget };
 }
 
 /** The same questions, settled the same way — so there is nothing to announce. */
@@ -313,6 +362,8 @@ function same<T>(
   for (const [key, value] of a) {
     const other = b.get(key);
     if (!other || other.status !== value.status) return false;
+    // Started on since: a host may say how long it has been at it.
+    if (other.status === 'pending' && value.status === 'pending' && other.since !== value.since) return false;
   }
   return true;
 }

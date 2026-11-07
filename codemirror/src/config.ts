@@ -17,8 +17,15 @@ export interface CompileConfig {
    * ships.
    */
   prelude?: string;
-  /** How long one statement may take before its worker is killed. */
+  /** How long one statement may take to compile before its worker is
+   * killed, in milliseconds. */
   timeout?: number;
+  /**
+   * How long one expression may take to evaluate, in milliseconds; null for
+   * as long as it takes. Defaults to `timeout`. Either way, an evaluation can
+   * be stopped (`stopEvaluating`), and one nothing wants any more is.
+   */
+  evaluationTimeout?: number | null;
   /** Mark each statement with how its compilation went. Default: true. */
   showStatus?: boolean;
   /**
@@ -70,6 +77,7 @@ export interface Resolved {
   /** The prelude's lines, read once: it goes in front of everything evaluated. */
   prelude: readonly DagLine[];
   timeout: number;
+  evaluationTimeout: number | null;
   /** The environment's lines, read once: it is long and it never changes. */
   environment: readonly DagLine[];
   /** The names the environment brings into scope. */
@@ -96,6 +104,7 @@ export function resolve(compile: boolean | CompileConfig): Resolved | null {
     compiler: config.compiler ?? defaultCompiler,
     prelude,
     timeout: config.timeout ?? 10000,
+    evaluationTimeout: config.evaluationTimeout === undefined ? config.timeout ?? 10000 : config.evaluationTimeout,
     environment,
     initialScope: scope,
     // Compiled code refers to the prelude's combinator labels, so they are
