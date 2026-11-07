@@ -179,7 +179,7 @@ export const analyses = (
     // A statement's state is what its compilation decides, so a compilation
     // arriving is as much of a change here as an edit is; nothing else is.
     update: (value, tr) =>
-      tr.docChanged || tr.state.field(lambadaCompilations) !== tr.startState.field(lambadaCompilations)
+      tr.docChanged || tr.state.field(lambadaCompilations) !== tr.startState.field(lambadaCompilations, false)
         ? analyze(tr.state, initial)
         : value,
   });

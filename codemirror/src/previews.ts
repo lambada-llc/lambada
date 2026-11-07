@@ -175,7 +175,7 @@ const building = (field: StateField<Walked>) =>
       }
 
       update(update: ViewUpdate) {
-        if (update.state.field(field) !== update.startState.field(field)) this.schedule();
+        if (update.state.field(field) !== update.startState.field(field, false)) this.schedule();
       }
 
       schedule() {
@@ -704,7 +704,7 @@ export function previews(config: Resolved): Extension {
     create: (state) => expressionsIn(state, config, null),
     update: (value, tr) => {
       const made = tr.effects.filter((effect) => effect.is(built)).map((effect) => effect.value as ReadonlyMap<number, Programs>);
-      if (!made.length && tr.state.field(config.analyses) === tr.startState.field(config.analyses)) return value;
+      if (!made.length && tr.state.field(config.analyses) === tr.startState.field(config.analyses, false)) return value;
       const programs = new Map(value.memo.programs);
       for (const done of made) for (const [id, program] of done) programs.set(id, program);
       return expressionsIn(tr.state, config, { ...value, memo: { ...value.memo, programs } });
