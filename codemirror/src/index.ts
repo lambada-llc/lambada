@@ -14,8 +14,8 @@ import { lambadaStatements } from './statements';
 import { statementStatus } from './status';
 import { symbolHighlights, symbolRanges } from './symbols';
 import { dagOf } from './dag';
-import { TO_STRING, expectTests, recording } from './expect';
-import { evaluation, lambadaEvaluations } from './evaluations';
+import { TO_STRING, evaluateAgain, expectTests, recording } from './expect';
+import { evaluation, lambadaEvaluations, stopEvaluating } from './evaluations';
 
 export {
   lambadaLanguage,
@@ -27,6 +27,8 @@ export {
   symbolRanges,
   expectTests,
   recording,
+  evaluateAgain,
+  stopEvaluating,
   TO_STRING,
   lambadaEvaluations,
   evaluation,

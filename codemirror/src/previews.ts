@@ -739,7 +739,7 @@ export function previews(config: Resolved): Extension {
     building(expressions),
     config.showPreviews ? [theme, pressPast, decorations] : [],
     config.expectTests ? expectations(config.analyses, expressions, evaluated.field) : [],
-    evaluated.keep(config, (state) => [
+    evaluated.keep({ compiler: config.compiler, timeout: config.evaluationTimeout }, (state) => [
       ...state.field(expressions).expressions.flatMap((expression) =>
         !expression.dag ? [] : config.expectTests ? [expression.dag, expression.rendered] : [expression.dag],
       ),

@@ -77,6 +77,7 @@ lambada({ compile: { previewResults: false } })   // do not evaluate anything
 lambada({ compile: { previewResults: show } })    // what to show for a value
 lambada({ compile: { expectTests: true } })       // work out each test as the build would
 lambada({ compile: { compiler, timeout } })       // a compiler of your own
+lambada({ compile: { evaluationTimeout: null } })  // evaluate as long as it takes
 lambada({ compile: { environment } })             // what is in scope to begin with
 ```
 
@@ -113,9 +114,13 @@ in document order, saying where the expression and the block under it are, which
 - `fails` — the build stops here, and `message` is what it says, word for word:
   the value is read the way the build's runtime reads it, step for step.
   `tree` is what it could not read: the value, through `_to_string`.
-- `unknown` — the editor gave up after its `timeout`. The build has no time
-  limit, so this is the editor's, not the build's.
-- `pending` — not evaluated yet.
+- `unknown` — the editor gave up after its `evaluationTimeout`, or was told to
+  stop, and `message` says which. The build has no time limit, so this is the
+  editor's, not the build's. `evaluateAgain(view, test)` asks once more.
+- `pending` — not evaluated yet: being evaluated since `since`, or waiting its
+  turn behind another (`since` null). `stopEvaluating(view)` stops the one under
+  way; an evaluation nothing wants any more, because its expression was edited,
+  is stopped without being asked.
 
 What to make of it — patches to accept, messages, markers — is the host's, from
 its own state field or view plugin; a new array means something changed. The

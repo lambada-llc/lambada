@@ -4,6 +4,8 @@ import type { Analysis } from './analysis';
 import type { Expression } from './previews';
 import { treeOf, type Tree, type Value } from './tree';
 import type { Outcome } from './worker';
+import { evaluated as evaluating } from './evaluations';
+import type { EditorView } from '@codemirror/view';
 
 // Expect tests: what the build would write under each bare expression of a
 // tested source, or what it would do instead.
@@ -158,9 +160,11 @@ function sha256(bytes: Uint8Array): string {
 
 /** What the build makes of one test. */
 export type ExpectOutcome =
-  /** Not evaluated yet. */
-  | { kind: 'pending' }
-  /** The editor gave up on it, and `message` says why. The build has no time
+  /** Not evaluated yet: being evaluated since `since` (as `Date.now()` had
+   * it), or, null, waiting its turn. */
+  | { kind: 'pending'; since: number | null }
+  /** The editor gave up on it, or was told to stop, and `message` says which.
+   * `evaluateAgain` asks once more. The build has no time
    * limit, so this is the editor's, not the build's. */
   | { kind: 'unknown'; message: string }
   /** The build stops here, with this message: `tree`, what `_to_string`
@@ -225,14 +229,21 @@ function tests(
     const key = rendered;
     live.add(key);
     const under = blockUnder(doc, to);
-    const test = (outcome: ExpectOutcome) => ({ from, to, block: under, renderer, outcome });
-    if (!key) return test({ kind: 'pending' });
+    const test = (outcome: ExpectOutcome): ExpectTest => {
+      const made = { from, to, block: under, renderer, outcome };
+      programs.set(made, [dag, rendered]);
+      return made;
+    };
+    if (!key) return test({ kind: 'pending', since: null });
     if (!results.has(key)) {
       const raw = known.get(dag);
       const shown = known.get(rendered);
       const gaveUp = [raw, shown].find((outcome) => outcome?.status === 'error');
       if (gaveUp?.status === 'error') return test({ kind: 'unknown', message: gaveUp.message });
-      if (raw?.status !== 'ok' || shown?.status !== 'ok') return test({ kind: 'pending' });
+      if (raw?.status !== 'ok' || shown?.status !== 'ok') {
+        const working = [raw, shown].find((outcome) => outcome?.status === 'pending' && outcome.since !== undefined);
+        return test({ kind: 'pending', since: working?.status === 'pending' ? working.since ?? null : null });
+      }
       results.set(key, recorded(raw, shown));
     }
     const record = results.get(key)!;
@@ -248,6 +259,15 @@ function tests(
   });
   for (const key of results.keys()) if (!live.has(key)) results.delete(key);
   return found;
+}
+
+/** The programs each test was evaluated as, for asking again. */
+const programs = new WeakMap<ExpectTest, readonly string[]>();
+
+/** Evaluate `test` once more — one stopped, or one the editor gave up on. */
+export function evaluateAgain(view: EditorView, test: ExpectTest): void {
+  const texts = programs.get(test);
+  if (texts) view.dispatch({ effects: evaluating.forget.of(texts.filter((text) => text)) });
 }
 
 /** Which field holds the tests, if this editor has one. */

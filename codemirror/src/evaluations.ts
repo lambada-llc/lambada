@@ -1,4 +1,5 @@
 import { Facet, type EditorState, type StateField } from '@codemirror/state';
+import type { EditorView } from '@codemirror/view';
 
 import { lambadaCompilations } from './compilation';
 import { dagLine, type Bindings } from './dag';
@@ -89,4 +90,11 @@ export function evaluation(state: EditorState, request: Evaluation): Outcome<{ t
   const answer = state.field(evaluated.field).get(program.program);
   if (!answer || answer.status !== 'ok') return answer ?? { status: 'pending' };
   return { status: 'ok', tree: treeOf(answer) };
+}
+
+/** Stop the evaluation under way, if there is one: an expression that loops,
+ * or one not worth waiting for. Its answer says it was stopped, and after how
+ * long; everything queued behind it goes on. */
+export function stopEvaluating(view: EditorView): void {
+  view.dispatch({ effects: evaluated.stop.of(null) });
 }
