@@ -55,286 +55,279 @@ self_apply 35
 45 :c 44
 46 :b 45
 47 :b self_apply
-48 :c triage
-49 48 △
-50 40 49
-51 :c 50
-52 23 :k
-53 40 triage
-54 52 53
-55 39 54
-56 :c 55
-57 56 △
-Bool.match_ft 57
+48 23 :k
+49 40 triage
+50 48 49
+51 29 50
+Bool.match_ft 51
 Bool.match Bool.match_ft
-58 23 35
-59 40 △
-60 40 59
-61 58 60
-Lambada._piece_char:188 61
-62 Bool.match Lambada._piece_char:188
-63 23 :i
-64 :b :s
-65 :b :k
-66 28 35
-67 65 66
-Lambada._piece_off:190 67
-68 triage Lambada._piece_off:190
-69 68 △
-70 Bool.match Lambada._piece_off:190
-71 :k 25
-72 :ct 71
-73 :k 72
-74 △ 73
-75 :b 74
-76 :b 75
-77 76 35
-Lambada._piece_on:189 77
-78 70 Lambada._piece_on:189
-79 :b 78
-80 :b 63
-81 :b 64
+52 23 35
+53 40 △
+54 40 53
+55 52 54
+Lambada._piece_char:188 55
+56 Bool.match Lambada._piece_char:188
+57 23 :i
+58 :b :s
+59 :b :k
+60 28 35
+61 59 60
+Lambada._piece_off:190 61
+62 triage Lambada._piece_off:190
+63 62 △
+64 Bool.match Lambada._piece_off:190
+65 :k 25
+66 :ct 65
+67 :k 66
+68 △ 67
+69 :b 68
+70 :b 69
+71 70 35
+Lambada._piece_on:189 71
+72 64 Lambada._piece_on:189
+73 :b 72
+74 :b 57
+75 :b 58
 id :i
-82 Bool.match id
+76 Bool.match id
 Bool.true 1
 true Bool.true
-83 :k 15
-84 82 83
-85 :b 84
-86 39 85
-87 81 86
-88 80 87
-Fn.p_or 88
-89 :c :i
-let 89
+77 :k 15
+78 76 77
+79 :b 78
+80 39 79
+81 75 80
+82 74 81
+Fn.p_or 82
+83 :c :i
+let 83
 const :k
-90 34 △
-91 14 90
-92 const 91
-93 let 92
-94 10 △
-95 40 94
-96 :s 95
+84 34 △
+85 14 84
+86 const 85
+87 let 86
+88 10 △
+89 40 88
+90 :s 89
 compose :b
-97 :c compose
-98 :b 97
-99 98 94
-100 11 99
-101 96 100
-102 93 101
-fix 102
-103 triage true
+91 :c compose
+92 :b 91
+93 92 88
+94 11 93
+95 90 94
+96 87 95
+fix 96
+97 triage true
 Bool.false △
 false △
-104 103 2
-105 :k 2
+98 97 2
+99 :k 2
+100 98 99
+101 triage 100
+102 :b 101
+103 23 99
+104 :b 103
+105 :b 13
 106 104 105
-107 triage 106
-108 :b 107
-109 :b 13
-110 39 109
-111 :c 110
-112 111 105
-113 108 112
-114 :s 113
-115 13 2
-116 :b 115
-117 :b 116
-118 :b 117
-119 Bool.match 2
-120 :b 119
-121 41 120
-122 39 121
-123 40 122
-124 :s 123
-125 124 :i
-126 118 125
-127 114 126
-128 fix 127
-equal_const 128
-129 :k 71
-130 :k 129
-131 :k 130
-132 :k 131
-133 equal_const 132
-134 Fn.p_or 133
-135 :ct 129
-136 equal_const 135
-137 134 136
-Lambada._is_indent:183 137
-138 79 Lambada._is_indent:183
-139 65 138
-140 69 139
-141 :c 140
-142 64 141
-143 63 142
-144 :k 143
-Lambada._piece_newline:191 144
-145 62 Lambada._piece_newline:191
-146 :b 145
-147 equal_const 73
-Lambada._is_lf:182 147
-148 146 Lambada._is_lf:182
-149 :s 148
-150 149 :i
-151 :c 150
-152 51 151
-153 47 152
-Lambada._piece:192 153
-154 :b Lambada._piece:192
-155 154 74
+107 102 106
+108 :s 107
+109 13 2
+110 :b 109
+111 :b 110
+112 :b 111
+113 Bool.match 2
+114 :b 113
+115 41 114
+116 39 115
+117 40 116
+118 :s 117
+119 118 :i
+120 112 119
+121 108 120
+122 fix 121
+equal_const 122
+123 :k 65
+124 :k 123
+125 :k 124
+126 :k 125
+127 equal_const 126
+128 Fn.p_or 127
+129 :ct 123
+130 equal_const 129
+131 128 130
+Lambada._is_indent:183 131
+132 73 Lambada._is_indent:183
+133 59 132
+134 63 133
+135 :c 134
+136 58 135
+137 57 136
+138 :k 137
+Lambada._piece_newline:191 138
+139 56 Lambada._piece_newline:191
+140 :b 139
+141 equal_const 67
+Lambada._is_lf:182 141
+142 140 Lambada._is_lf:182
+143 :s 142
+144 143 :i
+145 :c 144
+146 23 145
+147 28 triage
+148 40 147
+149 146 148
+150 47 149
+Lambada._piece:192 150
+151 :b Lambada._piece:192
+152 151 68
+153 :c 152
+154 46 153
+Lambada._text_step:193 154
+155 39 Lambada._text_step:193
 156 :c 155
-157 46 156
-Lambada._text_step:193 157
-158 39 Lambada._text_step:193
-159 :c 158
-160 38 159
-161 self_apply 160
-Lambada._text_loop:194 161
-162 :c Lambada._text_loop:194
-163 :b 162
-164 Lambada._piece:192 △
-165 163 164
-166 14 165
-Lambada._statement_text:195 166
-167 31 Lambada._statement_text:195
-168 11 167
-169 29 168
-170 :k 169
-Lambada._st_end:196 170
-171 triage Lambada._st_end:196
-172 171 △
-173 :b Bool.match
-174 64 168
-175 :c 174
+157 38 156
+158 self_apply 157
+Lambada._text_loop:194 158
+159 :c Lambada._text_loop:194
+160 :b 159
+161 Lambada._piece:192 △
+162 160 161
+163 14 162
+Lambada._statement_text:195 163
+164 31 Lambada._statement_text:195
+165 11 164
+166 29 165
+167 :k 166
+Lambada._st_end:196 167
+168 triage Lambada._st_end:196
+169 168 △
+170 58 165
+171 :c 170
+172 :b 171
+173 :b 172
+174 :b 173
+List.match 147
+175 List.match 25
 176 :b 175
-177 :b 176
-178 :b 177
-179 :b 39
-180 :b 41
-181 :b 89
-182 :b 14
-183 Bool.match 35
-184 :k :i
-185 183 184
-186 :b 185
-187 186 Lambada._is_lf:182
-188 :c 187
-189 182 188
-190 self_apply 189
-Lambada.skip_line 190
-191 181 Lambada.skip_line
-192 64 191
-193 63 192
-194 39 193
-195 :s 194
-196 :b 195
-197 29 12
-198 196 197
-199 180 198
-200 179 199
-201 39 200
-202 :c 201
-List.match 49
-203 List.match 25
-204 :b 203
-205 :k 24
-206 Bool.match 205
-207 :b 65
-208 207 35
-209 206 208
-210 :c 209
-211 204 210
-Nat._succ_body:1 211
-212 self_apply Nat._succ_body:1
-Nat.succ__fastest 212
+177 :k 24
+178 Bool.match 177
+179 :b 59
+180 179 35
+181 178 180
+182 :c 181
+183 176 182
+Nat._succ_body:1 183
+184 self_apply Nat._succ_body:1
+Nat.succ__fastest 184
 Nat.succ Nat.succ__fastest
-213 202 Nat.succ
-214 178 213
-Lambada._st_new:198 214
-215 Bool.match Lambada._st_new:198
-216 180 193
-217 179 216
-218 39 217
-219 :c 218
-220 219 Nat.succ
-221 :k 220
-Lambada._st_more:197 221
-222 215 Lambada._st_more:197
-223 :b 222
-224 223 Lambada._is_indent:183
-225 173 224
-226 :c 225
-227 180 Lambada._st_more:197
-228 179 227
-229 64 228
-230 :s 229
-231 230 12
-Lambada._st_piece:199 231
-232 215 Lambada._st_piece:199
-233 :b 232
-234 233 Lambada._is_indent:183
-235 :s 234
-236 235 :i
-237 172 236
-Lambada._st_after_gap:200 237
-238 :b Lambada._st_after_gap:200
-239 :b 238
-240 65 △
-Lambada._nc_code:184 240
-241 Bool.match Lambada._nc_code:184
-242 40 35
-243 :c 242
-244 243 Lambada.skip_line
-245 :k 244
-Lambada._nc_comment:186 245
-246 241 Lambada._nc_comment:186
-247 :b 246
-248 :ct 130
-249 :ct 248
-250 equal_const 249
-Lambada._is_hash:30 250
-251 247 Lambada._is_hash:30
-252 173 251
-253 :c 252
-254 :k 35
-Lambada._nc_blank:185 254
-255 253 Lambada._nc_blank:185
-256 :s 255
-257 256 Lambada._is_lf:182
-258 :s 257
-259 258 :i
-260 :c 259
-261 182 260
-262 self_apply 261
-Lambada._next_code:187 262
-263 :b Lambada._next_code:187
-264 :b 263
-265 264 △
-266 239 265
-Lambada._st_gap:201 266
-267 226 Lambada._st_gap:201
+185 23 Nat.succ
+186 :b 185
+187 :b 186
+188 :b 41
+189 :b 83
+190 :b 14
+191 Bool.match 35
+192 :k :i
+193 191 192
+194 :b 193
+195 194 Lambada._is_lf:182
+196 :c 195
+197 190 196
+198 self_apply 197
+Lambada.skip_line 198
+199 189 Lambada.skip_line
+200 58 199
+201 57 200
+202 39 201
+203 :s 202
+204 :b 203
+205 29 12
+206 204 205
+207 188 206
+208 187 207
+209 174 208
+Lambada._st_new:198 209
+210 Bool.match Lambada._st_new:198
+211 :b 39
+212 188 201
+213 187 212
+214 :k 213
+Lambada._st_more:197 214
+215 188 Lambada._st_more:197
+216 211 215
+217 58 216
+218 :s 217
+219 218 12
+Lambada._st_piece:199 219
+220 210 Lambada._st_piece:199
+221 :b 220
+222 221 Lambada._is_indent:183
+223 :s 222
+224 223 :i
+225 169 224
+Lambada._st_after_gap:200 225
+226 :b Lambada._st_after_gap:200
+227 :b 226
+228 :k 35
+Lambada._nc_blank:185 228
+229 23 Lambada._nc_blank:185
+230 :b Bool.match
+231 59 △
+Lambada._nc_code:184 231
+232 Bool.match Lambada._nc_code:184
+233 23 Lambada.skip_line
+234 40 35
+235 233 234
+236 :k 235
+Lambada._nc_comment:186 236
+237 232 Lambada._nc_comment:186
+238 :b 237
+239 :ct 124
+240 :ct 239
+241 equal_const 240
+Lambada._is_hash:30 241
+242 238 Lambada._is_hash:30
+243 230 242
+244 229 243
+245 :s 244
+246 245 Lambada._is_lf:182
+247 :s 246
+248 247 :i
+249 :c 248
+250 190 249
+251 self_apply 250
+Lambada._next_code:187 251
+252 :b Lambada._next_code:187
+253 :b 252
+254 253 △
+255 227 254
+Lambada._st_gap:201 255
+256 23 Lambada._st_gap:201
+257 210 Lambada._st_more:197
+258 :b 257
+259 258 Lambada._is_indent:183
+260 230 259
+261 256 260
+262 :s 261
+263 262 Lambada._is_hash:30
+264 230 263
+265 256 264
+266 :s 265
+267 266 Lambada._is_lf:182
 268 :s 267
-269 268 Lambada._is_hash:30
-270 173 269
-271 :c 270
-272 271 Lambada._st_gap:201
-273 :s 272
-274 273 Lambada._is_lf:182
+269 268 :i
+270 169 269
+Lambada._statementsE:202 270
+271 23 Lambada._statementsE:202
+272 :b Lambada._statementsE:202
+273 272 Lambada.skip_line
+274 271 273
 275 :s 274
-276 275 :i
-277 172 276
-Lambada._statementsE:202 277
-278 :b Lambada._statementsE:202
-279 278 Lambada.skip_line
-280 :c 279
-281 280 Lambada._statementsE:202
-282 :s 281
-283 :b 282
-284 283 197
-285 27 284
-286 14 285
-287 :b 286
-288 287 Lambada._next_code:187
-Lambada.statements 288
+276 :b 275
+277 276 205
+278 27 277
+279 14 278
+280 :b 279
+281 280 Lambada._next_code:187
+Lambada.statements 281
 Lambada.statements

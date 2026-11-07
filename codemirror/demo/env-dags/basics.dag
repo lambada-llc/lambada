@@ -6,1226 +6,1211 @@
 6 1 5
 7 △ 6
 8 △ 7
-9 1 1
-10 △ 9
+9 8 1
+:b 9
+10 1 1
 11 △ 10
-12 11 5
-13 8 12
-14 △ 13
+12 △ 11
+13 12 5
+14 8 13
 15 △ 14
-16 15 9
-:c 16
-17 8 1
-:b 17
-18 :b :c
-19 :c :c
-:k 1
-20 19 :k
-21 :b :b
-22 :b △
-23 :b 22
-24 23 △
-triage 24
-25 21 triage
-26 20 25
-27 18 26
-28 :c 27
+16 △ 15
+17 16 10
+:c 17
+18 :c :c
 _ △
-29 28 △
-Bool.match_ft 29
+19 18 △
+20 :b 19
+:k 1
+21 18 :k
+22 :b :b
+23 :b △
+24 :b 23
+25 24 △
+triage 25
+26 22 triage
+27 21 26
+28 20 27
+Bool.match_ft 28
 Bool.match Bool.match_ft
 Bool.false △
-30 Bool.match 2
-31 △ 1
-32 △ 31
-33 32 △
-:i 33
+29 Bool.match 2
+30 △ 1
+31 △ 30
+32 31 △
+:i 32
 id :i
-34 30 id
-Bool.and 34
+33 29 id
+Bool.and 33
 Bool.true 1
-35 Bool.match Bool.true
-36 35 △
-Bool.not 36
-37 Bool.match Bool.not
-38 37 id
-Bool.equal 38
+34 Bool.match Bool.true
+35 34 △
+Bool.not 35
+36 Bool.match Bool.not
+37 36 id
+Bool.equal 37
+38 :b :c
 39 :c △
 40 :b 39
 41 40 1
-42 23 41
-43 18 42
-44 :c 43
-45 44 △
-46 18 45
-47 :c 46
-Bool.if 47
-48 :c triage
-49 :b 48
-50 49 :k
-51 18 50
-52 :c 51
-53 52 △
-Bool.match_tf 53
-54 Bool.match id
-55 54 9
-Bool.or 55
+42 24 41
+43 20 42
+44 38 43
+45 :c 44
+Bool.if 45
+46 :c triage
+47 :b 46
+48 47 :k
+49 20 48
+Bool.match_tf 49
+50 Bool.match id
+51 50 10
+Bool.or 51
 :t △
-:ct 31
-56 :ct △
-57 :ct 56
-58 :ct 57
-59 :k 58
-60 :ct 59
-61 :k 60
+:ct 30
+52 :ct △
+53 :ct 52
+54 :ct 53
+55 :k 54
+56 :ct 55
+57 :k 56
+58 :k 57
+59 △ 58
+60 :k 55
+61 :ct 60
 62 :k 61
 63 △ 62
-64 :k 59
-65 :ct 64
-66 :k 65
-67 △ 66
-68 :ct 61
-69 △ 68
-70 :k 57
-71 :k 70
-72 :ct 71
-73 :k 72
-74 :ct 73
-75 △ 74
-76 75 △
-77 69 76
-78 67 77
-79 63 78
-80 Bool.match_tf 79
-81 :ct 72
-82 :k 81
+64 :ct 57
+65 △ 64
+66 :k 53
+67 :k 66
+68 :ct 67
+69 :k 68
+70 :ct 69
+71 △ 70
+72 71 △
+73 65 72
+74 63 73
+75 59 74
+76 Bool.match_tf 75
+77 :ct 68
+78 :k 77
+79 △ 78
+80 :k 67
+81 :k 80
+82 :ct 81
 83 △ 82
-84 :k 71
-85 :k 84
-86 :ct 85
-87 △ 86
-88 :ct 70
-89 :ct 88
-90 :k 89
-91 :k 90
-92 △ 91
-93 :ct 65
-94 △ 93
-95 94 76
-96 92 95
-97 87 96
-98 83 97
-99 80 98
-Bool.to_string 99
+84 :ct 66
+85 :ct 84
+86 :k 85
+87 :k 86
+88 △ 87
+89 :ct 61
+90 △ 89
+91 90 72
+92 88 91
+93 83 92
+94 79 93
+95 76 94
+Bool.to_string 95
 Bool.to_source Bool.to_string
-100 54 Bool.not
-Bool.xor 100
-101 19 :i
-102 :b 101
+96 50 Bool.not
+Bool.xor 96
+97 18 :i
+98 :b 97
 :s 5
-103 :b :s
-104 :b 103
+99 :b :s
+100 :b 99
 false △
-105 :k 2
-106 Bool.match 105
-107 106 id
-108 :b 107
-109 18 108
-110 104 109
-111 102 110
-Fn.p_and 111
-112 :b Bool.not
-Fn.p_not 112
+101 :k 2
+102 Bool.match 101
+103 102 id
+104 :b 103
+105 38 104
+106 100 105
+107 98 106
+Fn.p_and 107
+108 :b Bool.not
+Fn.p_not 108
 true Bool.true
-113 :k 9
-114 54 113
-115 :b 114
-116 18 115
-117 104 116
-118 102 117
-Fn.p_or 118
-119 :b 18
-120 :c :i
-let 120
-const :k
-121 triage △
-122 121 △
-123 :s :i
-124 123 △
-125 122 124
-126 const 125
-127 let 126
-128 22 △
-129 21 128
-130 :s 129
+109 :k 10
+110 50 109
+111 :b 110
+112 38 111
+113 100 112
+114 98 113
+Fn.p_or 114
 compose :b
-131 :c compose
-132 :b 131
-133 132 128
-134 23 133
-135 130 134
-136 127 135
-fix 136
-137 :b fix
-138 :b 137
-139 48 △
-List.match 139
-140 21 List.match
-141 :c 140
-142 :b 141
-143 18 21
-144 142 143
-145 138 144
-List.foldr__common 145
+115 18 compose
+116 :b 38
+117 :c :i
+let 117
+const :k
+118 triage △
+119 118 △
+120 :s :i
+121 120 △
+122 119 121
+123 const 122
+124 let 123
+125 23 △
+126 22 125
+127 :s 126
+128 :c compose
+129 :b 128
+130 129 125
+131 24 130
+132 127 131
+133 124 132
+fix 133
+134 :b fix
+135 :b 134
+136 19 triage
+List.match 136
+137 22 List.match
+138 :c 137
+139 :b 138
+140 38 22
+141 139 140
+142 135 141
+List.foldr__common 142
 List.foldr__fastest List.foldr__common
 List.foldr List.foldr__fastest
-146 :b List.foldr
-147 :b 146
-148 :b 21
-149 :b 148
-150 :b 54
-151 149 150
-152 119 151
-153 18 152
-154 :s 153
-155 101 :s
-156 154 155
-157 147 156
-158 18 157
-159 119 158
-160 18 159
-161 :c 160
-Fn.pow_fast 161
-162 :c Fn.pow_fast
-163 162 compose
-164 :c 163
-165 164 id
-Fn.pow 165
-166 18 triage
-167 :c 166
-168 167 △
-Snat.match 168
-169 :s Snat.match
-170 :b 169
-171 :b 170
-172 119 :c
-173 148 172
-174 103 173
-175 101 174
-176 171 175
-177 119 176
-178 18 177
-179 fix 178
-Fn.pow_snat 179
-180 :b Bool.and
-181 146 180
-182 :c 181
-183 182 true
-List.all 183
-184 :b Bool.or
-185 146 184
-186 :c 185
-187 186 △
-List.any 187
-188 List.match △
+143 :b List.foldr
+144 :b 143
+145 :b 22
+146 :b 145
+147 :b 50
+148 146 147
+149 116 148
+150 38 149
+151 :s 150
+152 97 :s
+153 151 152
+154 144 153
+155 38 154
+156 116 155
+157 38 156
+158 :c 157
+Fn.pow_fast 158
+159 115 Fn.pow_fast
+160 97 159
+Fn.pow 160
+161 20 triage
+Snat.match 161
+162 :s Snat.match
+163 :b 162
+164 :b 163
+165 116 :c
+166 145 165
+167 99 166
+168 97 167
+169 164 168
+170 116 169
+171 38 170
+172 fix 171
+Fn.pow_snat 172
+173 :b Bool.and
+174 143 173
+175 21 174
+List.all 175
+176 :b Bool.or
+177 143 176
+178 19 177
+List.any 178
+179 List.match △
+180 :b 179
+181 :b 180
+182 :b 24
+183 120 :i
+self_apply 183
+184 :b 30
+185 :b 184
+186 185 183
+187 Bool.match 186
+188 :b 1
 189 :b 188
-190 :b 189
-191 :b 23
-192 21 :b
-193 :c 192
-194 123 :i
-self_apply 194
-195 :b 31
-196 :b 195
-197 196 194
-198 Bool.match 197
-199 :b 1
-200 :b 199
-201 200 △
-202 188 201
-203 :k 202
-204 198 203
-205 :c 204
-206 189 205
-Nat._pred_body:2 206
-207 self_apply Nat._pred_body:2
-Nat.pred__fastest 207
+190 189 △
+191 179 190
+192 :k 191
+193 187 192
+194 :c 193
+195 180 194
+Nat._pred_body:2 195
+196 self_apply Nat._pred_body:2
+Nat.pred__fastest 196
 Nat.pred Nat.pred__fastest
-208 :b Nat.pred
+197 :b Nat.pred
+198 :b 197
+199 198 △
+200 18 199
+201 22 :b
+202 200 201
+203 18 202
+204 203 137
+Nat.match 204
+205 Nat.match 2
+206 :b 205
+207 22 △
+208 :c 207
 209 :b 208
-210 209 △
-211 193 210
-212 141 211
-Nat.match 212
-213 Nat.match 2
-214 :b 213
-215 21 △
-216 :c 215
-217 :b 216
-218 190 217
-219 214 218
-220 fix 219
-List.take 220
-221 21 List.take
-222 21 221
-223 :c 222
-224 223 △
-225 191 224
-226 104 225
-227 103 226
-228 21 227
-229 :s 228
-230 :b 193
-231 Nat.match id
-232 :b 231
-233 190 199
-234 232 233
-235 fix 234
-List.drop 235
-236 21 List.drop
-237 21 236
+210 181 209
+211 206 210
+212 fix 211
+List.take 212
+213 22 List.take
+214 22 213
+215 19 214
+216 182 215
+217 100 216
+218 99 217
+219 22 218
+220 :s 219
+221 :c 201
+222 :b 221
+223 Nat.match id
+224 :b 223
+225 181 188
+226 224 225
+227 fix 226
+List.drop 227
+228 22 List.drop
+229 22 228
+230 19 229
+231 222 230
+232 220 231
+233 181 232
+234 134 233
+List.chunk 234
+235 18 208
+236 235 137
+237 134 236
 238 :c 237
-239 238 △
-240 230 239
-241 229 240
-242 190 241
-243 137 242
-List.chunk 243
-244 141 216
-245 137 244
-246 :c 245
-List.concat__common 246
+List.concat__common 238
 List.concat__fastest List.concat__common
 List.concat List.concat__fastest
 List.concat__smallest List.concat__common
-247 List.foldr List.concat
-248 247 △
-List.concat_list 248
-249 19 △
-250 :b List.concat
-251 146 250
-252 249 251
-List.concat_map 252
+239 List.foldr List.concat
+240 239 △
+List.concat_list 240
+241 :b List.concat
+242 143 241
+243 19 242
+List.concat_map 243
 List.cons △
-Pair.match 122
-253 :k :i
-254 Pair.match 253
-Pair.snd 254
-255 :b Pair.snd
-256 :b 255
+Pair.match 119
+244 :k :i
+245 Pair.match 244
+Pair.snd 245
+246 :b Pair.snd
+247 :b 246
 Pair.create △
-257 List.match 2
-258 :b 257
-259 :b 258
-260 :b Bool.match
-261 260 201
-262 :s 261
-263 :b 262
-264 :b Pair.match
-265 264 24
-266 21 265
-267 :c 266
-268 263 267
-269 103 268
-270 :c 269
-271 259 270
-272 137 271
-List.span 272
-273 256 List.span
-List.drop_while 273
-274 :b List.concat_list
-275 :b 274
-276 :b 275
-277 :b 276
-278 :b 277
-279 21 215
-280 21 279
-281 21 280
-282 :c 281
-283 249 △
-284 19 283
-285 :c 279
-286 285 △
-287 146 286
-288 249 287
-289 217 288
-290 189 289
-List.intersperse 290
-291 275 List.intersperse
-List.join 291
-292 21 List.join
-293 21 292
-294 :c 293
-295 148 22
-296 18 295
-297 190 296
-298 137 297
-List.map__common 298
+248 List.match 2
+249 :b 248
+250 :b 249
+251 :b Bool.match
+252 251 190
+253 :s 252
+254 :b 253
+255 :b Pair.match
+256 255 25
+257 22 256
+258 :c 257
+259 254 258
+260 99 259
+261 :c 260
+262 250 261
+263 134 262
+List.span 263
+264 247 List.span
+List.drop_while 264
+265 :b List.concat_list
+266 :b 265
+267 :b 266
+268 :b 267
+269 :b 268
+270 19 △
+271 18 270
+272 145 23
+273 38 272
+274 181 273
+275 134 274
+List.map__common 275
 List.map__fastest List.map__common
 List.map List.map__fastest
-299 294 List.map
-300 191 299
-301 119 300
-302 18 301
-303 21 302
-304 284 303
-305 282 304
-306 278 305
-List.enclose 306
-307 triage id
-308 :b 307
-309 199 △
-310 308 309
-311 :c 310
-312 311 △
-313 :s 312
-314 146 313
-315 249 314
-List.filter 315
-316 307 △
-317 316 △
-318 :b 317
-319 146 318
-320 249 319
-List.filter_map 320
-321 :s List.match
-322 :b 321
-323 :b 322
-324 323 193
-325 137 324
-List.foldl__common 325
+276 18 List.map
+277 22 207
+278 19 277
+279 143 278
+280 19 279
+281 209 280
+282 180 281
+List.intersperse 282
+283 266 List.intersperse
+List.join 283
+284 22 List.join
+285 22 284
+286 276 285
+287 182 286
+288 116 287
+289 38 288
+290 22 289
+291 271 290
+292 18 291
+293 22 277
+294 22 293
+295 292 294
+296 269 295
+List.enclose 296
+297 triage id
+298 :b 297
+299 188 △
+300 298 299
+301 19 300
+302 :s 301
+303 143 302
+304 19 303
+List.filter 304
+305 297 △
+306 305 △
+307 :b 306
+308 143 307
+309 19 308
+List.filter_map 309
+310 :s List.match
+311 :b 310
+312 :b 311
+313 312 221
+314 134 313
+List.foldl__common 314
 List.foldl__fastest List.foldl__common
 List.foldl List.foldl__fastest
 List.foldl__smallest List.foldl__common
 List.foldr__smallest List.foldr__common
 Option.none △
 Option.some △
-326 188 309
-List.head 326
-327 20 List.match
-List.head_or 327
-328 List.match true
-329 328 105
-List.is_empty 329
-330 188 113
-List.is_not_empty 330
-331 List.match 9
+315 179 299
+List.head 315
+316 21 List.match
+List.head_or 316
+317 List.match true
+318 317 101
+List.is_empty 318
+319 179 109
+List.is_not_empty 319
+320 List.match 10
+321 :b 320
+322 :b 181
+323 21 126
+324 38 323
+wait 324
+325 wait self_apply
+326 triage true
+327 326 2
+328 327 101
+329 :k 328
+330 triage 329
+331 18 101
 332 :b 331
-333 :b 190
-334 Bool.match △
-335 :b 334
-336 :b 335
-337 119 336
-338 148 337
-339 18 338
-340 21 339
-341 :c 340
-342 :c 129
-343 342 1
-344 18 343
-wait 344
-345 wait self_apply
-346 triage true
-347 346 2
-348 347 105
-349 :k 348
-350 triage 349
-351 :b 121
-352 :b 351
-353 :c 194
-354 352 353
-355 18 354
-356 :c 355
-357 356 105
-358 350 357
-359 121 2
-360 :b 359
-361 :b 360
-362 :b 361
-363 19 353
-364 :b 180
-365 :b 364
-366 365 353
-367 149 366
-368 119 367
-369 103 368
-370 21 369
-371 363 370
-372 362 371
-373 358 372
+333 :b 118
+334 :b 333
+335 :c 183
+336 334 335
+337 332 336
+338 330 337
+339 118 2
+340 :b 339
+341 :b 340
+342 :b 341
+343 18 335
+344 :b 173
+345 :b 344
+346 345 335
+347 146 346
+348 116 347
+349 99 348
+350 22 349
+351 343 350
+352 342 351
+353 338 352
+354 :c 353
+_equal_body:1 354
+355 325 _equal_body:1
+equal 355
+356 18 equal
+357 Bool.match △
+358 :b 357
+359 :b 358
+360 116 359
+361 145 360
+362 38 361
+363 22 362
+364 356 363
+365 322 364
+366 321 365
+367 fix 366
+List.is_prefix 367
+368 List.match 52
+369 :b 368
+370 :k 30
+371 Bool.match 370
+372 189 183
+373 371 372
 374 :c 373
-_equal_body:1 374
-375 345 _equal_body:1
-equal 375
-376 341 equal
-377 333 376
-378 332 377
-379 fix 378
-List.is_prefix 379
-380 List.match 56
-381 :b 380
-382 :k 31
-383 Bool.match 382
-384 200 194
-385 383 384
-386 :c 385
-387 381 386
-Nat._succ_body:1 387
-388 self_apply Nat._succ_body:1
-Nat.succ__fastest 388
-389 :b Nat.succ__fastest
-390 199 389
-391 189 390
-392 fix 391
-List.length 392
-393 :b 389
-394 393 353
-395 :k 394
-396 257 395
+375 369 374
+Nat._succ_body:1 375
+376 self_apply Nat._succ_body:1
+Nat.succ__fastest 376
+377 :b Nat.succ__fastest
+378 188 377
+379 180 378
+380 fix 379
+List.length 380
+381 :b 377
+382 381 335
+383 :k 382
+384 248 383
+385 :c 384
+386 self_apply 385
+List.length__fastest 386
+387 325 Nat._succ_body:1
+Nat.succ__smallest 387
+388 :b Nat.succ__smallest
+389 188 388
+390 180 389
+391 fix 390
+List.length__smallest 391
+392 :b 255
+393 22 Bool.match
+394 19 393
+395 38 394
+396 22 395
 397 :c 396
-398 self_apply 397
-List.length__fastest 398
-399 345 Nat._succ_body:1
-Nat.succ__smallest 399
-400 :b Nat.succ__smallest
-401 199 400
-402 189 401
-403 fix 402
-List.length__smallest 403
-404 :b 264
-405 21 Bool.match
-406 :c 405
-407 406 △
-408 18 407
-409 21 408
-410 :c 409
-411 :b 410
-412 411 equal
-413 404 412
-414 18 413
-415 146 414
-416 :c 415
-417 416 △
-List.lookup 417
-Option.match 168
-418 :c Option.match
-419 418 id
-Option.get_or 419
-420 21 Option.get_or
-421 21 420
-422 :c 421
-423 422 List.lookup
-List.lookup_or 423
+398 :b 397
+399 398 equal
+400 392 399
+401 38 400
+402 143 401
+403 19 402
+List.lookup 403
+404 18 List.lookup
+Option.match 161
+405 97 Option.match
+Option.get_or 405
+406 22 Option.get_or
+407 22 406
+408 404 407
+List.lookup_or 408
 List.map__smallest List.map__common
-424 :b 249
-425 104 23
-426 148 425
-427 18 426
-428 21 427
-429 :c 428
-430 :c 143
 Nat.succ Nat.succ__fastest
-431 430 Nat.succ
-432 429 431
-433 259 432
-434 137 433
-435 424 434
-List.mapi 435
-436 :b Nat.match
-437 436 △
-438 21 437
-439 :c 438
-440 :b 439
-441 440 :c
-442 119 441
-443 18 442
-444 190 443
-445 fix 444
-List.nth 445
-446 21 140
-447 :c 446
-448 21 Nat.match
-449 :c 448
-450 :b 449
-451 450 :c
-452 119 451
-453 18 452
-454 447 453
-455 137 454
-List.nth_or 455
-456 :b 260
-457 :b 456
-458 217 △
-459 457 458
-460 104 459
-461 103 460
-462 :s 461
-463 462 24
-464 119 463
-465 18 464
-466 :s 465
-467 404 466
-468 146 467
-469 :c 468
-470 469 2
-List.partition 470
-471 List.match 253
-472 :b let
-473 :b 472
-474 473 210
-475 148 474
-476 148 475
-477 18 476
-478 :c 477
-479 103 194
-480 21 479
+409 18 Nat.succ
+410 :b 409
+411 410 22
+412 18 411
+413 100 24
+414 145 413
+415 38 414
+416 22 415
+417 412 416
+418 250 417
+419 134 418
+420 20 419
+List.mapi 420
+421 :b Nat.match
+422 421 △
+423 22 422
+424 :c 423
+425 :b 424
+426 425 :c
+427 116 426
+428 38 427
+429 181 428
+430 fix 429
+List.nth 430
+431 22 Nat.match
+432 :c 431
+433 :b 432
+434 433 :c
+435 116 434
+436 38 435
+437 18 436
+438 22 137
+439 437 438
+440 134 439
+List.nth_or 440
+441 18 2
+442 :b 251
+443 :b 442
+444 209 △
+445 443 444
+446 100 445
+447 99 446
+448 :s 447
+449 448 25
+450 116 449
+451 38 450
+452 :s 451
+453 392 452
+454 143 453
+455 441 454
+List.partition 455
+456 List.match 244
+457 18 39
+458 99 183
+459 22 458
+460 457 459
+461 18 460
+462 :b 461
+463 :b let
+464 :b 463
+465 464 199
+466 145 465
+467 145 466
+468 462 467
+469 456 468
+470 :c 469
+List._range_body:1 470
+471 325 List._range_body:1
+472 19 471
+List.range 472
+473 self_apply List._range_body:1
+474 19 473
+List.range__fastest 474
+475 325 Nat._pred_body:2
+Nat.pred__smallest 475
+476 :b Nat.pred__smallest
+477 :b 476
+478 477 △
+479 464 478
+480 38 479
 481 :c 480
-482 481 39
-483 478 482
-484 471 483
-485 :c 484
-List._range_body:1 485
-486 345 List._range_body:1
-487 249 486
-List.range 487
-488 self_apply List._range_body:1
-489 249 488
-List.range__fastest 489
-490 345 Nat._pred_body:2
-Nat.pred__smallest 490
-491 :b Nat.pred__smallest
+482 :b 481
+483 :b 482
+484 22 :s
+485 457 484
+486 483 485
+487 311 486
+488 38 487
+489 fix 488
+490 19 489
+List.range__smallest 490
+491 List.match id
 492 :b 491
-493 492 △
-494 473 493
-495 18 494
-496 :c 495
-497 :b 496
-498 :b 497
-499 21 :s
-500 :c 499
-501 500 39
-502 498 501
-503 322 502
-504 18 503
-505 fix 504
-506 249 505
-List.range__smallest 506
-507 List.match id
-508 :b 507
-509 :b 508
-510 150 △
-511 148 510
-512 148 511
-513 18 512
-514 :s 513
-515 :b 514
-516 :s :b
-517 516 :i
-List._twice:2 517
-518 :b List._twice:2
-519 :b 518
-520 :b 519
-521 520 :c
-522 515 521
-523 509 522
-524 18 523
-525 fix 524
-List._repeat:3 525
-526 424 List._repeat:3
-List.repeat 526
-527 List.foldl 39
-528 527 △
-List.reverse 528
-529 :b 250
-530 529 List.take
-531 103 530
-532 21 531
-533 :s 532
-534 :b List.drop
-535 534 Nat.succ
-536 217 535
-537 533 536
-List.set_nth 537
-538 :b List.match
-539 :b 538
-540 539 △
-541 103 540
-542 :s 541
-543 :b 542
-544 :b 543
-545 :b 102
-546 :b 545
-547 :b 104
-548 :b 547
-549 :b 119
-550 :b 217
-551 :b 550
-552 193 △
-553 551 552
-554 260 553
-555 :s 554
-556 :c 280
-557 :b 556
-558 148 21
-559 18 558
-560 :c 559
-561 560 △
-562 557 561
-563 555 562
-564 21 563
-565 21 564
-566 :c 565
-567 549 566
-568 104 567
-569 102 568
-570 549 569
-571 548 570
-572 546 571
-573 544 572
-574 509 573
-575 137 574
-List._merge:2 575
-576 472 List._merge:2
-577 :c 576
-578 538 283
-579 :s 578
-580 :b 579
-581 :b 580
-582 :b 149
-583 :b 404
-584 :b 583
-585 21 192
-586 :c 585
-587 586 552
-588 582 587
-589 549 588
-590 149 589
-591 119 590
-592 103 591
-593 :c 592
-594 593 552
-595 584 594
-596 582 595
-597 549 596
-598 119 597
-599 18 598
-600 :c 599
-601 264 166
-602 List.foldr 601
-603 602 2
-List._halve:1 603
-604 600 List._halve:1
-605 581 604
-606 190 605
-607 137 606
-608 577 607
-List.sort 608
-609 260 265
-610 :c 609
-611 Pair.match 201
-612 610 611
-613 :s 612
-614 :b 613
-615 614 equal
-616 146 615
-617 :c 616
-618 617 2
-List.split_on 618
-619 188 2
-List.tail 619
-620 Pair.match :k
-Pair.fst 620
-621 :b Pair.fst
-622 :b 621
-623 622 List.span
-List.take_while 623
-624 :k 56
-625 :ct 624
+493 :b 492
+494 147 △
+495 145 494
+496 145 495
+497 38 496
+498 :s 497
+499 :b 498
+500 :s :b
+501 500 :i
+List._twice:2 501
+502 :b List._twice:2
+503 :b 502
+504 :b 503
+505 504 :c
+506 499 505
+507 493 506
+508 38 507
+509 fix 508
+List._repeat:3 509
+510 20 List._repeat:3
+List.repeat 510
+511 List.foldl 39
+512 511 △
+List.reverse 512
+513 :b 241
+514 513 List.take
+515 99 514
+516 22 515
+517 :s 516
+518 :b List.drop
+519 518 Nat.succ
+520 209 519
+521 517 520
+List.set_nth 521
+522 :b List.match
+523 522 270
+524 :s 523
+525 :b 524
+526 :b 525
+527 38 25
+528 255 527
+529 List.foldr 528
+530 529 2
+List._halve:1 530
+531 18 List._halve:1
+532 :b 531
+533 :b 532
+534 :b 533
+535 :b 146
+536 :b 392
+537 :b 536
+538 19 201
+539 18 538
+540 :b 116
+541 22 201
+542 539 541
+543 535 542
+544 540 543
+545 146 544
+546 116 545
+547 99 546
+548 539 547
+549 537 548
+550 535 549
+551 534 550
+552 526 551
+553 181 552
+554 134 553
+555 18 554
+556 :b 522
+557 556 △
+558 99 557
+559 :s 558
+560 :b 559
+561 :b 560
+562 :b 98
+563 :b 562
+564 :b 100
+565 :b 564
+566 :b 209
+567 :b 566
+568 567 538
+569 251 568
+570 :s 569
+571 :c 293
+572 :b 571
+573 145 22
+574 20 573
+575 572 574
+576 570 575
+577 22 576
+578 22 577
+579 :c 578
+580 540 579
+581 100 580
+582 98 581
+583 540 582
+584 565 583
+585 563 584
+586 561 585
+587 493 586
+588 134 587
+List._merge:2 588
+589 463 List._merge:2
+590 555 589
+List.sort 590
+591 Pair.match 190
+592 18 591
+593 251 256
+594 592 593
+595 :s 594
+596 :b 595
+597 596 equal
+598 143 597
+599 441 598
+List.split_on 599
+600 179 2
+List.tail 600
+601 Pair.match :k
+Pair.fst 601
+602 :b Pair.fst
+603 :b 602
+604 603 List.span
+List.take_while 604
+605 :k 52
+606 :ct 605
+607 :ct 606
+608 :k 607
+609 :ct 608
+610 :ct 609
+611 △ 610
+612 611 △
+613 List.enclose 612
+614 :ct 56
+615 △ 614
+616 :k 605
+617 :k 616
+618 :k 617
+619 :k 618
+620 △ 619
+621 620 △
+622 615 621
+623 613 622
+624 :ct 607
+625 :k 624
 626 :ct 625
-627 :k 626
-628 :ct 627
-629 :ct 628
-630 △ 629
-631 630 △
-632 List.enclose 631
-633 :ct 60
-634 △ 633
-635 :k 624
-636 :k 635
-637 :k 636
-638 :k 637
-639 △ 638
-640 639 △
-641 634 640
-642 632 641
-643 :ct 626
-644 :k 643
-645 :ct 644
-646 △ 645
-647 646 △
-648 642 647
-List.to_source 648
-649 23 39
-650 148 649
-651 18 650
-652 21 651
-653 :c 652
-654 653 39
-655 404 654
-656 18 655
-657 :c 656
-658 264 657
-659 List.foldr 658
-660 659 2
-List.unzip 660
-661 :b 194
-662 :b 363
-663 148 295
-664 662 663
-665 258 664
-666 18 665
-667 661 666
-List._zip_map:1 667
-668 List._zip_map:1 1
-669 :k 668
-670 List.match 669
-671 39 △
-672 List._zip_map:1 671
-673 List.match 672
-674 :b 673
-675 200 24
-676 674 675
-677 199 676
-678 670 677
-679 103 678
-680 :s 679
-681 :b 680
-682 :c 541
-683 :b 682
-684 683 199
-685 508 684
-686 681 685
-687 fix 686
-List.zip 687
-688 :b 333
-689 149 23
-690 119 689
-691 148 690
-692 18 691
-693 688 692
-694 549 693
-695 119 694
-696 333 695
-697 119 696
-698 137 697
-List.zip_with 698
+627 △ 626
+628 627 △
+629 623 628
+List.to_source 629
+630 24 39
+631 145 630
+632 38 631
+633 22 632
+634 457 633
+635 392 634
+636 38 635
+637 :c 636
+638 255 637
+639 List.foldr 638
+640 639 2
+List.unzip 640
+641 :b 183
+642 :b 343
+643 145 272
+644 642 643
+645 249 644
+646 38 645
+647 641 646
+List._zip_map:1 647
+648 List._zip_map:1 1
+649 :k 648
+650 List.match 649
+651 List._zip_map:1 270
+652 List.match 651
+653 :b 652
+654 189 25
+655 653 654
+656 188 655
+657 650 656
+658 99 657
+659 :s 658
+660 :b 659
+661 :c 558
+662 :b 661
+663 662 188
+664 492 663
+665 660 664
+666 fix 665
+List.zip 666
+667 :b 322
+668 146 24
+669 116 668
+670 145 669
+671 38 670
+672 667 671
+673 540 672
+674 116 673
+675 322 674
+676 116 675
+677 134 676
+List.zip_with 677
 Map.Structural.empty △
-699 22 1
-700 21 699
+678 Option.match △
+679 :b 678
+680 679 25
+681 Pair.match 680
+682 List.filter_map 681
+683 18 682
+684 23 1
+685 22 684
+686 :c 685
+687 :b 686
+688 Pair.match 125
+689 List.map 688
+690 :b 689
+691 687 690
+692 255 691
+693 513 692
+694 145 693
+695 38 694
+696 :s 695
+697 :b List.concat_map
+698 :b List.map
+699 698 256
+700 22 699
 701 :c 700
-702 :b 701
-703 Pair.match 128
-704 List.map 703
-705 :b 704
-706 702 705
-707 264 706
-708 529 707
-709 148 708
-710 18 709
-711 :s 710
-712 :b List.concat_map
-713 :b List.map
-714 713 265
-715 21 714
-716 :c 715
-717 264 716
-718 712 717
-719 21 718
-720 :s 719
-721 720 :i
-722 711 721
-723 264 722
-724 fix 723
-Map.Structural._entries_or_more:38 724
-725 472 Map.Structural._entries_or_more:38
-726 :c 725
-727 Option.match △
-728 :b 727
-729 728 24
-730 Pair.match 729
-731 List.filter_map 730
-732 726 731
-Map.Structural.entries 732
-733 199 620
-734 122 733
-Map.Structural._step_v:1 734
-735 :k Map.Structural._step_v:1
-736 triage 735
-737 :b Map.Structural._step_v:1
-738 199 254
-739 122 738
-Map.Structural._step_s:2 739
-740 737 Map.Structural._step_s:2
-Map.Structural._get_vs:4 740
-741 :k Map.Structural._get_vs:4
-742 triage 741
-743 :b Map.Structural._step_s:2
-744 743 Map.Structural._step_s:2
-745 131 744
-Map.Structural._get_ss:5 745
-746 :b Map.Structural._get_ss:5
-747 :b 746
-748 747 353
-749 742 748
-Map.Structural._step_f:3 254
-750 255 Map.Structural._step_s:2
-751 131 750
-752 193 751
-Map.Structural._get_sf:6 752
-753 :b Map.Structural._get_sf:6
-754 :b 753
-755 754 353
-756 103 755
-757 :c 756
-758 :b 757
-759 758 353
-760 749 759
-761 736 760
-762 737 Map.Structural._step_f:3
-763 131 762
-Map.Structural._get_fv:7 763
-764 :b Map.Structural._get_fv:7
-765 :b 764
-766 765 353
-767 triage 766
-768 743 Map.Structural._step_f:3
-769 131 768
-770 193 769
-Map.Structural._get_fs:8 770
-771 :b Map.Structural._get_fs:8
+702 255 701
+703 697 702
+704 22 703
+705 :s 704
+706 705 :i
+707 696 706
+708 255 707
+709 fix 708
+Map.Structural._entries_or_more:38 709
+710 463 Map.Structural._entries_or_more:38
+711 683 710
+Map.Structural.entries 711
+712 188 601
+713 119 712
+Map.Structural._step_v:1 713
+714 :k Map.Structural._step_v:1
+715 triage 714
+716 :b Map.Structural._step_v:1
+717 188 245
+718 119 717
+Map.Structural._step_s:2 718
+719 716 Map.Structural._step_s:2
+Map.Structural._get_vs:4 719
+720 :k Map.Structural._get_vs:4
+721 triage 720
+722 :b Map.Structural._step_s:2
+723 722 Map.Structural._step_s:2
+724 18 723
+725 724 :b
+Map.Structural._get_ss:5 725
+726 :b Map.Structural._get_ss:5
+727 :b 726
+728 727 335
+729 721 728
+Map.Structural._step_f:3 245
+730 246 Map.Structural._step_s:2
+731 18 730
+732 731 :b
+733 18 732
+734 733 201
+Map.Structural._get_sf:6 734
+735 :b Map.Structural._get_sf:6
+736 :b 735
+737 736 335
+738 99 737
+739 :c 738
+740 :b 739
+741 740 335
+742 729 741
+743 715 742
+744 716 Map.Structural._step_f:3
+745 18 744
+746 745 :b
+Map.Structural._get_fv:7 746
+747 :b Map.Structural._get_fv:7
+748 :b 747
+749 748 335
+750 triage 749
+751 722 Map.Structural._step_f:3
+752 18 751
+753 752 :b
+754 18 753
+755 754 201
+Map.Structural._get_fs:8 755
+756 :b Map.Structural._get_fs:8
+757 :b 756
+758 757 335
+759 99 758
+760 :c 759
+761 :b 760
+762 761 335
+763 750 762
+764 246 Map.Structural._step_f:3
+765 18 764
+766 765 :b
+767 18 766
+768 767 201
+769 18 768
+770 769 541
+Map.Structural._get_ff:9 770
+771 :b Map.Structural._get_ff:9
 772 :b 771
-773 772 353
-774 103 773
+773 772 335
+774 99 773
 775 :c 774
 776 :b 775
-777 776 353
-778 767 777
-779 255 Map.Structural._step_f:3
-780 131 779
-781 193 780
-782 586 781
-Map.Structural._get_ff:9 782
-783 :b Map.Structural._get_ff:9
-784 :b 783
-785 784 353
-786 103 785
-787 :c 786
-788 :b 787
-789 788 353
-790 104 789
-791 18 790
-792 :c 791
-793 :b 792
-794 793 353
-795 778 794
-796 761 795
-797 :c 796
-Map.Structural._get_body:10 797
-798 345 Map.Structural._get_body:10
-Map.Structural.pmap_get 798
+777 776 335
+778 100 777
+779 38 778
+780 :c 779
+781 :b 780
+782 781 335
+783 763 782
+784 743 783
+785 :c 784
+Map.Structural._get_body:10 785
+786 325 Map.Structural._get_body:10
+Map.Structural.pmap_get 786
 Map.Structural.get Map.Structural.pmap_get
-799 self_apply Map.Structural._get_body:10
-Map.Structural.pmap_get__fastest 799
-800 triage Map.Structural._step_v:1
-801 :b 800
-802 430 Map.Structural._step_s:2
-803 801 802
-804 :s 803
-805 21 143
-806 :s 805
-807 430 Map.Structural._step_f:3
-808 806 807
-809 804 808
-810 fix 809
-Map.Structural.pmap_get__smallest 810
-811 triage 2
-812 811 △
-813 473 △
-814 103 813
-815 :s 814
-816 199 :k
-817 19 816
-818 :b triage
-819 :b 818
-820 351 :k
-821 :s 820
-822 821 816
-823 :c 822
-824 819 823
-825 103 824
-826 20 825
-827 103 826
-828 817 827
-829 18 828
-830 :c 829
-831 815 830
-Map.Structural._fork_unless_leafy:24 831
-832 :b Map.Structural._fork_unless_leafy:24
-833 :b 832
-834 833 120
-835 18 834
-836 812 835
-837 833 836
-838 18 837
-839 812 838
-Map.Structural._rem_v:25 839
-840 :c Map.Structural._rem_v:25
-Map.Structural._rem_at_v:28 840
-841 :k Map.Structural._rem_at_v:28
-842 triage 841
-843 19 120
-844 21 Map.Structural._fork_unless_leafy:24
-845 21 844
-846 843 845
-847 812 846
-848 833 847
-849 18 848
-850 812 849
-Map.Structural._rem_s:26 850
-851 :c Map.Structural._rem_s:26
-852 :b 851
-853 852 Map.Structural._rem_at_v:28
-Map.Structural._rem_vs:31 853
-854 :k Map.Structural._rem_vs:31
-855 triage 854
-Map.Structural._rem_at_s:29 851
-856 852 Map.Structural._rem_at_s:29
-Map.Structural._rem_ss:32 856
-857 :b Map.Structural._rem_ss:32
+787 self_apply Map.Structural._get_body:10
+Map.Structural.pmap_get__fastest 787
+788 triage Map.Structural._step_v:1
+789 :b 788
+790 18 Map.Structural._step_s:2
+791 :b 790
+792 791 22
+793 789 792
+794 :s 793
+795 22 140
+796 :s 795
+797 18 Map.Structural._step_f:3
+798 :b 797
+799 798 22
+800 796 799
+801 794 800
+802 fix 801
+Map.Structural.pmap_get__smallest 802
+803 triage 2
+804 803 △
+805 464 △
+806 99 805
+807 :s 806
+808 188 :k
+809 18 808
+810 :b triage
+811 :b 810
+812 333 :k
+813 :s 812
+814 813 808
+815 :c 814
+816 811 815
+817 99 816
+818 21 817
+819 99 818
+820 809 819
+821 38 820
+822 :c 821
+823 807 822
+Map.Structural._fork_unless_leafy:24 823
+824 :b Map.Structural._fork_unless_leafy:24
+825 :b 824
+826 825 117
+827 38 826
+828 804 827
+829 825 828
+830 38 829
+831 804 830
+Map.Structural._rem_v:25 831
+832 :c Map.Structural._rem_v:25
+Map.Structural._rem_at_v:28 832
+833 :k Map.Structural._rem_at_v:28
+834 triage 833
+835 18 117
+836 22 Map.Structural._fork_unless_leafy:24
+837 22 836
+838 835 837
+839 804 838
+840 825 839
+841 38 840
+842 804 841
+Map.Structural._rem_s:26 842
+843 :c Map.Structural._rem_s:26
+844 :b 843
+845 844 Map.Structural._rem_at_v:28
+Map.Structural._rem_vs:31 845
+846 :k Map.Structural._rem_vs:31
+847 triage 846
+Map.Structural._rem_at_s:29 843
+848 844 Map.Structural._rem_at_s:29
+Map.Structural._rem_ss:32 848
+849 :b Map.Structural._rem_ss:32
+850 :b 849
+851 :b 850
+852 851 335
+853 847 852
+Map.Structural._rem_f:27 839
+854 :c Map.Structural._rem_f:27
+Map.Structural._rem_at_f:30 854
+855 844 Map.Structural._rem_at_f:30
+Map.Structural._rem_sf:33 855
+856 :b Map.Structural._rem_sf:33
+857 :b 856
 858 :b 857
 859 :b 858
-860 859 353
-861 855 860
-Map.Structural._rem_f:27 847
-862 :c Map.Structural._rem_f:27
-Map.Structural._rem_at_f:30 862
-863 852 Map.Structural._rem_at_f:30
-Map.Structural._rem_sf:33 863
-864 :b Map.Structural._rem_sf:33
-865 :b 864
-866 :b 865
-867 :b 866
-868 148 353
-869 103 868
-870 21 869
-871 363 870
-872 867 871
-873 861 872
-874 842 873
-875 :b 862
-876 875 Map.Structural._rem_at_v:28
-Map.Structural._rem_fv:34 876
-877 :b Map.Structural._rem_fv:34
+860 145 335
+861 99 860
+862 22 861
+863 343 862
+864 859 863
+865 853 864
+866 834 865
+867 :b 854
+868 867 Map.Structural._rem_at_v:28
+Map.Structural._rem_fv:34 868
+869 :b Map.Structural._rem_fv:34
+870 :b 869
+871 :b 870
+872 871 335
+873 triage 872
+874 867 Map.Structural._rem_at_s:29
+Map.Structural._rem_fs:35 874
+875 :b Map.Structural._rem_fs:35
+876 :b 875
+877 :b 876
 878 :b 877
-879 :b 878
-880 879 353
-881 triage 880
-882 875 Map.Structural._rem_at_s:29
-Map.Structural._rem_fs:35 882
-883 :b Map.Structural._rem_fs:35
+879 878 863
+880 873 879
+881 867 Map.Structural._rem_at_f:30
+Map.Structural._rem_ff:36 881
+882 :b Map.Structural._rem_ff:36
+883 :b 882
 884 :b 883
 885 :b 884
 886 :b 885
-887 886 871
-888 881 887
-889 875 Map.Structural._rem_at_f:30
-Map.Structural._rem_ff:36 889
-890 :b Map.Structural._rem_ff:36
-891 :b 890
-892 :b 891
-893 :b 892
-894 :b 893
-895 19 871
-896 21 870
-897 895 896
-898 894 897
-899 888 898
-900 874 899
-901 :c 900
-Map.Structural._rem_body:37 901
-902 345 Map.Structural._rem_body:37
-903 :c 902
-904 903 2
-Map.Structural.pmap_remove 904
-905 self_apply Map.Structural._rem_body:37
-906 :c 905
-907 906 2
-Map.Structural.pmap_remove__fastest 907
-908 triage 840
-909 :b 908
-910 :b 852
-911 909 910
-912 :s 911
-913 :b 875
-914 :b 913
-915 :b 914
-916 :s 559
-917 916 :i
-918 915 917
-919 912 918
-920 fix 919
-921 :c 920
-922 921 2
-Map.Structural.pmap_remove__smallest 922
-923 120 △
-924 22 923
-925 :c 924
-926 925 △
-927 22 926
-928 :c 927
-929 928 △
+887 18 863
+888 22 862
+889 887 888
+890 886 889
+891 880 890
+892 866 891
+893 :c 892
+Map.Structural._rem_body:37 893
+894 325 Map.Structural._rem_body:37
+895 441 894
+Map.Structural.pmap_remove 895
+896 self_apply Map.Structural._rem_body:37
+897 441 896
+Map.Structural.pmap_remove__fastest 897
+898 triage 832
+899 :b 898
+900 :b 844
+901 899 900
+902 :s 901
+903 :b 867
+904 :b 903
+905 :b 904
+906 38 573
+907 :s 906
+908 907 :i
+909 905 908
+910 902 909
+911 fix 910
+912 441 911
+Map.Structural.pmap_remove__smallest 912
+913 117 △
+914 23 913
+915 19 914
+916 23 915
+917 19 916
+918 triage 917
+919 918 △
+920 triage 915
+921 920 △
+922 24 117
+923 38 922
+924 921 923
+925 24 924
+926 38 925
+927 919 926
+Map.Structural._set_v:11 927
+928 :c Map.Structural._set_v:11
+Map.Structural._at_v:14 928
+929 :k Map.Structural._at_v:14
 930 triage 929
-931 930 △
-932 triage 926
-933 932 △
-934 23 120
-935 18 934
-936 933 935
-937 23 936
-938 18 937
-939 931 938
-Map.Structural._set_v:11 939
-940 :c Map.Structural._set_v:11
-Map.Structural._at_v:14 940
-941 :k Map.Structural._at_v:14
-942 triage 941
-943 199 923
-944 22 943
-945 :c 944
-946 945 △
+931 188 913
+932 23 931
+933 19 932
+934 triage 933
+935 934 △
+936 triage 931
+937 936 △
+938 835 277
+939 937 938
+940 24 939
+941 38 940
+942 935 941
+Map.Structural._set_s:12 942
+943 :c Map.Structural._set_s:12
+944 :b 943
+945 944 Map.Structural._at_v:14
+Map.Structural._set_vs:17 945
+946 :k Map.Structural._set_vs:17
 947 triage 946
-948 947 △
-949 triage 943
-950 949 △
-951 843 279
-952 950 951
-953 23 952
-954 18 953
-955 948 954
-Map.Structural._set_s:12 955
-956 :c Map.Structural._set_s:12
+Map.Structural._at_s:15 943
+948 944 Map.Structural._at_s:15
+Map.Structural._set_ss:18 948
+949 :b Map.Structural._set_ss:18
+950 :b 949
+951 :b 950
+952 951 335
+953 947 952
+Map.Structural._set_f:13 939
+954 :c Map.Structural._set_f:13
+Map.Structural._at_f:16 954
+955 944 Map.Structural._at_f:16
+Map.Structural._set_sf:19 955
+956 :b Map.Structural._set_sf:19
 957 :b 956
-958 957 Map.Structural._at_v:14
-Map.Structural._set_vs:17 958
-959 :k Map.Structural._set_vs:17
-960 triage 959
-Map.Structural._at_s:15 956
-961 957 Map.Structural._at_s:15
-Map.Structural._set_ss:18 961
-962 :b Map.Structural._set_ss:18
-963 :b 962
-964 :b 963
-965 964 353
-966 960 965
-Map.Structural._set_f:13 952
-967 :c Map.Structural._set_f:13
-Map.Structural._at_f:16 967
-968 957 Map.Structural._at_f:16
-Map.Structural._set_sf:19 968
-969 :b Map.Structural._set_sf:19
-970 :b 969
-971 :b 970
+958 :b 957
+959 :b 958
+960 959 863
+961 953 960
+962 930 961
+963 :b 954
+964 963 Map.Structural._at_v:14
+Map.Structural._set_fv:20 964
+965 :b Map.Structural._set_fv:20
+966 :b 965
+967 :b 966
+968 967 335
+969 triage 968
+970 963 Map.Structural._at_s:15
+Map.Structural._set_fs:21 970
+971 :b Map.Structural._set_fs:21
 972 :b 971
-973 972 871
-974 966 973
-975 942 974
-976 :b 967
-977 976 Map.Structural._at_v:14
-Map.Structural._set_fv:20 977
-978 :b Map.Structural._set_fv:20
+973 :b 972
+974 :b 973
+975 974 863
+976 969 975
+977 963 Map.Structural._at_f:16
+Map.Structural._set_ff:22 977
+978 :b Map.Structural._set_ff:22
 979 :b 978
 980 :b 979
-981 980 353
-982 triage 981
-983 976 Map.Structural._at_s:15
-Map.Structural._set_fs:21 983
-984 :b Map.Structural._set_fs:21
-985 :b 984
-986 :b 985
-987 :b 986
-988 987 871
-989 982 988
-990 976 Map.Structural._at_f:16
-Map.Structural._set_ff:22 990
-991 :b Map.Structural._set_ff:22
-992 :b 991
-993 :b 992
+981 :b 980
+982 :b 981
+983 982 889
+984 976 983
+985 962 984
+986 :c 985
+Map.Structural._set_body:23 986
+987 325 Map.Structural._set_body:23
+988 22 987
+989 21 988
+Map.Structural.pmap_set 989
+990 self_apply Map.Structural._set_body:23
+991 22 990
+992 21 991
+Map.Structural.pmap_set__fastest 992
+993 triage 928
 994 :b 993
-995 :b 994
-996 995 897
-997 989 996
-998 975 997
-999 :c 998
-Map.Structural._set_body:23 999
-1000 345 Map.Structural._set_body:23
-1001 21 1000
-1002 20 1001
-Map.Structural.pmap_set 1002
-1003 self_apply Map.Structural._set_body:23
-1004 21 1003
-1005 20 1004
-Map.Structural.pmap_set__fastest 1005
-1006 triage 940
-1007 :b 1006
-1008 :b 957
-1009 1007 1008
-1010 :s 1009
-1011 :b 976
-1012 :b 1011
-1013 :b 1012
-1014 1013 917
-1015 1010 1014
-1016 fix 1015
-1017 21 1016
-1018 20 1017
-Map.Structural.pmap_set__smallest 1018
+995 :b 944
+996 994 995
+997 :s 996
+998 :b 963
+999 :b 998
+1000 :b 999
+1001 1000 908
+1002 997 1001
+1003 fix 1002
+1004 22 1003
+1005 21 1004
+Map.Structural.pmap_set__smallest 1005
 Map.Structural.remove Map.Structural.pmap_remove
-1019 21 Map.Structural.pmap_set
-1020 :c 1019
-1021 1020 △
-Map.Structural.set 1021
-1022 :b 950
-1023 818 923
-1024 :s 1023
-1025 1024 943
-1026 :s 1025
-1027 :b 1026
-1028 :b 1027
-1029 18 517
-1030 1028 1029
-1031 818 1030
-1032 :c 1031
-1033 1032 △
-1034 :s 1033
-1035 819 120
-1036 103 1035
-1037 21 1036
-1038 :c 1037
-1039 :b 1038
-1040 1039 :c
-1041 547 1040
-1042 149 1041
-1043 119 1042
-1044 18 1043
-1045 :s 1044
-1046 1045 1029
-1047 1034 1046
-1048 1022 1047
-1049 18 1048
-1050 fix 1049
-Map.Structural._to_func:42 1050
-1051 Map.Structural._to_func:42 id
-Map.Structural.to_func 1051
+1006 22 Map.Structural.pmap_set
+1007 19 1006
+Map.Structural.set 1007
+1008 :b 937
+1009 810 913
+1010 :s 1009
+1011 1010 931
+1012 :s 1011
+1013 :b 1012
+1014 :b 1013
+1015 38 501
+1016 1014 1015
+1017 810 1016
+1018 19 1017
+1019 :s 1018
+1020 811 117
+1021 99 1020
+1022 22 1021
+1023 :c 1022
+1024 :b 1023
+1025 1024 :c
+1026 564 1025
+1027 146 1026
+1028 116 1027
+1029 38 1028
+1030 :s 1029
+1031 1030 1015
+1032 1019 1031
+1033 1008 1032
+1034 38 1033
+1035 fix 1034
+Map.Structural._to_func:42 1035
+1036 Map.Structural._to_func:42 id
+Map.Structural.to_func 1036
 Map.empty △
 Map.entries Map.Structural.entries
 Map.get Map.Structural.get
@@ -1241,2595 +1226,2500 @@ Map.pmap_set__smallest Map.Structural.pmap_set__smallest
 Map.remove Map.Structural.remove
 Map.set Map.Structural.set
 Map.to_func Map.Structural.to_func
-1052 189 816
-1053 :s 1052
-1054 1053 :i
-1055 Bool.match 1054
-1056 1055 Nat.succ
-Nat._carry:4 1056
-1057 249 Nat._carry:4
-1058 triage 1057
-1059 :c Nat._carry:4
-1060 1058 1059
-1061 :b 1060
-1062 :c 923
-1063 1062 △
-1064 Bool.match 1063
-1065 120 true
-1066 :c 1065
-1067 1066 △
-1068 1064 1067
-1069 Bool.match 1068
-1070 Bool.match 1067
-1071 1062 true
-1072 1070 1071
-1073 1069 1072
-1074 Bool.match 1073
-1075 Bool.match 1072
-1076 Bool.match 1071
-1077 1066 true
-1078 1076 1077
-1079 1075 1078
-1080 1074 1079
-Nat._add_3bits_k:3 1080
-1081 264 Nat._add_3bits_k:3
-1082 :c 1081
-1083 18 1082
-1084 21 1083
-1085 :c 1084
-1086 :b 1085
-1087 1086 217
-1088 1061 1087
-1089 fix 1088
-Nat._add:6 1089
-1090 :b Nat._add:6
-1091 :b 1090
-1092 189 675
-1093 199 1092
-1094 257 1093
-1095 103 1094
-1096 :s 1095
-1097 :b 1096
-1098 1097 685
-1099 fix 1098
-Nat._zip_rest:5 1099
-1100 1091 Nat._zip_rest:5
-1101 18 1100
-1102 :c 1101
-1103 1102 △
-Nat.add 1103
-1104 Bool.match 671
-1105 22 Bool.not
-1106 :s 1105
-1107 1106 :i
-1108 1104 1107
-1109 Bool.match 1108
-1110 Bool.match 1107
-1111 39 true
-1112 1110 1111
-1113 1109 1112
-Nat.add_3bits 1113
-1114 △ id
-1115 1114 Nat.succ
-1116 List.match 1115
-1117 :b 1116
-1118 :c Pair.match
-Pair.let 1118
-1119 :b Pair.let
-1120 103 1119
-1121 21 1120
-1122 :c 1121
-1123 148 813
-1124 148 1123
-1125 18 1124
-1126 :s 1125
-Nat._copy_step:20 244
-1127 :c Nat._copy_step:20
-1128 23 1127
-1129 103 1128
-1130 21 1129
-1131 :s 1130
-1132 456 195
-1133 103 1132
-1134 21 1133
-1135 :c 1134
-1136 1135 199
-1137 119 1136
-1138 447 1137
-Nat._flip_step:21 1138
-1139 :b Nat._flip_step:21
-1140 1139 Nat.succ
-1141 :c 1140
-1142 18 1141
-1143 1131 1142
-1144 457 1143
-1145 104 1144
-1146 103 1145
-1147 :s 1146
-1148 :c Nat._flip_step:21
-1149 18 1148
-1150 191 1149
-1151 104 1150
-1152 103 1151
+1037 180 808
+1038 :s 1037
+1039 1038 :i
+1040 Bool.match 1039
+1041 1040 Nat.succ
+Nat._carry:4 1041
+1042 19 Nat._carry:4
+1043 triage 1042
+1044 :c Nat._carry:4
+1045 1043 1044
+1046 :b 1045
+1047 19 913
+1048 Bool.match 1047
+1049 117 true
+1050 19 1049
+1051 1048 1050
+1052 Bool.match 1051
+1053 Bool.match 1050
+1054 21 913
+1055 1053 1054
+1056 1052 1055
+1057 Bool.match 1056
+1058 Bool.match 1055
+1059 Bool.match 1054
+1060 21 1049
+1061 1059 1060
+1062 1058 1061
+1063 1057 1062
+Nat._add_3bits_k:3 1063
+1064 255 Nat._add_3bits_k:3
+1065 :c 1064
+1066 38 1065
+1067 22 1066
+1068 :c 1067
+1069 :b 1068
+1070 1069 209
+1071 1046 1070
+1072 fix 1071
+Nat._add:6 1072
+1073 :b Nat._add:6
+1074 :b 1073
+1075 180 654
+1076 188 1075
+1077 248 1076
+1078 99 1077
+1079 :s 1078
+1080 :b 1079
+1081 1080 664
+1082 fix 1081
+Nat._zip_rest:5 1082
+1083 1074 Nat._zip_rest:5
+1084 20 1083
+Nat.add 1084
+1085 Bool.match 270
+1086 23 Bool.not
+1087 :s 1086
+1088 1087 :i
+1089 1085 1088
+1090 Bool.match 1089
+1091 Bool.match 1088
+1092 21 △
+1093 1091 1092
+1094 1090 1093
+Nat.add_3bits 1094
+1095 △ id
+1096 1095 Nat.succ
+1097 List.match 1096
+1098 :b 1097
+1099 145 805
+1100 145 1099
+1101 38 1100
+1102 :s 1101
+Nat._copy_step:20 236
+1103 :c Nat._copy_step:20
+1104 24 1103
+1105 99 1104
+1106 22 1105
+1107 :s 1106
+1108 18 188
+1109 442 184
+1110 99 1109
+1111 22 1110
+1112 1108 1111
+1113 116 1112
+1114 18 1113
+1115 1114 438
+Nat._flip_step:21 1115
+1116 :b Nat._flip_step:21
+1117 1116 Nat.succ
+1118 :c 1117
+1119 38 1118
+1120 1107 1119
+1121 443 1120
+1122 100 1121
+1123 99 1122
+1124 :s 1123
+1125 :b Nat._copy_step:20
+1126 1125 Nat.succ
+1127 :c 1126
+1128 18 1127
+1129 :c Nat._flip_step:21
+1130 38 1129
+1131 182 1130
+1132 100 1131
+1133 99 1132
+1134 1128 1133
+1135 1124 1134
+1136 116 1135
+1137 38 1136
+1138 :c 1137
+1139 1102 1138
+1140 18 1139
+1141 :c Pair.match
+Pair.let 1141
+1142 :b Pair.let
+1143 99 1142
+1144 22 1143
+1145 1140 1144
+1146 1098 1145
+1147 fix 1146
+Nat._add_chain:24 1147
+1148 602 Nat._add_chain:24
+Nat.add_const 1148
+1149 359 △
+1150 99 1149
+1151 :s 1150
+1152 176 319
 1153 :c 1152
-1154 :b Nat._copy_step:20
-1155 1154 Nat.succ
-1156 :c 1155
-1157 1153 1156
-1158 1147 1157
-1159 119 1158
-1160 18 1159
-1161 :c 1160
-1162 1126 1161
-1163 1122 1162
-1164 1117 1163
-1165 fix 1164
-Nat._add_chain:24 1165
-1166 621 Nat._add_chain:24
-Nat.add_const 1166
-1167 336 △
-1168 103 1167
-1169 :s 1168
-1170 184 330
-1171 :c 1170
-1172 1169 1171
-1173 120 1172
-1174 249 1173
-Nat._canonicalize__common:11 1174
-1175 Nat._canonicalize__common:11 List.foldr__fastest
-Nat.canonicalize__fastest 1175
+1154 1151 1153
+1155 117 1154
+1156 19 1155
+Nat._canonicalize__common:11 1156
+1157 Nat._canonicalize__common:11 List.foldr__fastest
+Nat.canonicalize__fastest 1157
 Nat.canonicalize Nat.canonicalize__fastest
-1176 :b Nat.canonicalize
-1177 :b 1176
-1178 :b 1177
-1179 713 Pair.match
-1180 21 1179
-1181 21 1180
-1182 :c 1181
-1183 1182 List.zip
-1184 1178 1183
-Nat._bitwise:1 1184
-1185 Nat._bitwise:1 Bool.and
-Nat.bit_and 1185
-1186 Nat._bitwise:1 Bool.or
-Nat.bit_or 1186
-1187 Bool.match 85
-1188 :ct 84
-1189 1187 1188
-1190 22 1189
-1191 21 1190
-1192 List.foldr 1191
-1193 1192 id
-Nat.bits_to_dstring 1193
-1194 Nat.add_const 85
-1195 Bool.match 1194
-1196 1070 1063
-1197 Bool.match 1196
-1198 1076 1067
-1199 1197 1198
-1200 Bool.match 1199
-1201 Bool.match 1198
-1202 Bool.match 1077
-1203 1202 1071
-1204 1201 1203
-1205 1200 1204
-Nat._sub_3bits_k:7 1205
-1206 264 Nat._sub_3bits_k:7
-1207 :c 1206
-1208 18 1207
-1209 21 1208
-1210 :c 1209
-1211 :b 1210
-1212 1211 217
-1213 258 1212
-1214 fix 1213
-Nat._sub__fastest:9 1214
-1215 :b Nat._sub__fastest:9
-1216 :b 1215
-1217 1216 List.zip
-1218 18 1217
-1219 :c 1218
-1220 1219 true
-Nat.ncsub__fastest 1220
-1221 1177 Nat.ncsub__fastest
-Nat.sub__fastest 1221
+1158 :b Nat.canonicalize
+1159 :b 1158
+1160 :b 1159
+1161 18 List.zip
+1162 698 Pair.match
+1163 22 1162
+1164 22 1163
+1165 1161 1164
+1166 1160 1165
+Nat._bitwise:1 1166
+1167 Nat._bitwise:1 Bool.and
+Nat.bit_and 1167
+1168 Nat._bitwise:1 Bool.or
+Nat.bit_or 1168
+1169 Bool.match 81
+1170 :ct 80
+1171 1169 1170
+1172 23 1171
+1173 22 1172
+1174 List.foldr 1173
+1175 1174 id
+Nat.bits_to_dstring 1175
+1176 Nat.add_const 81
+1177 Bool.match 1176
+1178 :b 21
+1179 1053 1047
+1180 Bool.match 1179
+1181 1059 1050
+1182 1180 1181
+1183 Bool.match 1182
+1184 Bool.match 1181
+1185 Bool.match 1060
+1186 1185 1054
+1187 1184 1186
+1188 1183 1187
+Nat._sub_3bits_k:7 1188
+1189 255 Nat._sub_3bits_k:7
+1190 :c 1189
+1191 38 1190
+1192 22 1191
+1193 :c 1192
+1194 :b 1193
+1195 1194 209
+1196 249 1195
+1197 fix 1196
+Nat._sub__fastest:9 1197
+1198 :b Nat._sub__fastest:9
+1199 :b 1198
+1200 1199 List.zip
+1201 1178 1200
+Nat.ncsub__fastest 1201
+1202 1159 Nat.ncsub__fastest
+Nat.sub__fastest 1202
 Nat.sub Nat.sub__fastest
-1222 :ct 638
-1223 Nat.sub 1222
-1224 :k 625
-1225 1223 1224
-1226 Nat.add_const 1225
-1227 1195 1226
-1228 :b 1227
-1229 :b 200
-1230 :c Bool.and
-1231 :b 1230
-1232 :b 1231
-1233 1232 Bool.or
-1234 1229 1233
-1235 190 1234
-1236 189 1235
-1237 188 1236
-1238 :k 1237
-1239 188 1238
-Nat._is_ge_10:3 1239
-1240 1228 Nat._is_ge_10:3
-1241 :s 1240
-1242 1241 :i
-Nat._to_char:4 1242
-1243 :b Nat._to_char:4
-1244 :c Fn.pow
-1245 188 253
-Nat.div2 1245
-1246 1244 Nat.div2
-Nat.shr 1246
-1247 Nat.shr 635
-1248 1243 1247
-1249 22 1248
-1250 :s 1249
-1251 List.take 635
-1252 1243 1251
-1253 22 1252
-1254 249 1253
-1255 1250 1254
-Nat.byte_to_hex 1255
-Nat.canonicalize__smallest 1175
-1256 :s Nat.add
-Nat.double 611
-1257 1256 Nat.double
-1258 389 1257
-1259 Bool.match 1258
-1260 1259 Nat.div2
-1261 :b 1260
-1262 199 Bool.not
-1263 328 1262
-Nat._is_even:1 1263
-1264 1261 Nat._is_even:1
-1265 :s 1264
-1266 1265 :i
-Nat.collatz_step 1266
-1267 19 2
-1268 131 Nat.collatz_step
-1269 393 1268
-1270 260 1269
-1271 1267 1270
-1272 21 1271
-1273 :c 1272
-1274 21 Bool.and
-1275 :c 1274
-Nat.is_zero 329
-1276 1275 Nat.is_zero
-1277 188 1276
-Nat._is_one:2 1277
-1278 1273 Nat._is_one:2
-1279 103 1278
-1280 101 1279
-1281 fix 1280
-Nat.collatz_steps 1281
-1282 Bool.match Nat.sub
-1283 :c Nat.sub
-1284 1282 1283
-1285 :b 1284
-1286 :b 1285
-1287 :b 112
-1288 21 Bool.or
-1289 :c 1288
-1290 :c Bool.match
-1291 1290 9
-1292 189 1291
-1293 fix 1292
-Nat._any:14 1293
-1294 1289 Nat._any:14
-1295 1287 1294
-1296 538 1295
-1297 :s 1296
-1298 :b 1297
-1299 21 194
-1300 21 1299
-1301 :c 1300
-1302 :c Bool.or
-1303 :b 1302
-1304 1303 Bool.not
-1305 1301 1304
-1306 549 1305
-1307 1298 1306
-1308 119 1307
-1309 332 1308
-Nat._lte_t:15 1309
-1310 wait Nat._lte_t:15
-1311 List.match Nat._any:14
-1312 :b 1311
-1313 1231 Bool.not
-1314 1301 1313
-1315 549 1314
-1316 259 1315
-1317 119 1316
-1318 1312 1317
-Nat._lte_f:16 1318
-1319 Bool.match Nat._lte_f:16
-1320 1319 Nat._lte_t:15
-1321 :c 1320
-Nat._lte_body:17 1321
-1322 1310 Nat._lte_body:17
-Nat.is_lte 1322
-1323 1286 Nat.is_lte
-1324 18 1323
+1203 :ct 619
+1204 Nat.sub 1203
+1205 :k 606
+1206 1204 1205
+1207 Nat.add_const 1206
+1208 1177 1207
+1209 :b 1208
+1210 :b 189
+1211 :c Bool.and
+1212 :b 1211
+1213 :b 1212
+1214 1213 Bool.or
+1215 1210 1214
+1216 181 1215
+1217 180 1216
+1218 179 1217
+1219 :k 1218
+1220 179 1219
+Nat._is_ge_10:3 1220
+1221 1209 Nat._is_ge_10:3
+1222 :s 1221
+1223 1222 :i
+Nat._to_char:4 1223
+1224 :b Nat._to_char:4
+1225 179 244
+Nat.div2 1225
+1226 18 Nat.div2
+1227 1226 Fn.pow
+Nat.shr 1227
+1228 Nat.shr 616
+1229 1224 1228
+1230 23 1229
+1231 :s 1230
+1232 List.take 616
+1233 1224 1232
+1234 23 1233
+1235 19 1234
+1236 1231 1235
+Nat.byte_to_hex 1236
+Nat.canonicalize__smallest 1157
+1237 :s Nat.add
+Nat.double 591
+1238 1237 Nat.double
+1239 377 1238
+1240 Bool.match 1239
+1241 1240 Nat.div2
+1242 :b 1241
+1243 188 Bool.not
+1244 317 1243
+Nat._is_even:1 1244
+1245 1242 Nat._is_even:1
+1246 :s 1245
+1247 1246 :i
+Nat.collatz_step 1247
+Nat.is_zero 318
+1248 18 Nat.is_zero
+1249 22 Bool.and
+1250 1248 1249
+1251 179 1250
+Nat._is_one:2 1251
+1252 18 Nat._is_one:2
+1253 18 Nat.collatz_step
+1254 1253 :b
+1255 381 1254
+1256 251 1255
+1257 441 1256
+1258 22 1257
+1259 1252 1258
+1260 99 1259
+1261 97 1260
+1262 fix 1261
+Nat.collatz_steps 1262
+1263 Bool.match Nat.sub
+1264 :c Nat.sub
+1265 1263 1264
+1266 :b 1265
+1267 :b 1266
+1268 :b 108
+1269 18 10
+1270 1269 Bool.match
+1271 180 1270
+1272 fix 1271
+Nat._any:14 1272
+1273 18 Nat._any:14
+1274 22 Bool.or
+1275 1273 1274
+1276 1268 1275
+1277 522 1276
+1278 :s 1277
+1279 :b 1278
+1280 :c Bool.or
+1281 :b 1280
+1282 1281 Bool.not
+1283 18 1282
+1284 22 183
+1285 22 1284
+1286 1283 1285
+1287 540 1286
+1288 1279 1287
+1289 116 1288
+1290 321 1289
+Nat._lte_t:15 1290
+1291 wait Nat._lte_t:15
+1292 List.match Nat._any:14
+1293 :b 1292
+1294 1212 Bool.not
+1295 18 1294
+1296 1295 1285
+1297 540 1296
+1298 250 1297
+1299 116 1298
+1300 1293 1299
+Nat._lte_f:16 1300
+1301 Bool.match Nat._lte_f:16
+1302 1301 Nat._lte_t:15
+1303 :c 1302
+Nat._lte_body:17 1303
+1304 1291 Nat._lte_body:17
+Nat.is_lte 1304
+1305 1267 Nat.is_lte
+1306 38 1305
+1307 :s 1306
+1308 1307 :i
+1309 99 1308
+1310 97 1309
+Nat.diff 1310
+1311 18 Nat.canonicalize
+1312 1311 207
+1313 Pair.match 1312
+1314 :b 1313
+1315 :b 1314
+1316 23 Nat.double
+1317 22 1316
+1318 :c 1317
+1319 :b 1318
+1320 1319 △
+1321 1210 1320
+1322 443 1321
+1323 100 1322
+1324 99 1323
 1325 :s 1324
-1326 1325 :i
-1327 103 1326
-1328 101 1327
-Nat.diff 1328
-1329 216 Nat.canonicalize
-1330 Pair.match 1329
+1326 377 Nat.double
+1327 23 1326
+1328 22 1327
+1329 22 1328
+1330 :c 1329
 1331 :b 1330
-1332 :b 1331
-1333 22 Nat.double
-1334 21 1333
-1335 :c 1334
-1336 :b 1335
-1337 1336 △
-1338 1229 1337
-1339 457 1338
-1340 104 1339
-1341 103 1340
-1342 :s 1341
-1343 389 Nat.double
-1344 22 1343
-1345 21 1344
-1346 21 1345
-1347 :c 1346
-1348 :b 1347
-1349 :b Nat.sub__fastest
-1350 :b 1349
-1351 1350 △
-1352 1348 1351
-1353 1342 1352
-1354 104 1353
-1355 18 1354
-1356 :s 1355
-1357 :b 1356
-1358 Nat._lte_t:15 Nat._lte_body:17
-Nat.is_lte__fastest 1358
-1359 21 Nat.is_lte__fastest
-1360 21 1359
-1361 :c 1360
-1362 1361 △
-1363 1357 1362
-1364 549 1363
-1365 119 1364
-1366 18 1365
-1367 :s 1366
-1368 1367 :i
-1369 404 1368
-1370 146 1369
-1371 :c 1370
-1372 1371 2
-1373 :c 1372
-1374 1332 1373
-Nat.divmod__fastest 1374
-1375 622 Nat.divmod__fastest
-Nat.div__fastest 1375
+1332 :b Nat.sub__fastest
+1333 :b 1332
+1334 1333 △
+1335 1331 1334
+1336 1325 1335
+1337 100 1336
+1338 38 1337
+1339 :s 1338
+1340 :b 1339
+1341 Nat._lte_t:15 Nat._lte_body:17
+Nat.is_lte__fastest 1341
+1342 22 Nat.is_lte__fastest
+1343 22 1342
+1344 19 1343
+1345 1340 1344
+1346 540 1345
+1347 116 1346
+1348 38 1347
+1349 :s 1348
+1350 1349 :i
+1351 392 1350
+1352 143 1351
+1353 441 1352
+1354 :c 1353
+1355 1315 1354
+Nat.divmod__fastest 1355
+1356 603 Nat.divmod__fastest
+Nat.div__fastest 1356
 Nat.div Nat.div__fastest
-1376 :b 1229
-1377 19 :c
-1378 819 1333
-1379 18 1378
-1380 :s 1379
-1381 :b 1380
-1382 131 Nat.double
-1383 23 1382
-1384 1381 1383
-1385 119 1384
-1386 18 1385
-1387 :c 1386
-1388 1387 △
-1389 104 1388
-1390 18 1389
-1391 21 1390
-1392 21 1391
-1393 1377 1392
-1394 583 1393
-1395 473 1394
-1396 149 1395
-1397 119 1396
-1398 18 1397
-1399 :c 1398
-1400 1399 1
-1401 1376 1400
-Nat._divmod:18 1401
-1402 Nat._divmod:18 Nat.succ__smallest
-1403 22 Nat.canonicalize__smallest
-1404 335 1403
-1405 :c 1404
-1406 Pair.match 1405
-1407 :b 1406
-1408 :b 1407
-1409 List.match 283
-1410 :b 1409
-1411 264 458
-1412 21 1411
-1413 :c 1412
-1414 :b 1413
-1415 1211 1414
-1416 1410 1415
-1417 fix 1416
-Nat._sub_wc:10 1417
-1418 :b Nat._sub_wc:10
-1419 :b 1418
-1420 1419 List.zip
-1421 18 1420
-1422 :c 1421
-1423 1422 true
-1424 1408 1423
-Nat._sub_check__smallest:12 1424
-1425 1402 Nat._sub_check__smallest:12
-1426 1425 List.foldr__smallest
-1427 103 1426
-1428 :s 1427
-1429 :s △
-1430 :b 1429
-1431 :b 1430
-1432 430 Nat.double
-1433 1431 1432
-1434 199 1433
-1435 258 1434
-1436 fix 1435
-1437 1428 1436
-Nat.divmod__smallest 1437
-1438 622 Nat.divmod__smallest
-Nat.div__smallest 1438
+1357 :b 1210
+1358 :b 1178
+1359 18 :c
+1360 :b 20
+1361 811 1316
+1362 38 1361
+1363 :s 1362
+1364 :b 1363
+1365 592 :b
+1366 24 1365
+1367 1364 1366
+1368 1360 1367
+1369 100 1368
+1370 38 1369
+1371 22 1370
+1372 22 1371
+1373 1359 1372
+1374 536 1373
+1375 464 1374
+1376 146 1375
+1377 1358 1376
+1378 1357 1377
+Nat._divmod:18 1378
+1379 Nat._divmod:18 Nat.succ__smallest
+1380 23 Nat.canonicalize__smallest
+1381 358 1380
+1382 :c 1381
+1383 Pair.match 1382
+1384 :b 1383
+1385 :b 1384
+1386 List.match 270
+1387 :b 1386
+1388 255 444
+1389 22 1388
+1390 :c 1389
+1391 :b 1390
+1392 1194 1391
+1393 1387 1392
+1394 fix 1393
+Nat._sub_wc:10 1394
+1395 :b Nat._sub_wc:10
+1396 :b 1395
+1397 1396 List.zip
+1398 1178 1397
+1399 1385 1398
+Nat._sub_check__smallest:12 1399
+1400 1379 Nat._sub_check__smallest:12
+1401 1400 List.foldr__smallest
+1402 99 1401
+1403 :s 1402
+1404 :s △
+1405 :b 1404
+1406 :b 1405
+1407 :b 592
+1408 1407 22
+1409 1406 1408
+1410 188 1409
+1411 249 1410
+1412 fix 1411
+1413 1403 1412
+Nat.divmod__smallest 1413
+1414 603 Nat.divmod__smallest
+Nat.div__smallest 1414
 Nat.divmod Nat.divmod__fastest
-1439 Nat.match 56
-1440 :b 1439
+1415 Nat.match 52
+1416 :b 1415
+1417 :b 1416
+1418 147 Nat.add
+1419 145 1418
+1420 1407 1419
+1421 143 1420
+1422 19 1421
+1423 :c 1422
+Nat.mul 1423
+1424 22 Nat.mul
+1425 :c 1424
+1426 1417 1425
+1427 99 1426
+1428 97 1427
+1429 fix 1428
+Nat.factorial 1429
+1430 Bool.match Nat.double
+1431 1430 30
+1432 :b 1431
+1433 List.head_or △
+1434 1432 1433
+1435 :c 1434
+1436 List.foldl 1435
+1437 1436 △
+Nat.from_bin 1437
+1438 :b List.foldl
+1439 :b 1438
+1440 :b Nat.add
 1441 :b 1440
-1442 150 Nat.add
-1443 148 1442
-1444 18 1443
-1445 :c 1444
-1446 1445 Nat.double
-1447 146 1446
-1448 249 1447
-1449 :c 1448
-Nat.mul 1449
-1450 21 Nat.mul
-1451 :c 1450
-1452 1441 1451
-1453 103 1452
-1454 101 1453
-1455 fix 1454
-Nat.factorial 1455
-1456 Bool.match Nat.double
-1457 1456 31
-1458 :b 1457
-1459 List.head_or △
-1460 1458 1459
-1461 :c 1460
-1462 List.foldl 1461
-1463 1462 △
-Nat.from_bin 1463
-1464 :b List.foldl
-1465 :b 1464
-1466 :b Nat.add
-1467 :b 1466
-1468 456 compose
-1469 18 1468
-1470 :s 1469
-1471 1470 :i
-1472 103 1471
-1473 :c 1472
-1474 equal id
-1475 1473 1474
-Nat._smart_compose:13 1475
-1476 Nat._smart_compose:13 Nat.double
-1477 260 1476
-1478 :s 1477
-1479 :b 1256
-1480 :b Nat.double
-1481 1479 1480
-1482 1478 1481
-1483 List.foldl 1482
-1484 1483 id
-1485 :k 1484
-1486 257 1485
-1487 :b 1486
-1488 1487 List.reverse
-Nat.mul_const 1488
-1489 1467 Nat.mul_const
-1490 148 1489
-1491 18 1490
-1492 1465 1491
-1493 424 1492
-Nat.from_string_base 1493
-1494 Nat.from_string_base 637
-1495 :ct 635
-1496 Nat.add_const 1495
+1442 equal id
+1443 18 1442
+1444 442 compose
+1445 38 1444
+1446 :s 1445
+1447 1446 :i
+1448 99 1447
+1449 1443 1448
+Nat._smart_compose:13 1449
+1450 Nat._smart_compose:13 Nat.double
+1451 251 1450
+1452 :s 1451
+1453 :b 1237
+1454 :b Nat.double
+1455 1453 1454
+1456 1452 1455
+1457 List.foldl 1456
+1458 1457 id
+1459 :k 1458
+1460 248 1459
+1461 :b 1460
+1462 1461 List.reverse
+Nat.mul_const 1462
+1463 1441 Nat.mul_const
+1464 145 1463
+1465 38 1464
+1466 1439 1465
+1467 20 1466
+Nat.from_string_base 1467
+1468 Nat.from_string_base 618
+1469 :ct 616
+1470 Nat.add_const 1469
+1471 :b 1470
+1472 1158 1232
+Nat._nibble:1 1472
+1473 1471 Nat._nibble:1
+1474 Bool.match 1473
+1475 1474 Nat._nibble:1
+1476 :b 1475
+1477 :b Nat.is_zero
+1478 Nat.shr 66
+1479 1477 1478
+1480 1476 1479
+1481 :s 1480
+1482 1481 :i
+Nat._from_char:2 1482
+1483 1468 Nat._from_char:2
+Nat.from_hex 1483
+1484 Nat.from_string_base 1205
+1485 463 Nat.canonicalize
+1486 :s 1485
+1487 Nat._copy_step:20 △
+Nat._keep:22 1487
+1488 :b Nat._keep:22
+1489 188 1488
+1490 249 1489
+1491 fix 1490
+Nat._mask:26 1491
+1492 522 Nat._mask:26
+1493 22 1492
+1494 :s 1493
+1495 1095 Nat.pred
+1496 List.match 1495
 1497 :b 1496
-1498 1176 1251
-Nat._nibble:1 1498
-1499 1497 Nat._nibble:1
-1500 Bool.match 1499
-1501 1500 Nat._nibble:1
-1502 :b 1501
-1503 :b Nat.is_zero
-1504 Nat.shr 70
-1505 1503 1504
-1506 1502 1505
-1507 :s 1506
-1508 1507 :i
-Nat._from_char:2 1508
-1509 1494 Nat._from_char:2
-Nat.from_hex 1509
-1510 Nat.from_string_base 1224
-1511 456 △
-1512 103 1511
-1513 :s 1512
-1514 189 286
-1515 1513 1514
-1516 18 1515
-1517 :s 1516
-1518 1517 :i
-1519 List.foldr 1518
-1520 1519 △
-Nat._strip_high_run:25 1520
-1521 472 Nat._strip_high_run:25
+1498 23 Nat._keep:22
+1499 22 1498
+1500 :s 1499
+1501 Nat._flip_step:21 △
+1502 :c 1501
+1503 1500 1502
+1504 442 1503
+1505 99 1504
+1506 :s 1505
+1507 18 Nat._keep:22
+1508 24 1502
+1509 99 1508
+1510 1507 1509
+1511 1506 1510
+1512 38 1511
+1513 :c 1512
+1514 18 1513
+1515 38 1142
+1516 22 1515
+1517 1514 1516
+1518 1497 1517
+1519 fix 1518
+Nat._sub_chain:23 1519
+1520 602 Nat._sub_chain:23
+Nat.ncsub_const 1520
+1521 22 Nat.ncsub_const
 1522 :c 1521
-1523 472 Nat.canonicalize
-1524 :s 1523
-1525 Nat._copy_step:20 △
-Nat._keep:22 1525
-1526 :b Nat._keep:22
-1527 199 1526
-1528 258 1527
-1529 fix 1528
-Nat._mask:26 1529
-1530 538 Nat._mask:26
-1531 21 1530
-1532 :s 1531
-1533 1114 Nat.pred
-1534 List.match 1533
-1535 :b 1534
-1536 18 1119
-1537 21 1536
-1538 :c 1537
-1539 22 Nat._keep:22
-1540 21 1539
-1541 :s 1540
-1542 Nat._flip_step:21 △
-1543 :c 1542
-1544 1541 1543
-1545 456 1544
-1546 103 1545
-1547 :s 1546
-1548 23 1543
-1549 103 1548
-1550 :c 1549
-1551 1550 Nat._keep:22
-1552 1547 1551
-1553 18 1552
-1554 :c 1553
-1555 1538 1554
-1556 1535 1555
-1557 fix 1556
-Nat._sub_chain:23 1557
-1558 621 Nat._sub_chain:23
-Nat.ncsub_const 1558
-1559 21 Nat.ncsub_const
-1560 :c 1559
-1561 :b 1560
-1562 1561 Nat._mask:26
-1563 200 1562
-1564 200 1563
-1565 1532 1564
-1566 103 1565
-1567 101 1566
-1568 1524 1567
-1569 1522 1568
-Nat.ncsub_const_block 1569
-1570 1177 Nat.ncsub_const_block
-Nat.sub_const_block 1570
-1571 Nat.sub_const_block 85
-Nat.sub_x_48 1571
-1572 1510 Nat.sub_x_48
-Nat.from_string 1572
-1573 :k 253
-1574 triage 1573
-1575 1574 △
-1576 103 120
-1577 101 1576
-1578 149 1577
-1579 104 1578
-1580 18 1579
-1581 21 1580
-1582 :c 1581
-1583 :b 1582
-1584 119 19
-1585 18 1584
-1586 :c 1585
-1587 1583 1586
-1588 122 1587
-Nat._pelim2:10 1588
-1589 :c Nat._pelim2:10
-1590 1575 1589
-Nat._pelim1:11 1590
-1591 :c Nat._pelim1:11
-1592 1591 Nat._pelim1:11
-1593 18 1592
-1594 21 1593
-1595 :c 1594
-1596 :b 1595
-1597 19 :b
-1598 21 923
-1599 21 1598
-1600 1597 1599
-1601 List.foldr 1600
-1602 1601 :i
-Memo.precompute_multi 1602
-1603 :c 1023
-1604 :b 1603
-1605 1604 :k
-1606 18 1605
-1607 :s 1606
-1608 1607 816
-Memo.gen_leaf 1608
-1609 List.match Memo.gen_leaf
-1610 :b 1609
-1611 :b 1610
-1612 103 1605
-1613 :s 1612
-1614 :b 1613
-1615 :b 1614
-1616 20 :b
-1617 148 1616
-1618 103 1617
-1619 21 1618
-1620 :c 1619
-1621 560 552
-1622 1620 1621
-1623 1615 1622
-Memo.mk_gen_fork 1623
-1624 21 Memo.mk_gen_fork
-1625 21 1624
-1626 21 1625
-1627 :c 1626
-1628 1627 211
-1629 1611 1628
-1630 137 1629
-Memo.gen_list 1630
-1631 :b 1024
-1632 :b 1631
-1633 131 △
-1634 430 1633
-1635 1632 1634
-1636 119 1635
-1637 103 1636
-1638 817 1637
-Memo.mk_gen_stem 1638
-1639 Memo.mk_gen_stem Memo.gen_leaf
-Memo.gen_bool 1639
-1640 Memo.gen_list Memo.gen_bool
-1641 1640 635
-1642 △ 1641
-1643 1642 △
-1644 1642 1643
-1645 Memo.precompute_multi 1644
-1646 Nat.mul_const 1224
-1647 1466 1646
-1648 1645 1647
-Nat._pair_val_tab:2 1648
-1649 :b Nat._pair_val_tab:2
+1523 :b 1522
+1524 1523 Nat._mask:26
+1525 189 1524
+1526 189 1525
+1527 1494 1526
+1528 99 1527
+1529 97 1528
+1530 1486 1529
+1531 18 1530
+1532 442 △
+1533 99 1532
+1534 :s 1533
+1535 180 278
+1536 1534 1535
+1537 38 1536
+1538 :s 1537
+1539 1538 :i
+1540 List.foldr 1539
+1541 1540 △
+Nat._strip_high_run:25 1541
+1542 463 Nat._strip_high_run:25
+1543 1531 1542
+Nat.ncsub_const_block 1543
+1544 1159 Nat.ncsub_const_block
+Nat.sub_const_block 1544
+1545 Nat.sub_const_block 81
+Nat.sub_x_48 1545
+1546 1484 Nat.sub_x_48
+Nat.from_string 1546
 Memo.precompute_alt :i
-1650 1640 70
-Memo.gen_ascii_low 1650
-1651 Memo.precompute_alt Memo.gen_ascii_low
-1652 1651 △
-1653 1652 Nat.sub_x_48
-Nat._decimal_digit:1 1653
-1654 1649 Nat._decimal_digit:1
-1655 21 1654
-1656 :c 1655
-1657 1656 Nat._decimal_digit:1
-Nat._pair_val:3 1657
-1658 :c Nat._pair_val:3
-1659 1596 1658
-1660 812 1659
-Nat._elim_e2:13 1660
-1661 :c Nat._elim_e2:13
-1662 812 1661
-Nat._elim_e1:14 1662
-1663 :c Nat._elim_e1:14
-Nat._from_even:17 1663
-1664 triage Nat._from_even:17
-1665 199 Nat._decimal_digit:1
-1666 triage 1665
-1667 1666 △
-1668 :b Nat._pelim1:11
-1669 :b 1668
-1670 1669 △
-1671 18 1670
-1672 :c 1671
-1673 1672 Nat._pelim1:11
-1674 119 1673
-1675 148 1674
-1676 18 1675
-1677 :c 1676
-1678 1677 Nat._decimal_digit:1
-1679 1667 1678
-Nat._elim_o2:15 1679
-1680 :c Nat._elim_o2:15
-1681 812 1680
-Nat._elim_o:16 1681
-1682 :c Nat._elim_o:16
-Nat._from_odd:18 1682
-1683 :k Nat._from_odd:18
-1684 1664 1683
-1685 1684 △
-Nat._parity:19 1685
-1686 :b Nat._parity:19
-1687 :b 328
-1688 199 194
-1689 1687 1688
-1690 :c 1689
-1691 :k 1690
-1692 257 1691
-1693 :c 1692
-1694 self_apply 1693
-Nat._odd_len:12 1694
-1695 1686 Nat._odd_len:12
-1696 :c 1695
-1697 18 120
-1698 :c 1697
-1699 104 1698
-1700 102 1699
-1701 18 1700
-1702 :c 1701
-1703 1640 58
-Nat._gen_carry:4 1703
-1704 △ Nat._gen_carry:4
-1705 1704 △
-1706 Memo.precompute_multi 1705
-1707 :k 73
+1547 :c 1009
+1548 :b 1547
+1549 1548 :k
+1550 38 1549
+1551 :s 1550
+1552 1551 808
+Memo.gen_leaf 1552
+1553 List.match Memo.gen_leaf
+1554 :b 1553
+1555 :b 1554
+1556 99 1549
+1557 :s 1556
+1558 :b 1557
+1559 :b 1558
+1560 :b 539
+1561 1560 573
+1562 18 1561
+1563 21 :b
+1564 145 1563
+1565 99 1564
+1566 22 1565
+1567 1562 1566
+1568 1559 1567
+Memo.mk_gen_fork 1568
+1569 22 Memo.mk_gen_fork
+1570 22 1569
+1571 22 1570
+1572 203 1571
+1573 1555 1572
+1574 134 1573
+Memo.gen_list 1574
+1575 :b 1010
+1576 :b 1575
+1577 19 :b
+1578 18 1577
+1579 :b 1578
+1580 1579 22
+1581 1576 1580
+1582 116 1581
+1583 99 1582
+1584 809 1583
+Memo.mk_gen_stem 1584
+1585 Memo.mk_gen_stem Memo.gen_leaf
+Memo.gen_bool 1585
+1586 Memo.gen_list Memo.gen_bool
+1587 1586 66
+Memo.gen_ascii_low 1587
+1588 Memo.precompute_alt Memo.gen_ascii_low
+1589 1588 △
+1590 1589 Nat.sub_x_48
+Nat._decimal_digit:1 1590
+1591 18 Nat._decimal_digit:1
+1592 22 913
+1593 22 1592
+1594 115 1593
+1595 List.foldr 1594
+1596 1595 :i
+Memo.precompute_multi 1596
+1597 1586 616
+1598 △ 1597
+1599 1598 △
+1600 1598 1599
+1601 Memo.precompute_multi 1600
+1602 Nat.mul_const 1205
+1603 1440 1602
+1604 1601 1603
+Nat._pair_val_tab:2 1604
+1605 :b Nat._pair_val_tab:2
+1606 1605 Nat._decimal_digit:1
+1607 22 1606
+1608 1591 1607
+Nat._pair_val:3 1608
+1609 18 Nat._pair_val:3
+1610 1586 54
+Nat._gen_carry:4 1610
+1611 △ Nat._gen_carry:4
+1612 1611 △
+1613 Memo.precompute_multi 1612
+1614 :k 69
+1615 18 1614
+1616 1615 Nat.add
+1617 463 1616
+1618 :s 1617
+1619 :b 1618
+1620 179 :k
+1621 463 1620
+1622 22 1621
+1623 :s 1622
+1624 :b 1623
+1625 :b 1624
+1626 463 Nat.div2
+1627 22 1626
+1628 22 1627
+1629 22 1628
+1630 :s 1629
+1631 :b 1630
+1632 :c 1629
+1633 :b 1632
+1634 :b 1633
+1635 22 1617
+1636 :s 1635
+1637 :b 1636
+1638 :b 1637
+1639 :b 1638
+1640 :b 1639
+1641 :b 1640
+1642 :b 464
+1643 18 1620
+1644 38 117
+1645 22 1644
+1646 1643 1645
+1647 116 1646
+1648 99 1647
+1649 1226 1648
+1650 1642 1649
+1651 100 1650
+1652 145 1651
+1653 145 1652
+1654 145 1653
+1655 99 1654
+1656 22 1655
+1657 :s 1656
+1658 :b 1657
+1659 146 1650
+1660 100 1659
+1661 145 1660
+1662 38 1661
+1663 22 1662
+1664 22 1663
+1665 22 1664
+1666 :s 1665
+1667 :b 1666
+1668 146 1659
+1669 100 1668
+1670 145 1669
+1671 99 1670
+1672 22 1671
+1673 :s 1672
+1674 :b 1673
+1675 :b 1674
+1676 146 1668
+1677 116 1676
+1678 38 1677
+1679 22 1678
+1680 22 1679
+1681 :s 1680
+1682 :b 1681
+1683 :b 1682
+1684 :b 1642
+1685 18 28
+1686 :b 1685
+1687 811 190
+1688 20 1687
+1689 145 1688
+1690 145 1689
+1691 1686 1690
+1692 1684 1691
+1693 535 1692
+1694 535 1693
+1695 540 1694
+1696 116 1695
+1697 145 1696
+1698 38 1697
+1699 22 1698
+1700 :c 1699
+1701 :b 1700
+1702 540 1693
+1703 116 1702
+1704 38 1703
+1705 :c 1704
+1706 :b 1705
+1707 810 :k
 1708 19 1707
-1709 1708 Nat.add
-1710 472 1709
-1711 :s 1710
-1712 :b 1711
-1713 188 :k
-1714 472 1713
-1715 21 1714
-1716 :s 1715
-1717 :b 1716
-1718 :b 1717
-1719 472 Nat.div2
-1720 21 1719
-1721 21 1720
-1722 21 1721
-1723 :s 1722
+1709 22 1708
+1710 22 1709
+1711 1685 1710
+1712 1706 1711
+1713 1701 1712
+1714 1683 1713
+1715 1675 1714
+1716 1667 1715
+1717 1658 1716
+1718 18 1717
+1719 :b 1619
+1720 :b 1719
+1721 :b 1625
+1722 :b 1721
+1723 :b 1631
 1724 :b 1723
-1725 :c 1722
+1725 :b 1634
 1726 :b 1725
-1727 :b 1726
-1728 21 1710
-1729 :s 1728
-1730 :b 1729
-1731 :b 1730
-1732 :b 1731
-1733 :b 1732
-1734 :b 1733
-1735 :b 1712
-1736 :b 1735
-1737 :b 1718
-1738 :b 1737
-1739 :b 1724
-1740 :b 1739
-1741 :b 1727
-1742 :b 1741
-1743 :b 473
-1744 556 286
-1745 1743 1744
-1746 149 1745
-1747 149 1746
-1748 149 1747
-1749 119 1748
-1750 148 1749
-1751 103 1750
-1752 :s 1751
-1753 :b 1752
-1754 :b 819
-1755 1229 286
-1756 1754 1755
-1757 119 1756
-1758 18 1757
-1759 :c 1758
-1760 1759 △
-1761 149 1760
-1762 149 1761
-1763 149 1762
-1764 149 1763
-1765 119 1764
-1766 18 1765
-1767 :c 1766
-1768 :b 1767
-1769 :b 549
-1770 1754 :c
-1771 149 1770
-1772 119 1771
-1773 148 1772
-1774 18 1773
-1775 :s 1774
-1776 1229 :c
-1777 1775 1776
-1778 1769 1777
-1779 549 1778
-1780 119 1779
-1781 18 1780
-1782 :c 1781
-1783 1782 △
-1784 1768 1783
-1785 1753 1784
-1786 1753 1785
-1787 1742 1786
-1788 1740 1787
-1789 1738 1788
-1790 1737 1789
-1791 1736 1790
-1792 472 1791
-1793 21 1792
-1794 21 1793
-1795 21 1794
-1796 21 1795
-1797 21 1796
-1798 21 1797
-1799 21 1798
-1800 :c 1799
-1801 21 1697
-1802 :c 1801
-1803 1802 1713
-1804 119 1803
-1805 103 1804
-1806 :c 1805
-1807 1806 Nat.div2
-1808 1743 1807
-1809 104 1808
-1810 148 1809
-1811 148 1810
-1812 148 1811
-1813 103 1812
-1814 21 1813
-1815 :s 1814
-1816 :b 1815
-1817 149 1808
-1818 104 1817
-1819 148 1818
-1820 18 1819
-1821 21 1820
-1822 21 1821
-1823 21 1822
-1824 :s 1823
-1825 :b 1824
-1826 149 1817
-1827 104 1826
-1828 148 1827
-1829 103 1828
-1830 21 1829
-1831 :s 1830
-1832 :b 1831
-1833 :b 1832
-1834 149 1826
-1835 119 1834
-1836 18 1835
-1837 21 1836
-1838 21 1837
-1839 :s 1838
-1840 :b 1839
-1841 :b 1840
-1842 :b 1743
-1843 819 201
-1844 18 1843
-1845 :c 1844
-1846 1845 △
-1847 148 1846
-1848 148 1847
-1849 18 1848
-1850 :c 1849
-1851 1850 29
-1852 1842 1851
-1853 582 1852
-1854 582 1853
-1855 549 1854
-1856 119 1855
-1857 148 1856
-1858 18 1857
-1859 21 1858
-1860 :c 1859
-1861 :b 1860
-1862 549 1853
-1863 119 1862
-1864 18 1863
-1865 :c 1864
-1866 :b 1865
-1867 818 :k
-1868 :c 1867
-1869 1868 △
-1870 21 1869
-1871 21 1870
-1872 :c 1871
-1873 1872 29
-1874 1866 1873
-1875 1861 1874
-1876 1841 1875
-1877 1833 1876
-1878 1825 1877
-1879 1816 1878
-1880 1800 1879
-1881 1734 1880
-1882 1733 1881
-1883 1727 1882
-1884 1724 1883
-1885 1718 1884
-1886 1717 1885
-1887 1712 1886
-Nat._hp_entry:5 1887
-1888 104 1697
-1889 102 1888
-1890 19 1889
-1891 1890 585
-1892 Nat._hp_entry:5 1891
-1893 1706 1892
-Nat._hundred_plus_tab:6 1893
-1894 472 Nat._hundred_plus_tab:6
-1895 :c 1894
-1896 :b 1895
-1897 1896 192
-1898 Nat._hp_entry:5 1897
-1899 1706 1898
-Nat._hundred_plus_tab2:7 1899
-1900 1702 Nat._hundred_plus_tab2:7
-Nat._hundred_plus:8 1900
-1901 21 Nat._hundred_plus:8
-1902 21 1901
-1903 :c 1902
-1904 1903 Nat._pair_val:3
-Nat._pair_step:9 1904
-1905 1696 Nat._pair_step:9
-1906 :s 1905
-1907 1906 :i
-Nat.from_string__fastest 1907
-1908 364 Nat.is_lte
-1909 103 1908
-1910 21 1909
-1911 :c 1910
-1912 :c Nat.is_lte
-1913 1911 1912
-Nat.in_range 1913
-1914 1287 Nat.is_lte
-Nat.is_gt 1914
-Nat.is_gte 1912
-1915 1287 Nat.is_gte
-Nat.is_lt 1915
-1916 103 Bool.match
-1917 21 1916
-1918 :c 1917
-1919 1918 Bool.xor
-1920 264 1919
-1921 List.foldl__smallest 1920
-1922 1921 true
-1923 :b 1922
-1924 :b 1923
-1925 1924 List.zip
-Nat.is_lte__smallest 1925
-1926 :s 1916
-1927 1926 Nat.is_lte
-Nat.max 1927
-1928 List.foldl Nat.max
-1929 1928 △
-Nat.max_list 1929
-1930 103 1290
-1931 :s 1930
-1932 1931 Nat.is_lte
-Nat.min 1932
-1933 256 Nat.divmod__fastest
-Nat.mod__fastest 1933
+1727 18 278
+1728 1727 293
+1729 1642 1728
+1730 146 1729
+1731 146 1730
+1732 146 1731
+1733 116 1732
+1734 145 1733
+1735 99 1734
+1736 :s 1735
+1737 :b 1736
+1738 :b 811
+1739 1210 278
+1740 1738 1739
+1741 1360 1740
+1742 146 1741
+1743 146 1742
+1744 146 1743
+1745 146 1744
+1746 116 1745
+1747 38 1746
+1748 :c 1747
+1749 :b 1748
+1750 :b 1360
+1751 :b 1750
+1752 1738 :c
+1753 146 1752
+1754 116 1753
+1755 145 1754
+1756 38 1755
+1757 :s 1756
+1758 1210 :c
+1759 1757 1758
+1760 1751 1759
+1761 1749 1760
+1762 1737 1761
+1763 1737 1762
+1764 1726 1763
+1765 1724 1764
+1766 1722 1765
+1767 1721 1766
+1768 1720 1767
+1769 463 1768
+1770 22 1769
+1771 22 1770
+1772 22 1771
+1773 22 1772
+1774 22 1773
+1775 22 1774
+1776 22 1775
+1777 1718 1776
+1778 1641 1777
+1779 1640 1778
+1780 1634 1779
+1781 1631 1780
+1782 1625 1781
+1783 1624 1782
+1784 1619 1783
+Nat._hp_entry:5 1784
+1785 100 1644
+1786 98 1785
+1787 18 1786
+1788 1787 541
+1789 Nat._hp_entry:5 1788
+1790 1613 1789
+Nat._hundred_plus_tab:6 1790
+1791 463 Nat._hundred_plus_tab:6
+1792 :c 1791
+1793 :b 1792
+1794 1793 201
+1795 Nat._hp_entry:5 1794
+1796 1613 1795
+Nat._hundred_plus_tab2:7 1796
+1797 18 Nat._hundred_plus_tab2:7
+1798 :b 1797
+1799 :c 1644
+1800 100 1799
+1801 98 1800
+1802 1798 1801
+Nat._hundred_plus:8 1802
+1803 22 Nat._hundred_plus:8
+1804 22 1803
+1805 1609 1804
+Nat._pair_step:9 1805
+1806 18 Nat._pair_step:9
+1807 :k 244
+1808 triage 1807
+1809 1808 △
+1810 99 117
+1811 97 1810
+1812 146 1811
+1813 100 1812
+1814 38 1813
+1815 22 1814
+1816 :c 1815
+1817 :b 1816
+1818 116 18
+1819 38 1818
+1820 :c 1819
+1821 1817 1820
+1822 119 1821
+Nat._pelim2:10 1822
+1823 :c Nat._pelim2:10
+1824 1809 1823
+Nat._pelim1:11 1824
+1825 18 Nat._pelim1:11
+1826 1825 Nat._pelim1:11
+1827 38 1826
+1828 22 1827
+1829 :c 1828
+1830 :b 1829
+1831 :c Nat._pair_val:3
+1832 1830 1831
+1833 804 1832
+Nat._elim_e2:13 1833
+1834 :c Nat._elim_e2:13
+1835 804 1834
+Nat._elim_e1:14 1835
+1836 :c Nat._elim_e1:14
+Nat._from_even:17 1836
+1837 triage Nat._from_even:17
+1838 188 Nat._decimal_digit:1
+1839 triage 1838
+1840 1839 △
+1841 :b 1591
+1842 :b 1825
+1843 :b Nat._pelim1:11
+1844 :b 1843
+1845 1844 △
+1846 1842 1845
+1847 116 1846
+1848 145 1847
+1849 1841 1848
+1850 1840 1849
+Nat._elim_o2:15 1850
+1851 :c Nat._elim_o2:15
+1852 804 1851
+Nat._elim_o:16 1852
+1853 :c Nat._elim_o:16
+Nat._from_odd:18 1853
+1854 :k Nat._from_odd:18
+1855 1837 1854
+1856 1855 △
+Nat._parity:19 1856
+1857 :b Nat._parity:19
+1858 :b 317
+1859 188 183
+1860 1858 1859
+1861 :c 1860
+1862 :k 1861
+1863 248 1862
+1864 :c 1863
+1865 self_apply 1864
+Nat._odd_len:12 1865
+1866 1857 Nat._odd_len:12
+1867 1806 1866
+1868 :s 1867
+1869 1868 :i
+Nat.from_string__fastest 1869
+1870 :c Nat.is_lte
+1871 18 1870
+1872 344 Nat.is_lte
+1873 99 1872
+1874 22 1873
+1875 1871 1874
+Nat.in_range 1875
+1876 1268 Nat.is_lte
+Nat.is_gt 1876
+Nat.is_gte 1870
+1877 1268 Nat.is_gte
+Nat.is_lt 1877
+1878 18 Bool.xor
+1879 99 Bool.match
+1880 22 1879
+1881 1878 1880
+1882 255 1881
+1883 List.foldl__smallest 1882
+1884 1883 true
+1885 :b 1884
+1886 :b 1885
+1887 1886 List.zip
+Nat.is_lte__smallest 1887
+1888 :s 1879
+1889 1888 Nat.is_lte
+Nat.max 1889
+1890 List.foldl Nat.max
+1891 1890 △
+Nat.max_list 1891
+1892 :c Bool.match
+1893 99 1892
+1894 :s 1893
+1895 1894 Nat.is_lte
+Nat.min 1895
+1896 247 Nat.divmod__fastest
+Nat.mod__fastest 1896
 Nat.mod Nat.mod__fastest
-1934 256 Nat.divmod__smallest
-Nat.mod__smallest 1934
-1935 260 1480
-1936 :s 1935
-1937 1936 1481
-1938 List.foldl 1937
-1939 :b 1938
-1940 :c 334
-1941 1939 1940
-1942 257 1941
-1943 :b 1942
-1944 1943 List.reverse
-Nat.mul_const_naive 1944
+1897 247 Nat.divmod__smallest
+Nat.mod__smallest 1897
+1898 251 1454
+1899 :s 1898
+1900 1899 1455
+1901 List.foldl 1900
+1902 :b 1901
+1903 :c 357
+1904 1902 1903
+1905 248 1904
+1906 :b 1905
+1907 1906 List.reverse
+Nat.mul_const_naive 1907
 Nat.ncsub Nat.ncsub__fastest
-1945 404 217
-1946 148 1945
-1947 18 1946
-1948 21 1947
-1949 :c 1948
-1950 Bool.match 56
-1951 1950 2
-1952 Bool.match 1951
-1953 Bool.match 9
-1954 1953 56
-1955 1952 1954
-1956 Bool.match 1955
-1957 Bool.match 1954
-1958 31 true
-1959 Bool.match 1958
-1960 1959 9
-1961 1957 1960
-1962 1956 1961
-Nat.sub_3bits 1962
-1963 264 Nat.sub_3bits
-1964 :c 1963
-1965 1949 1964
-1966 258 1965
-1967 fix 1966
-Nat._sub__smallest:8 1967
-1968 :b Nat._sub__smallest:8
-1969 :b 1968
-1970 1969 List.zip
-1971 18 1970
-1972 :c 1971
-1973 1972 true
-Nat.ncsub__smallest 1973
-1974 Nat.ncsub_const_block 85
-Nat.ncsub_x_48 1974
-1975 Nat.ncsub_const_block 1222
-Nat.ncsub_x_65 1975
-1976 Nat.ncsub_const_block 86
-Nat.ncsub_x_97 1976
-1977 19 56
-1978 162 Nat.mul
-1979 1977 1978
-1980 :c 1979
-Nat.pow 1980
-1981 1244 Nat.double
-1982 1977 1981
-Nat.pow2 1982
-1983 List.foldl Nat.mul
-1984 1983 56
-Nat.product 1984
-1985 1244 1
-Nat.shl 1985
-1986 1177 Nat.ncsub__smallest
-Nat.sub__smallest 1986
-1987 1177 Nat.ncsub_const
-Nat.sub_const 1987
-1988 Nat.sub_const_block 1222
-Nat.sub_x_65 1988
-1989 Nat.sub_const_block 86
-Nat.sub_x_97 1989
-1990 List.foldl Nat.add
-1991 1990 △
-Nat.sum 1991
-1992 △ 85
-1993 1992 △
-1994 19 1993
-1995 :b 1994
-1996 :b 1995
-1997 :b 424
-1998 :b 509
-1999 21 Nat.shr
-2000 21 1999
-2001 :c 2000
-2002 2001 △
-2003 230 2002
-2004 582 2003
-2005 547 2004
-2006 104 2005
-2007 18 2006
-2008 21 2007
-2009 :s 2008
-2010 :b 191
-2011 230 224
-2012 2010 2011
-2013 2009 2012
-2014 1998 2013
-2015 138 2014
-Nat._digits_pow2:2 2015
-2016 1997 Nat._digits_pow2:2
-2017 457 2016
-2018 1996 2017
-2019 104 2018
-2020 18 2019
-2021 :c 2020
-2022 2021 Nat.is_zero
-Nat.to_string_pow2 2022
-2023 Nat.to_string_pow2 56
-2024 2023 1194
-Nat.to_bin 2024
-2025 List.match 1992
-2026 :b Nat.bits_to_dstring
-2027 :b 2026
-2028 2027 △
-2029 2025 2028
-Nat.to_bits_dstring 2029
-2030 :c 805
-2031 :b 2030
-2032 18 22
-2033 2031 2032
-2034 583 2033
-2035 119 2034
-2036 148 2035
-2037 148 2036
-2038 18 2037
-2039 :c 2038
-2040 :b 2039
-2041 :b Nat.divmod
-2042 :b 2041
-2043 2042 △
-2044 18 2043
-2045 :c 2044
-2046 2040 2045
-2047 1998 2046
-2048 138 2047
-Nat._to_digits:19 2048
-2049 Nat._to_digits:19 1224
-2050 2049 1194
-2051 260 2050
-2052 :c 2051
-2053 2052 1992
-2054 :s 2053
-2055 2054 Nat.is_zero
-Nat.to_dstring 2055
-2056 Nat.to_string_pow2 635
-2057 2056 Nat._to_char:4
-Nat.to_hex 2057
-2058 1997 Nat._to_digits:19
-2059 457 2058
-2060 1996 2059
-2061 104 2060
-2062 18 2061
-2063 :c 2062
-2064 2063 Nat.is_zero
-Nat.to_string_base 2064
-2065 Nat.to_string_base 1224
-2066 2065 1194
-Nat.to_string 2066
+1908 Bool.match 52
+1909 1908 2
+1910 Bool.match 1909
+1911 Bool.match 10
+1912 1911 52
+1913 1910 1912
+1914 Bool.match 1913
+1915 Bool.match 1912
+1916 30 true
+1917 Bool.match 1916
+1918 1917 10
+1919 1915 1918
+1920 1914 1919
+Nat.sub_3bits 1920
+1921 255 Nat.sub_3bits
+1922 :c 1921
+1923 18 1922
+1924 392 209
+1925 145 1924
+1926 38 1925
+1927 22 1926
+1928 1923 1927
+1929 249 1928
+1930 fix 1929
+Nat._sub__smallest:8 1930
+1931 :b Nat._sub__smallest:8
+1932 :b 1931
+1933 1932 List.zip
+1934 1178 1933
+Nat.ncsub__smallest 1934
+1935 Nat.ncsub_const_block 81
+Nat.ncsub_x_48 1935
+1936 Nat.ncsub_const_block 1203
+Nat.ncsub_x_65 1936
+1937 Nat.ncsub_const_block 82
+Nat.ncsub_x_97 1937
+1938 18 52
+1939 18 Nat.mul
+1940 1939 Fn.pow_fast
+1941 1938 1940
+1942 :c 1941
+Nat.pow 1942
+1943 592 Fn.pow
+1944 1938 1943
+Nat.pow2 1944
+1945 List.foldl Nat.mul
+1946 1945 52
+Nat.product 1946
+1947 21 Fn.pow
+Nat.shl 1947
+1948 1159 Nat.ncsub__smallest
+Nat.sub__smallest 1948
+1949 1159 Nat.ncsub_const
+Nat.sub_const 1949
+1950 Nat.sub_const_block 1203
+Nat.sub_x_65 1950
+1951 Nat.sub_const_block 82
+Nat.sub_x_97 1951
+1952 List.foldl Nat.add
+1953 1952 △
+Nat.sum 1953
+1954 :b 1248
+1955 △ 81
+1956 1955 △
+1957 18 1956
+1958 :b 1957
+1959 :b 1958
+1960 :b 493
+1961 22 Nat.shr
+1962 22 1961
+1963 19 1962
+1964 222 1963
+1965 535 1964
+1966 564 1965
+1967 100 1966
+1968 38 1967
+1969 22 1968
+1970 :s 1969
+1971 :b 182
+1972 222 215
+1973 1971 1972
+1974 1970 1973
+1975 1960 1974
+1976 135 1975
+Nat._digits_pow2:2 1976
+1977 1360 Nat._digits_pow2:2
+1978 443 1977
+1979 1959 1978
+1980 100 1979
+1981 1954 1980
+Nat.to_string_pow2 1981
+1982 Nat.to_string_pow2 52
+1983 1982 1176
+Nat.to_bin 1983
+1984 List.match 1955
+1985 :b Nat.bits_to_dstring
+1986 :b 1985
+1987 1986 △
+1988 1984 1987
+Nat.to_bits_dstring 1988
+1989 18 1955
+1990 :c 795
+1991 :b 1990
+1992 38 23
+1993 1991 1992
+1994 536 1993
+1995 116 1994
+1996 145 1995
+1997 145 1996
+1998 38 1997
+1999 :c 1998
+2000 :b 1999
+2001 :b Nat.divmod
+2002 :b 2001
+2003 2002 △
+2004 38 2003
+2005 :c 2004
+2006 2000 2005
+2007 1960 2006
+2008 135 2007
+Nat._to_digits:19 2008
+2009 Nat._to_digits:19 1205
+2010 2009 1176
+2011 251 2010
+2012 1989 2011
+2013 :s 2012
+2014 2013 Nat.is_zero
+Nat.to_dstring 2014
+2015 Nat.to_string_pow2 616
+2016 2015 Nat._to_char:4
+Nat.to_hex 2016
+2017 1360 Nat._to_digits:19
+2018 443 2017
+2019 1959 2018
+2020 100 2019
+2021 1954 2020
+Nat.to_string_base 2021
+2022 Nat.to_string_base 1205
+2023 2022 1176
+Nat.to_string 2023
 Nat.to_source Nat.to_string
-2067 Nat._bitwise:1 Bool.xor
-Nat.xor 2067
+2024 Nat._bitwise:1 Bool.xor
+Nat.xor 2024
 Nat.zero △
-2068 418 △
-2069 :c 2068
-Option.alt 2069
-Option.bind 727
-2070 728 649
-2071 :c 2070
-2072 728 2071
-Option.both 2072
-2073 728 22
-Option.map 2073
-2074 103 418
-2075 :c 2074
-2076 137 2075
-Option.repeatedly 2076
-2077 :b Option.map
-2078 2077 △
-2079 :c 2078
-2080 728 2079
-2081 :c 2080
-2082 List.foldr 2081
-2083 2082 1
-Option.sequence 2083
-2084 :ct 89
+2025 19 Option.match
+2026 :c 2025
+Option.alt 2026
+Option.bind 678
+2027 679 630
+2028 :c 2027
+2029 679 2028
+Option.both 2029
+2030 679 23
+Option.map 2030
+2031 :c Option.match
+2032 99 2031
+2033 :c 2032
+2034 134 2033
+Option.repeatedly 2034
+2035 :b Option.map
+2036 2035 △
+2037 :c 2036
+2038 679 2037
+2039 :c 2038
+2040 List.foldr 2039
+2041 2040 1
+Option.sequence 2041
+2042 :ct 85
+2043 :k 2042
+2044 △ 2043
+2045 :ct 2042
+2046 △ 2045
+2047 2044 72
+2048 2046 2047
+2049 2044 2048
+2050 Option.match 2049
+2051 :b 2050
+2052 :k 1205
+2053 :k 2052
+2054 △ 2053
+2055 :ct 86
+2056 △ 2055
+2057 71 621
+2058 2056 2057
+2059 2046 2058
+2060 90 2059
+2061 2054 2060
+2062 List.concat 2061
+2063 :b 2062
+2064 :b 2063
+2065 :ct 2052
+2066 △ 2065
+2067 2066 △
+2068 18 2067
+2069 :b 2068
+2070 2069 241
+2071 2064 2070
+2072 2051 2071
+Option.to_source 2072
+2073 :s 273
+2074 2073 :i
+2075 255 2074
+Pair.map_both 2075
+2076 255 23
+Pair.map_fst 2076
+2077 255 208
+Pair.map_snd 2077
+2078 Pair.match 39
+Pair.swap 2078
+2079 :k 1469
+2080 :ct 2079
+2081 :ct 2080
+2082 :k 2081
+2083 :ct 2082
+2084 :ct 2083
 2085 :k 2084
-2086 △ 2085
-2087 :ct 2084
-2088 △ 2087
-2089 2086 76
-2090 2088 2089
-2091 2086 2090
-2092 Option.match 2091
+2086 :k 2085
+2087 :ct 2086
+2088 :ct 2087
+2089 △ 2088
+2090 2089 621
+2091 2054 2090
+2092 List.concat 2091
 2093 :b 2092
-2094 :k 1224
-2095 :k 2094
-2096 △ 2095
-2097 :ct 90
-2098 △ 2097
-2099 75 640
-2100 2098 2099
-2101 2088 2100
-2102 94 2101
-2103 2096 2102
-2104 List.concat 2103
-2105 :b 2104
-2106 :b 2105
-2107 :ct 2094
-2108 △ 2107
-2109 2108 △
-2110 19 2109
-2111 :b 2110
-2112 2111 250
-2113 2106 2112
-2114 2093 2113
-Option.to_source 2114
-2115 :s 296
-2116 2115 :i
-2117 264 2116
-Pair.map_both 2117
-2118 264 22
-Pair.map_fst 2118
-2119 264 216
-Pair.map_snd 2119
-2120 Pair.match 39
-Pair.swap 2120
-2121 :k 1495
-2122 :ct 2121
-2123 :ct 2122
-2124 :k 2123
-2125 :ct 2124
+2094 :b 2093
+2095 :b 2094
+2096 :b 2095
+2097 List.concat 621
+2098 :b 2097
+2099 :b 2098
+2100 2099 2070
+2101 18 2100
+2102 145 241
+2103 38 2102
+2104 22 2103
+2105 2101 2104
+2106 2096 2105
+2107 392 2106
+Pair.to_source 2107
+2108 119 2076
+2109 triage 2108
+2110 2109 10
+2111 2110 △
+2112 List.foldr 2111
+2113 2112 △
+2114 602 2113
+Serialize.bitstr_decode 2114
+2115 compose Serialize.bitstr_decode
+2116 List.take 66
+2117 :b 2116
+2118 1 101
+2119 1 2118
+2120 1 2119
+2121 1 2120
+2122 18 2121
+2123 Nat.add_const 616
+2124 18 2123
+2125 :ct 54
 2126 :ct 2125
 2127 :k 2126
-2128 :k 2127
-2129 :ct 2128
-2130 :ct 2129
-2131 △ 2130
-2132 2131 640
-2133 2096 2132
-2134 List.concat 2133
-2135 :b 2134
-2136 :b 2135
-2137 :b 2136
-2138 :b 2137
-2139 148 250
-2140 18 2139
-2141 21 2140
-2142 :c 2141
-2143 List.concat 640
-2144 :b 2143
-2145 :b 2144
-2146 2145 2112
-2147 2142 2146
-2148 2138 2147
-2149 404 2148
-Pair.to_source 2149
-2150 122 2118
-2151 triage 2150
-2152 2151 9
-2153 2152 △
-2154 List.foldr 2153
-2155 2154 △
-2156 621 2155
-Serialize.bitstr_decode 2156
-2157 compose Serialize.bitstr_decode
-2158 List.take 70
-2159 :b 2158
-2160 :ct 58
-2161 :ct 2160
-2162 :k 2161
-2163 Bool.match 2162
-2164 :ct 2161
-2165 2163 2164
-2166 :b 2165
-2167 :b 1459
-2168 :b 2167
-2169 2168 Nat.shr
-Serialize._bit:5 2169
-2170 Serialize._bit:5 624
-2171 2166 2170
-2172 199 2171
-2173 260 2172
-2174 :c 2173
-2175 Nat.add_const 635
-2176 2174 2175
-2177 :s 2176
-2178 Serialize._bit:5 635
-2179 2177 2178
-2180 :s 2179
-2181 2180 :i
-2182 Bool.match 2181
-2183 Bool.match 1975
-2184 Nat.sub 86
-2185 :k 88
-2186 2184 2185
-2187 Nat.ncsub_const_block 2186
-2188 2183 2187
-2189 :b 2188
-2190 Serialize._bit:5 625
-2191 2189 2190
-2192 :s 2191
-2193 2192 :i
-2194 2182 2193
-2195 :b 2194
-2196 Serialize._bit:5 70
-2197 2195 2196
-2198 :s 2197
-2199 2198 :i
-Serialize._b64_index:6 2199
-2200 250 Serialize._b64_index:6
-2201 :c 2200
-2202 1 105
-2203 1 2202
-2204 1 2203
-2205 1 2204
-2206 2201 2205
-2207 2159 2206
-2208 250 2207
-2209 List.foldr 2208
-2210 2209 △
-Serialize._of_base64:7 2210
-2211 2157 Serialize._of_base64:7
-Serialize.base64_decode 2211
-2212 :b 2168
-2213 :b 2212
-2214 :b 2213
-2215 :b 2214
-2216 35 253
-2217 264 2216
-Serialize._pair_at:3 2217
-2218 :c Serialize._pair_at:3
-2219 :b 2218
-2220 :b 2219
-2221 :b 2220
-2222 :b 2221
-2223 :b 2222
-2224 let 2117
-2225 let 603
-2226 :b 2225
-2227 473 143
-2228 103 2227
-2229 :c 2228
-2230 :b 123
-2231 2230 120
-2232 2230 2231
-2233 2230 2232
-2234 2230 2233
-2235 18 2234
-2236 :c 2235
-2237 △ 1222
-2238 :ct 637
-2239 :k 2238
-2240 △ 2239
-2241 :ct 2238
+2128 Bool.match 2127
+2129 :ct 2126
+2130 2128 2129
+2131 :b 2130
+2132 :b 1433
+2133 :b 2132
+2134 2133 Nat.shr
+Serialize._bit:5 2134
+2135 Serialize._bit:5 605
+2136 2131 2135
+2137 188 2136
+2138 251 2137
+2139 2124 2138
+2140 :s 2139
+2141 Serialize._bit:5 616
+2142 2140 2141
+2143 :s 2142
+2144 2143 :i
+2145 Bool.match 2144
+2146 Bool.match 1936
+2147 Nat.sub 82
+2148 :k 84
+2149 2147 2148
+2150 Nat.ncsub_const_block 2149
+2151 2146 2150
+2152 :b 2151
+2153 Serialize._bit:5 606
+2154 2152 2153
+2155 :s 2154
+2156 2155 :i
+2157 2145 2156
+2158 :b 2157
+2159 Serialize._bit:5 66
+2160 2158 2159
+2161 :s 2160
+2162 2161 :i
+Serialize._b64_index:6 2162
+2163 241 Serialize._b64_index:6
+2164 2122 2163
+2165 2117 2164
+2166 241 2165
+2167 List.foldr 2166
+2168 2167 △
+Serialize._of_base64:7 2168
+2169 2115 Serialize._of_base64:7
+Serialize.base64_decode 2169
+2170 :b 2133
+2171 :b 2170
+2172 :b 2171
+2173 :b 2172
+2174 34 244
+2175 255 2174
+Serialize._pair_at:3 2175
+2176 :c Serialize._pair_at:3
+2177 :b 2176
+2178 :b 2177
+2179 :b 2178
+2180 :b 2179
+2181 :b 2180
+2182 let 2075
+2183 let 530
+2184 :b 2183
+2185 △ 1203
+2186 :ct 618
+2187 :k 2186
+2188 △ 2187
+2189 :ct 2186
+2190 △ 2189
+2191 :ct 617
+2192 :k 2191
+2193 :k 2192
+2194 △ 2193
+2195 :ct 2192
+2196 △ 2195
+2197 :ct 2191
+2198 :k 2197
+2199 △ 2198
+2200 :ct 2197
+2201 △ 2200
+2202 :k 2079
+2203 :k 2202
+2204 △ 2203
+2205 :ct 2202
+2206 △ 2205
+2207 :k 2080
+2208 △ 2207
+2209 △ 2081
+2210 :ct 1469
+2211 :k 2210
+2212 :k 2211
+2213 △ 2212
+2214 :ct 2211
+2215 △ 2214
+2216 :ct 2210
+2217 :k 2216
+2218 △ 2217
+2219 :ct 2216
+2220 △ 2219
+2221 :k 2053
+2222 △ 2221
+2223 :ct 2053
+2224 △ 2223
+2225 :k 2065
+2226 △ 2225
+2227 :ct 2065
+2228 △ 2227
+2229 :ct 1205
+2230 :k 2229
+2231 :k 2230
+2232 △ 2231
+2233 :ct 2230
+2234 △ 2233
+2235 :ct 2229
+2236 :k 2235
+2237 △ 2236
+2238 :ct 2235
+2239 △ 2238
+2240 :k 608
+2241 :k 2240
 2242 △ 2241
-2243 :ct 636
-2244 :k 2243
-2245 :k 2244
+2243 :ct 2240
+2244 △ 2243
+2245 :k 609
 2246 △ 2245
-2247 :ct 2244
+2247 :k 1170
 2248 △ 2247
-2249 :ct 2243
-2250 :k 2249
-2251 △ 2250
-2252 :ct 2249
+2249 :ct 1170
+2250 △ 2249
+2251 △ 1614
+2252 :ct 77
 2253 △ 2252
-2254 :k 2121
+2254 :k 2148
 2255 :k 2254
 2256 △ 2255
 2257 :ct 2254
 2258 △ 2257
-2259 :k 2122
-2260 △ 2259
-2261 △ 2123
-2262 :ct 1495
-2263 :k 2262
-2264 :k 2263
-2265 △ 2264
-2266 :ct 2263
-2267 △ 2266
-2268 :ct 2262
-2269 :k 2268
+2259 :ct 2148
+2260 :k 2259
+2261 △ 2260
+2262 :ct 2259
+2263 △ 2262
+2264 :k 60
+2265 :k 2264
+2266 △ 2265
+2267 :ct 2264
+2268 △ 2267
+2269 :k 614
 2270 △ 2269
-2271 :ct 2268
+2271 :ct 614
 2272 △ 2271
-2273 :k 2095
-2274 △ 2273
-2275 :ct 2095
+2273 :k 2125
+2274 :k 2273
+2275 :k 2274
 2276 △ 2275
-2277 :k 2107
+2277 :ct 2274
 2278 △ 2277
-2279 :ct 2107
-2280 △ 2279
-2281 :ct 1224
-2282 :k 2281
-2283 :k 2282
-2284 △ 2283
-2285 :ct 2282
-2286 △ 2285
-2287 :ct 2281
-2288 :k 2287
-2289 △ 2288
-2290 :ct 2287
-2291 △ 2290
-2292 :k 627
-2293 :k 2292
-2294 △ 2293
-2295 :ct 2292
-2296 △ 2295
-2297 :k 628
-2298 △ 2297
-2299 :k 1188
-2300 △ 2299
-2301 :ct 1188
-2302 △ 2301
-2303 △ 1707
-2304 :ct 81
-2305 △ 2304
-2306 :k 2185
-2307 :k 2306
-2308 △ 2307
-2309 :ct 2306
-2310 △ 2309
-2311 :ct 2185
-2312 :k 2311
-2313 △ 2312
-2314 :ct 2311
-2315 △ 2314
-2316 :k 64
-2317 :k 2316
-2318 △ 2317
-2319 :ct 2316
-2320 △ 2319
-2321 :k 633
-2322 △ 2321
-2323 :ct 633
-2324 △ 2323
-2325 :k 2160
-2326 :k 2325
-2327 :k 2326
-2328 △ 2327
-2329 :ct 2326
-2330 △ 2329
-2331 :ct 2325
-2332 :k 2331
-2333 △ 2332
-2334 △ 1188
-2335 △ 73
-2336 △ 81
-2337 △ 2306
-2338 △ 2311
-2339 △ 90
-2340 △ 2084
-2341 △ 2316
-2342 △ 65
-2343 △ 2287
-2344 :ct 643
-2345 △ 2344
-2346 2345 △
-2347 2343 2346
-2348 2342 2347
-2349 2341 2348
-2350 2340 2349
-2351 2339 2350
-2352 2338 2351
-2353 2337 2352
-2354 2336 2353
-2355 2335 2354
-2356 2334 2355
-2357 1992 2356
-2358 2333 2357
-2359 2330 2358
-2360 2328 2359
-2361 2324 2360
-2362 2322 2361
-2363 69 2362
-2364 63 2363
-2365 94 2364
-2366 67 2365
-2367 2320 2366
-2368 2318 2367
-2369 2088 2368
-2370 2086 2369
-2371 2098 2370
-2372 92 2371
-2373 2315 2372
-2374 2313 2373
-2375 2310 2374
-2376 2308 2375
-2377 2305 2376
-2378 83 2377
-2379 75 2378
-2380 2303 2379
-2381 2302 2380
-2382 2300 2381
-2383 87 2382
-2384 2298 2383
-2385 2296 2384
-2386 2294 2385
-2387 2291 2386
-2388 2289 2387
-2389 2286 2388
-2390 2284 2389
-2391 2280 2390
-2392 2278 2391
-2393 2276 2392
-2394 2274 2393
-2395 2272 2394
-2396 2270 2395
-2397 2267 2396
-2398 2265 2397
-2399 2261 2398
-2400 2260 2399
-2401 2258 2400
-2402 2256 2401
-2403 2253 2402
-2404 2251 2403
-2405 2248 2404
-2406 2246 2405
-2407 2242 2406
-2408 2240 2407
-2409 2237 2408
-Serialize._alphabet:1 2409
-2410 2236 Serialize._alphabet:1
-2411 2229 2410
-2412 2226 2411
-2413 2224 2412
-Serialize._alphabet_tree:2 2413
-2414 2218 Serialize._alphabet_tree:2
-2415 2219 2414
-2416 2220 2415
-2417 2221 2416
-2418 2222 2417
-2419 2223 2418
-2420 2215 2419
-Serialize._alphabet_get:4 2420
-2421 :c Serialize._alphabet_get:4
-2422 2421 △
-2423 :c 2422
-2424 2423 △
-2425 :c 2424
-2426 2425 △
-2427 :c 2426
-2428 2427 △
-2429 :c 2428
-2430 2429 △
-2431 22 2430
-2432 249 2431
-2433 538 2432
-2434 :s 2433
+2279 :ct 2273
+2280 :k 2279
+2281 △ 2280
+2282 △ 1170
+2283 △ 69
+2284 △ 77
+2285 △ 2254
+2286 △ 2259
+2287 △ 86
+2288 △ 2042
+2289 △ 2264
+2290 △ 61
+2291 △ 2235
+2292 :ct 624
+2293 △ 2292
+2294 2293 △
+2295 2291 2294
+2296 2290 2295
+2297 2289 2296
+2298 2288 2297
+2299 2287 2298
+2300 2286 2299
+2301 2285 2300
+2302 2284 2301
+2303 2283 2302
+2304 2282 2303
+2305 1955 2304
+2306 2281 2305
+2307 2278 2306
+2308 2276 2307
+2309 2272 2308
+2310 2270 2309
+2311 65 2310
+2312 59 2311
+2313 90 2312
+2314 63 2313
+2315 2268 2314
+2316 2266 2315
+2317 2046 2316
+2318 2044 2317
+2319 2056 2318
+2320 88 2319
+2321 2263 2320
+2322 2261 2321
+2323 2258 2322
+2324 2256 2323
+2325 2253 2324
+2326 79 2325
+2327 71 2326
+2328 2251 2327
+2329 2250 2328
+2330 2248 2329
+2331 83 2330
+2332 2246 2331
+2333 2244 2332
+2334 2242 2333
+2335 2239 2334
+2336 2237 2335
+2337 2234 2336
+2338 2232 2337
+2339 2228 2338
+2340 2226 2339
+2341 2224 2340
+2342 2222 2341
+2343 2220 2342
+2344 2218 2343
+2345 2215 2344
+2346 2213 2345
+2347 2209 2346
+2348 2208 2347
+2349 2206 2348
+2350 2204 2349
+2351 2201 2350
+2352 2199 2351
+2353 2196 2352
+2354 2194 2353
+2355 2190 2354
+2356 2188 2355
+2357 2185 2356
+Serialize._alphabet:1 2357
+2358 18 Serialize._alphabet:1
+2359 :b 2358
+2360 :b 120
+2361 2360 117
+2362 2360 2361
+2363 2360 2362
+2364 2360 2363
+2365 2359 2364
+2366 18 2365
+2367 464 140
+2368 99 2367
+2369 2366 2368
+2370 2184 2369
+2371 2182 2370
+Serialize._alphabet_tree:2 2371
+2372 18 Serialize._alphabet_tree:2
+2373 2372 Serialize._pair_at:3
+2374 2177 2373
+2375 2178 2374
+2376 2179 2375
+2377 2180 2376
+2378 2181 2377
+2379 2173 2378
+Serialize._alphabet_get:4 2379
+2380 19 Serialize._alphabet_get:4
+2381 19 2380
+2382 19 2381
+2383 19 2382
+2384 19 2383
+2385 23 2384
+2386 19 2385
+2387 522 2386
+2388 :s 2387
+2389 :b 2388
+2390 20 Serialize._alphabet_get:4
+2391 20 2390
+2392 20 2391
+2393 20 2392
+2394 24 2393
+2395 20 2394
+2396 556 2395
+2397 99 2396
+2398 :s 2397
+2399 :b 2398
+2400 :b 556
+2401 1360 Serialize._alphabet_get:4
+2402 1360 2401
+2403 1360 2402
+2404 182 2403
+2405 1360 2404
+2406 2400 2405
+2407 100 2406
+2408 99 2407
+2409 :s 2408
+2410 :b 2409
+2411 :b 2400
+2412 1750 Serialize._alphabet_get:4
+2413 1750 2412
+2414 1971 2413
+2415 1750 2414
+2416 2411 2415
+2417 564 2416
+2418 100 2417
+2419 99 2418
+2420 :s 2419
+2421 :b 2420
+2422 :b 2411
+2423 :b 1971
+2424 1751 Serialize._alphabet_get:4
+2425 2423 2424
+2426 1751 2425
+2427 2422 2426
+2428 565 2427
+2429 564 2428
+2430 100 2429
+2431 99 2430
+2432 :s 2431
+2433 :b 2432
+2434 :b 540
 2435 :b 2434
-2436 18 Serialize._alphabet_get:4
-2437 :c 2436
-2438 2437 △
-2439 18 2438
-2440 :c 2439
-2441 2440 △
-2442 18 2441
-2443 :c 2442
-2444 2443 △
-2445 18 2444
+2436 :b 535
+2437 :b 2436
+2438 :b 2423
+2439 2438 Serialize._alphabet_get:4
+2440 2437 2439
+2441 2435 2440
+2442 2434 2441
+2443 540 2442
+2444 116 2443
+2445 38 2444
 2446 :c 2445
-2447 2446 △
-2448 23 2447
-2449 424 2448
-2450 539 2449
-2451 103 2450
-2452 :s 2451
-2453 :b 2452
-2454 :b 539
-2455 119 Serialize._alphabet_get:4
-2456 18 2455
-2457 :c 2456
-2458 2457 △
-2459 119 2458
-2460 18 2459
-2461 :c 2460
-2462 2461 △
-2463 119 2462
-2464 18 2463
-2465 :c 2464
-2466 2465 △
-2467 191 2466
-2468 1997 2467
-2469 2454 2468
-2470 104 2469
-2471 103 2470
-2472 :s 2471
-2473 :b 2472
-2474 :b 2454
-2475 :b 1997
-2476 549 Serialize._alphabet_get:4
-2477 119 2476
-2478 18 2477
-2479 :c 2478
-2480 2479 △
-2481 549 2480
-2482 119 2481
-2483 18 2482
-2484 :c 2483
-2485 2484 △
-2486 2010 2485
-2487 2475 2486
-2488 2474 2487
-2489 547 2488
-2490 104 2489
-2491 103 2490
-2492 :s 2491
-2493 :b 2492
-2494 :b 2474
-2495 :b 2475
-2496 :b 2010
-2497 1769 Serialize._alphabet_get:4
-2498 549 2497
-2499 119 2498
-2500 18 2499
-2501 :c 2500
-2502 2501 △
-2503 2496 2502
-2504 2495 2503
-2505 2494 2504
-2506 548 2505
-2507 547 2506
-2508 104 2507
-2509 103 2508
-2510 :s 2509
-2511 :b 2510
-2512 :b 1769
-2513 :b 582
-2514 :b 2513
-2515 :b 2496
-2516 2515 Serialize._alphabet_get:4
-2517 2514 2516
-2518 2512 2517
-2519 1769 2518
-2520 549 2519
-2521 119 2520
-2522 18 2521
-2523 :c 2522
-2524 2511 2523
-2525 2493 2524
-2526 2473 2525
-2527 2453 2526
-2528 2435 2527
-2529 189 2528
-2530 fix 2529
-Serialize._to_base64:8 2530
-2531 compose Serialize._to_base64:8
-2532 :b 138
-2533 104 25
-2534 2532 2533
-2535 549 2534
-2536 119 2535
-2537 18 2536
-2538 :c 2537
-2539 2538 △
-Serialize._preorder:1 2539
-2540 Serialize._preorder:1 31
-2541 1229 196
-2542 2540 2541
-2543 :b 196
-2544 :b 2543
-2545 2544 917
-2546 1376 2545
-2547 1376 2546
-2548 2542 2547
-Serialize.bitstr_encode 2548
-2549 2531 Serialize.bitstr_encode
-Serialize.base64_encode 2549
-2550 List.map 620
-2551 472 2550
-2552 :c 2551
-2553 :c let
-2554 :b 2553
-2555 264 934
-2556 2554 2555
-2557 122 2556
-2558 :k 2557
-2559 346 2558
-2560 2559 △
-2561 :c 2560
-2562 List.foldl 2561
-2563 1114 △
-2564 2562 2563
-2565 472 2564
-2566 :c 2565
-2567 2566 620
-2568 2552 2567
-Serialize.bps_decode 2568
-2569 21 281
-2570 :c 2569
-2571 :s 307
-2572 :b 2571
-2573 :b 916
-2574 2573 192
-2575 2572 2574
-2576 149 2575
-2577 119 2576
-2578 18 2577
-2579 21 2578
-2580 :c 2579
-2581 2580 △
-2582 2570 2581
-2583 2532 2582
-2584 549 2583
-2585 119 2584
-2586 18 2585
-2587 :c 2586
-2588 2587 △
-Serialize._preorder_wrapped:2 2588
-2589 Serialize._preorder_wrapped:2 2095
-2590 2589 id
-2591 2590 2107
-Serialize.bps_encode 2591
-2592 List.split_on 1224
-2593 472 2592
-2594 :c 2593
-2595 :b 2594
-2596 List.filter List.is_not_empty
-2597 472 2596
-2598 :c 2597
-2599 :b 2598
-2600 List.split_on 638
-2601 472 2600
-2602 :c 2601
-2603 :b 2602
-2604 :c Map.pmap_get
-2605 539 2604
-2606 103 2605
-2607 :s 2606
-2608 :b 1020
-2609 2608 2604
-2610 119 2609
-2611 18 2610
-2612 :s 2611
-2613 2612 :i
-2614 2454 2613
-2615 104 2614
-2616 103 2615
-2617 :s 2616
-2618 21 1019
-2619 :c 2618
-2620 :b 2619
-2621 148 2604
-2622 18 2621
-2623 :s 2622
-2624 2623 2604
-2625 2620 2624
-2626 549 2625
-2627 119 2626
-2628 18 2627
-2629 :s 2628
-2630 2629 :i
-2631 1376 2630
-2632 2617 2631
-2633 2607 2632
-2634 321 2633
-2635 2603 2634
-2636 List.foldl 2635
-2637 472 2636
-2638 21 2637
-2639 :c 2638
-2640 456 120
-2641 18 2640
-2642 :c 2641
-2643 2642 △
-2644 18 2643
-2645 :s 2644
-2646 2645 List.is_empty
-2647 2639 2646
-2648 2599 2647
-2649 2595 2648
-Serialize.from_dag_with_env 2649
-2650 2131 △
-2651 Map.pmap_set 2650
-2652 2651 △
-2653 2652 △
-2654 Serialize.from_dag_with_env 2653
-Serialize.from_dag 2654
-2655 Serialize._preorder_wrapped:2 629
-2656 △ 2292
-2657 2655 2656
-2658 2657 645
-Serialize.js_array_encode 2658
-2659 21 let
-2660 :c 2659
-2661 :b 2660
-2662 :b 2554
-2663 :b 2662
-2664 let 1062
+2447 2433 2446
+2448 2421 2447
+2449 2410 2448
+2450 2399 2449
+2451 2389 2450
+2452 180 2451
+2453 fix 2452
+Serialize._to_base64:8 2453
+2454 compose Serialize._to_base64:8
+2455 :b 135
+2456 100 26
+2457 2455 2456
+2458 1750 2457
+Serialize._preorder:1 2458
+2459 Serialize._preorder:1 30
+2460 1210 185
+2461 2459 2460
+2462 :b 185
+2463 :b 2462
+2464 2463 908
+2465 1357 2464
+2466 1357 2465
+2467 2461 2466
+Serialize.bitstr_encode 2467
+2468 2454 Serialize.bitstr_encode
+Serialize.base64_encode 2468
+2469 18 601
+2470 :c let
+2471 :b 2470
+2472 255 922
+2473 2471 2472
+2474 119 2473
+2475 :k 2474
+2476 326 2475
+2477 2476 △
+2478 :c 2477
+2479 List.foldl 2478
+2480 1095 △
+2481 2479 2480
+2482 463 2481
+2483 2469 2482
+2484 18 2483
+2485 List.map 601
+2486 463 2485
+2487 2484 2486
+Serialize.bps_decode 2487
+2488 :s 297
+2489 :b 2488
+2490 :b 907
+2491 2490 201
+2492 2489 2491
+2493 146 2492
+2494 116 2493
+2495 38 2494
+2496 22 2495
+2497 19 2496
+2498 18 2497
+2499 22 294
+2500 2498 2499
+2501 2455 2500
+2502 1750 2501
+Serialize._preorder_wrapped:2 2502
+2503 Serialize._preorder_wrapped:2 2053
+2504 2503 id
+2505 2504 2065
+Serialize.bps_encode 2505
+2506 List.split_on 1205
+2507 463 2506
+2508 :c 2507
+2509 :b 2508
+2510 List.filter List.is_not_empty
+2511 463 2510
+2512 :c 2511
+2513 :b 2512
+2514 442 117
+2515 20 2514
+2516 38 2515
+2517 :s 2516
+2518 2517 List.is_empty
+2519 18 2518
+2520 List.split_on 619
+2521 463 2520
+2522 :c 2521
+2523 :b 2522
+2524 :c Map.pmap_get
+2525 556 2524
+2526 99 2525
+2527 :s 2526
+2528 :c 1006
+2529 :b 2528
+2530 2529 2524
+2531 116 2530
+2532 38 2531
+2533 :s 2532
+2534 2533 :i
+2535 2400 2534
+2536 100 2535
+2537 99 2536
+2538 :s 2537
+2539 22 1006
+2540 :c 2539
+2541 :b 2540
+2542 145 2524
+2543 38 2542
+2544 :s 2543
+2545 2544 2524
+2546 2541 2545
+2547 540 2546
+2548 116 2547
+2549 38 2548
+2550 :s 2549
+2551 2550 :i
+2552 1357 2551
+2553 2538 2552
+2554 2527 2553
+2555 310 2554
+2556 2523 2555
+2557 List.foldl 2556
+2558 463 2557
+2559 22 2558
+2560 2519 2559
+2561 2513 2560
+2562 2509 2561
+Serialize.from_dag_with_env 2562
+2563 2089 △
+2564 Map.pmap_set 2563
+2565 2564 △
+2566 2565 △
+2567 Serialize.from_dag_with_env 2566
+Serialize.from_dag 2567
+2568 Serialize._preorder_wrapped:2 610
+2569 △ 2240
+2570 2568 2569
+2571 2570 626
+Serialize.js_array_encode 2571
+2572 22 let
+2573 :c 2572
+2574 :b 2573
+2575 :b 2471
+2576 :b 2575
+2577 :c 913
+2578 let 2577
+2579 :b 2578
+2580 :b 2579
+2581 :b 2580
+2582 :b 2581
+2583 463 △
+2584 38 2583
+2585 18 2584
+2586 463 2585
+2587 22 2586
+2588 22 2587
+2589 22 2588
+2590 22 2589
+2591 :s 2590
+2592 38 28
+2593 :c 2592
+2594 1738 2593
+2595 146 2594
+2596 1358 2595
+2597 1750 2596
+2598 540 2597
+2599 116 2598
+2600 38 2599
+2601 2434 2600
+2602 540 2601
+2603 116 2602
+2604 38 2603
+2605 :c 2604
+2606 18 2605
+2607 :s :c
+2608 116 805
+2609 18 2608
+2610 22 :c
+2611 2609 2610
+2612 2607 2611
+2613 463 2612
+2614 22 2613
+2615 22 2614
+2616 22 2615
+2617 22 2616
+2618 22 2617
+2619 2606 2618
+2620 2591 2619
+2621 2582 2620
+2622 1357 2621
+2623 536 2622
+2624 2576 2623
+2625 392 2624
+2626 2574 2625
+2627 255 2626
+2628 2471 2627
+2629 fix 2628
+2630 21 2629
+Serialize.ternary_decode 2630
+2631 Serialize._preorder:1 1955
+2632 :b 2282
+2633 :b 2632
+2634 2631 2633
+2635 :b 2283
+2636 :b 2635
+2637 :b 2636
+2638 :b 2637
+2639 2638 908
+2640 2634 2639
+Serialize.ternary_encode 2640
+2641 18 913
+2642 22 914
+2643 2641 2642
+2644 189 2643
+2645 18 2644
+Dlist.cons 207
+2646 List.foldr Dlist.cons
+Dlist.empty id
+2647 2646 Dlist.empty
+Dlist.from_list 2647
+2648 Dlist.from_list 2563
+2649 18 2648
+2650 117 Dlist.empty
+2651 2649 2650
+2652 :c 2651
+2653 810 2652
+2654 19 2653
+2655 :s 2654
+2656 :b 2655
+2657 146 :c
+2658 116 2657
+2659 38 2658
+2660 :s 2659
+Serialize._fresh:1 Nat.to_bits_dstring
+2661 463 Serialize._fresh:1
+2662 22 2661
+2663 :s 2662
+2664 :b 2663
 2665 :b 2664
 2666 :b 2665
 2667 :b 2666
-2668 :b 2667
-2669 472 △
-2670 18 2669
-2671 19 2670
-2672 472 2671
-2673 21 2672
-2674 21 2673
-2675 21 2674
-2676 21 2675
-2677 :s 2676
-2678 :s :c
-2679 21 :c
-2680 :c 2679
-2681 119 813
-2682 2680 2681
+2668 :b 410
+2669 :b 2668
+2670 :b 563
+2671 :b 565
+2672 :b 129
+2673 :b 2672
+2674 :b 2673
+2675 :c 541
+2676 :b 2675
+2677 :b 620
+2678 :b 2677
+2679 :b 2678
+2680 △ 1205
+2681 18 2680
+2682 2681 :b
 2683 2678 2682
-2684 472 2683
-2685 21 2684
-2686 21 2685
-2687 21 2686
-2688 21 2687
-2689 21 2688
-2690 :c 2689
-2691 :b 20
-2692 :b 2691
-2693 18 29
-2694 :c 2693
-2695 1754 2694
-2696 149 2695
-2697 2692 2696
-2698 549 2697
-2699 119 2698
-2700 18 2699
-2701 :c 2700
-2702 2701 △
-2703 549 2702
-2704 119 2703
-2705 18 2704
-2706 1769 2705
-2707 549 2706
-2708 119 2707
-2709 18 2708
-2710 :c 2709
-2711 2690 2710
-2712 2677 2711
-2713 2668 2712
-2714 1376 2713
-2715 583 2714
-2716 2663 2715
-2717 404 2716
-2718 2661 2717
-2719 264 2718
-2720 2554 2719
-2721 fix 2720
-2722 20 2721
-Serialize.ternary_decode 2722
-2723 Serialize._preorder:1 1992
-2724 :b 2334
+2684 18 2683
+2685 2684 201
+2686 2679 2685
+2687 2672 2686
+2688 2676 2687
+2689 18 2688
+2690 22 541
+2691 22 2690
+2692 2689 2691
+2693 2674 2692
+2694 2671 2693
+2695 2670 2694
+2696 2435 2695
+2697 2434 2696
+2698 535 2697
+2699 2669 2698
+2700 2667 2699
+2701 18 2700
+2702 :b 2701
+2703 145 38
+2704 145 2703
+2705 2702 2704
+2706 2660 2705
+2707 2656 2706
+2708 38 2707
+2709 fix 2708
+Serialize._walk:2 2709
+2710 :b Serialize._walk:2
+2711 189 335
+2712 803 2711
+2713 24 2711
+2714 99 2713
+2715 22 2714
+2716 343 2715
+2717 2712 2716
+2718 :c 2717
+Reflect._quote_body:1 2718
+2719 325 Reflect._quote_body:1
+Reflect.quote 2719
+2720 2710 Reflect.quote
+2721 19 2720
+2722 2645 2721
+Serialize.to_dag 2722
+2723 Serialize._preorder:1 2089
+2724 :b 2054
 2725 :b 2724
-2726 2723 2725
-2727 :b 2335
+2726 :b 2725
+2727 :b 2089
 2728 :b 2727
 2729 :b 2728
-2730 :b 2729
-2731 2730 917
-2732 2726 2731
-Serialize.ternary_encode 2732
-Dlist.empty id
-2733 120 Dlist.empty
-2734 :c 2733
-Dlist.cons 215
-2735 List.foldr Dlist.cons
-2736 2735 Dlist.empty
-Dlist.from_list 2736
-2737 Dlist.from_list 2650
-2738 2734 2737
-2739 :c 2738
-2740 818 2739
-2741 :c 2740
-2742 2741 △
-2743 :s 2742
-2744 :b 2743
-2745 149 :c
-2746 119 2745
-2747 18 2746
-2748 :s 2747
-2749 148 18
-2750 148 2749
-2751 18 2750
-2752 :c 2751
-Serialize._fresh:1 Nat.to_bits_dstring
-2753 472 Serialize._fresh:1
-2754 21 2753
-2755 :s 2754
-2756 :b 2755
-2757 :b 2756
-2758 :b 2757
-2759 :b 2758
-2760 :b 546
-2761 :b 548
-2762 :b 132
-2763 :b 2762
-2764 :b 2763
-2765 21 585
-2766 21 2765
-2767 :c 2766
-2768 :b 586
-2769 :b 639
-2770 :b 2769
-2771 :b 2770
-2772 △ 1224
-2773 131 2772
-2774 2770 2773
-2775 193 2774
-2776 2771 2775
-2777 2762 2776
-2778 2768 2777
-2779 2767 2778
-2780 2764 2779
-2781 2761 2780
-2782 2760 2781
-2783 2512 2782
-2784 1769 2783
-2785 582 2784
-2786 549 2785
-2787 119 2786
-2788 18 2787
-2789 :c 2788
-2790 2789 Nat.succ
-2791 2759 2790
-2792 2752 2791
-2793 2748 2792
-2794 2744 2793
-2795 18 2794
-2796 fix 2795
-Serialize._walk:2 2796
-2797 :b Serialize._walk:2
-2798 200 353
-2799 811 2798
-2800 23 2798
-2801 103 2800
-2802 21 2801
-2803 363 2802
-2804 2799 2803
-2805 :c 2804
-Reflect._quote_body:1 2805
-2806 345 Reflect._quote_body:1
-Reflect.quote 2806
-2807 2797 Reflect.quote
-2808 249 2807
-2809 :c 2808
-2810 19 923
-2811 21 924
-2812 2810 2811
-2813 200 2812
-2814 2809 2813
-Serialize.to_dag 2814
-2815 Serialize._preorder:1 2131
-2816 :b 2096
-2817 :b 2816
-2818 :b 2817
-2819 :b 2131
-2820 :b 2819
-2821 :b 2820
-2822 430 2108
-2823 2771 2822
-2824 2821 2823
-2825 2818 2824
-2826 2815 2825
-2827 :b 2818
-2828 :b 2821
-2829 :b 2771
-2830 916 2823
-2831 2829 2830
-2832 2828 2831
-2833 2827 2832
-2834 2826 2833
-Serialize.to_source 2834
-2835 Serialize._preorder:1 2265
-2836 :b 2280
-2837 :b 2836
-2838 :b 2837
-2839 2838 2822
-2840 2818 2839
-2841 2835 2840
-2842 :b 2251
-2843 :b 2842
-2844 :b 2843
-2845 :b 2844
-2846 916 2822
-2847 2845 2846
-2848 2827 2847
-2849 2841 2848
-Serialize.tree_encode 2849
-2850 :c Map.set
-2851 2850 △
-Set.add 2851
+2730 18 2066
+2731 :b 2730
+2732 2731 22
+2733 2679 2732
+2734 2729 2733
+2735 2726 2734
+2736 2723 2735
+2737 :b 2726
+2738 :b 2729
+2739 :b 2679
+2740 907 2733
+2741 2739 2740
+2742 2738 2741
+2743 2737 2742
+2744 2736 2743
+Serialize.to_source 2744
+2745 Serialize._preorder:1 2213
+2746 :b 2228
+2747 :b 2746
+2748 :b 2747
+2749 2748 2732
+2750 2726 2749
+2751 2745 2750
+2752 :b 2199
+2753 :b 2752
+2754 :b 2753
+2755 :b 2754
+2756 907 2732
+2757 2755 2756
+2758 2737 2757
+2759 2751 2758
+Serialize.tree_encode 2759
+2760 19 Map.set
+Set.add 2760
+2761 :b 2485
+2762 2761 Map.entries
+Set.entries 2762
+2763 18 Set.entries
 Set.remove Map.remove
-2852 List.foldr Set.remove
-2853 21 2852
-2854 :c 2853
-2855 :b 2550
-2856 2855 Map.entries
-Set.entries 2856
-2857 2854 Set.entries
-Set.diff 2857
+2764 List.foldr Set.remove
+2765 22 2764
+2766 2763 2765
+Set.diff 2766
 Set.empty △
-2858 List.foldr Set.add
-2859 2858 △
-Set.from_list 2859
-2860 :b Set.from_list
-2861 :b 2860
-2862 :b List.filter
-2863 727 9
-2864 :b 2863
-2865 :b 2864
-2866 2865 Map.get
-Set.member 2866
-2867 :c Set.member
-2868 2862 2867
-2869 :c 2868
-2870 :b 2869
-2871 2870 Set.entries
-2872 2861 2871
-Set.intersect 2872
-2873 :ct 2331
-2874 △ 2873
-2875 2874 △
-2876 List.enclose 2875
-2877 2876 641
-2878 :ct 2162
-2879 △ 2878
-2880 2879 △
-2881 2877 2880
-2882 21 2881
-2883 :c 2882
-2884 2883 Set.entries
-Set.to_source 2884
-2885 21 2858
-2886 :c 2885
-2887 2886 Set.entries
-Set.union 2887
-2888 :c 25
-2889 2888 22
-2890 18 2889
-2891 :c 2890
-2892 2891 △
-2893 137 2892
-Snat.add 2893
+2767 List.foldr Set.add
+2768 2767 △
+Set.from_list 2768
+2769 :b Set.from_list
+2770 :b 2769
+2771 :b List.filter
+2772 678 10
+2773 :b 2772
+2774 :b 2773
+2775 2774 Map.get
+Set.member 2775
+2776 :c Set.member
+2777 2771 2776
+2778 :c 2777
+2779 :b 2778
+2780 2779 Set.entries
+2781 2770 2780
+Set.intersect 2781
+2782 :ct 2279
+2783 △ 2782
+2784 2783 △
+2785 List.enclose 2784
+2786 2785 622
+2787 :ct 2127
+2788 △ 2787
+2789 2788 △
+2790 2786 2789
+2791 22 2790
+2792 2763 2791
+Set.to_source 2792
+2793 22 2767
+2794 2763 2793
+Set.union 2794
+2795 18 23
+2796 2795 26
+2797 20 2796
+2798 134 2797
+Snat.add 2798
 Snat.succ △
 Snat.zero △
 Snat.one 1
-Snat.two 31
-Snat.three 32
-2894 △ Snat.three
-Snat.four 2894
-2895 1244 △
-2896 :c 2895
-2897 2896 △
-Snat.from_nat 2897
-2898 Option.match true
-2899 2898 2
-2900 :b 2899
-2901 :b 2900
-2902 818 △
-2903 :s 2902
-2904 :b 2903
-2905 352 :c
-2906 18 2905
-2907 :c 2906
-2908 2907 △
-2909 18 2908
-2910 2904 2909
-2911 18 2910
-2912 :c 2911
-2913 2912 △
-2914 fix 2913
-Snat.sub 2914
-2915 2901 Snat.sub
-Snat.is_lt 2915
-Snat.is_zero 2899
-2916 triage 253
-2917 2916 353
-2918 :c 869
-2919 :b 2918
-2920 2919 353
-2921 2917 2920
-2922 :c 2921
-2923 191 2922
-Snat._size_body:63 2923
-2924 345 Snat._size_body:63
-2925 :c 2924
-2926 2925 △
-Snat.size 2926
-Snat._selfstem:4 124
-Snat._k:5 126
-2927 △ Snat._k:5
-2928 △ 2927
-2929 :s 192
-2930 2929 :i
-2931 2571 2930
-2932 191 2931
-Snat._chain_step:7 2932
-2933 :b Snat._chain_step:7
-2934 2933 2928
-Snat._chain_code:8 2934
-2935 △ Snat._chain_code:8
-2936 2928 2935
-2937 :c 2936
-2938 2937 △
-Snat.size__103 2938
-2939 1429 △
-2940 :s 2939
-2941 2940 △
-Snat._fork_self:11 2941
-2942 122 Snat._fork_self:11
-Snat._dispatch:14 2942
-2943 :b Snat._dispatch:14
+Snat.two 30
+Snat.three 31
+2799 △ Snat.three
+Snat.four 2799
+2800 19 Fn.pow
+2801 19 2800
+Snat.from_nat 2801
+2802 Option.match true
+2803 2802 2
+2804 :b 2803
+2805 :b 2804
+2806 810 △
+2807 :s 2806
+2808 :b 2807
+2809 334 :c
+2810 20 2809
+2811 38 2810
+2812 2808 2811
+2813 20 2812
+2814 fix 2813
+Snat.sub 2814
+2815 2805 Snat.sub
+Snat.is_lt 2815
+Snat.is_zero 2803
+2816 triage 244
+2817 2816 335
+2818 :c 861
+2819 :b 2818
+2820 2819 335
+2821 2817 2820
+2822 :c 2821
+2823 182 2822
+Snat._size_body:63 2823
+2824 325 Snat._size_body:63
+2825 19 2824
+Snat.size 2825
+Snat._selfstem:4 121
+Snat._k:5 123
+2826 △ Snat._k:5
+2827 △ 2826
+2828 :s 201
+2829 2828 :i
+2830 2488 2829
+2831 182 2830
+Snat._chain_step:7 2831
+2832 :b Snat._chain_step:7
+2833 2832 2827
+Snat._chain_code:8 2833
+2834 △ Snat._chain_code:8
+2835 2827 2834
+2836 19 2835
+Snat.size__103 2836
+2837 1404 △
+2838 :s 2837
+2839 2838 △
+Snat._fork_self:11 2839
+2840 119 Snat._fork_self:11
+Snat._dispatch:14 2840
+2841 :b Snat._dispatch:14
 Snat._s:1 :s
-Snat._step_95:17 2932
-2944 const Snat._step_95:17
-2945 Snat._s:1 2944
-2946 1429 1
-2947 :s 2946
-2948 2947 1
-Snat._dup:12 2948
-2949 wait Snat._dup:12
-2950 2945 2949
-2951 △ 2950
-2952 2943 2951
-2953 :s 2952
-2954 2953 2
-Snat.size__111 2954
-2955 103 21
-2956 21 2955
-2957 :s 2956
-2958 2957 199
-2959 2571 2958
-Snat._triage:2 2959
-2960 191 Snat._triage:2
-Snat._functional_smallest:3 2960
-2961 :b Snat._functional_smallest:3
-2962 2961 2928
-Snat._code:6 2962
-2963 △ Snat._code:6
-2964 2928 2963
-2965 :c 2964
-2966 2965 △
-Snat.size__118 2966
-2967 123 :k
-2968 let 2967
-2969 21 wait
-2970 :s 2969
-2971 22 :c
-2972 22 2971
-2973 132 2972
-2974 2970 2973
-2975 2968 2974
-fix__wait 2975
-2976 fix__wait Snat._functional_smallest:3
-2977 :c 2976
-2978 2977 △
-Snat.size__125 2978
-2979 :s 620
-2980 2979 const
-2981 :s 2980
-2982 2981 △
-Snat._canon_door:36 2982
-2983 compose Snat._canon_door:36
-2984 Snat._s:1 199
-2985 2984 △
-2986 compose 2985
-2987 2986 699
-2988 22 2987
-2989 22 2988
-2990 Snat._s:1 2989
-2991 2990 122
-2992 compose 2991
-2993 Snat._s:1 23
-2994 2993 △
-2995 122 2994
-Snat._rewind:34 2995
-2996 compose Snat._rewind:34
-2997 2992 2996
-Snat._canon_body:35 2997
-2998 △ Snat._canon_body:35
-2999 2983 2998
-Snat.size__78 2999
-Snat._dispatch_90:28 125
-3000 :b Snat._dispatch_90:28
-3001 Snat._s:1 31
-3002 3001 id
-3003 122 3002
-Snat._flat_90:26 3003
-3004 :s Snat._flat_90:26
-3005 :b 3004
-3006 :b 3005
-3007 :s Snat._s:1
-3008 3007 const
-3009 2571 3008
-3010 3006 3009
-Snat._step_90:27 3010
-3011 const Snat._step_90:27
-3012 Snat._s:1 3011
-3013 121 1
-3014 3013 △
-Snat._refork:23 3014
-3015 Snat._s:1 Snat._refork:23
-3016 3015 △
-3017 122 3016
-Snat._redispatch:24 3017
-3018 compose Snat._redispatch:24
-Snat._repack:25 3018
-3019 3012 Snat._repack:25
-3020 △ 3019
-3021 3000 3020
-3022 :s 3021
-3023 3022 2
-Snat.size__90 3023
-3024 self_apply Snat._size_body:63
-3025 :c 3024
-3026 3025 △
-Snat.size__fastest 3026
+Snat._step_95:17 2831
+2842 const Snat._step_95:17
+2843 Snat._s:1 2842
+2844 1404 1
+2845 :s 2844
+2846 2845 1
+Snat._dup:12 2846
+2847 wait Snat._dup:12
+2848 2843 2847
+2849 △ 2848
+2850 2841 2849
+2851 :s 2850
+2852 2851 2
+Snat.size__111 2852
+2853 99 22
+2854 22 2853
+2855 :s 2854
+2856 2855 188
+2857 2488 2856
+Snat._triage:2 2857
+2858 182 Snat._triage:2
+Snat._functional_smallest:3 2858
+2859 :b Snat._functional_smallest:3
+2860 2859 2827
+Snat._code:6 2860
+2861 △ Snat._code:6
+2862 2827 2861
+2863 19 2862
+Snat.size__118 2863
+2864 120 :k
+2865 let 2864
+2866 22 wait
+2867 :s 2866
+2868 23 :c
+2869 23 2868
+2870 129 2869
+2871 2867 2870
+2872 2865 2871
+fix__wait 2872
+2873 fix__wait Snat._functional_smallest:3
+2874 19 2873
+Snat.size__125 2874
+2875 :s 601
+2876 2875 const
+2877 :s 2876
+2878 2877 △
+Snat._canon_door:36 2878
+2879 compose Snat._canon_door:36
+2880 Snat._s:1 188
+2881 2880 △
+2882 compose 2881
+2883 2882 684
+2884 23 2883
+2885 23 2884
+2886 Snat._s:1 2885
+2887 2886 119
+2888 compose 2887
+2889 Snat._s:1 24
+2890 2889 △
+2891 119 2890
+Snat._rewind:34 2891
+2892 compose Snat._rewind:34
+2893 2888 2892
+Snat._canon_body:35 2893
+2894 △ Snat._canon_body:35
+2895 2879 2894
+Snat.size__78 2895
+Snat._dispatch_90:28 122
+2896 :b Snat._dispatch_90:28
+2897 Snat._s:1 30
+2898 2897 id
+2899 119 2898
+Snat._flat_90:26 2899
+2900 :s Snat._flat_90:26
+2901 :b 2900
+2902 :b 2901
+2903 :s Snat._s:1
+2904 2903 const
+2905 2488 2904
+2906 2902 2905
+Snat._step_90:27 2906
+2907 const Snat._step_90:27
+2908 Snat._s:1 2907
+2909 118 1
+2910 2909 △
+Snat._refork:23 2910
+2911 Snat._s:1 Snat._refork:23
+2912 2911 △
+2913 119 2912
+Snat._redispatch:24 2913
+2914 compose Snat._redispatch:24
+Snat._repack:25 2914
+2915 2908 Snat._repack:25
+2916 △ 2915
+2917 2896 2916
+2918 :s 2917
+2919 2918 2
+Snat.size__90 2919
+2920 self_apply Snat._size_body:63
+2921 19 2920
+Snat.size__fastest 2921
 Snat.size__smallest Snat.size__78
-3027 :b 2943
-3028 103 const
-3029 :c 3028
-3030 3029 Snat._dup:12
-3031 22 3030
-Snat._pack:13 3031
-3032 3027 Snat._pack:13
-3033 103 3032
-3034 :c 3033
-3035 3034 2
-Snat._wn_size:15 3035
-3036 122 309
-Snat._flat:16 3036
-3037 :s Snat._flat:16
-3038 :b 3037
-3039 :b 3038
-3040 3039 3009
-Snat._step_78:18 3040
-3041 Snat._wn_size:15 Snat._step_78:18
-Snat.size__wn_78 3041
+2922 :b 2841
+2923 18 Snat._dup:12
+2924 99 const
+2925 2923 2924
+2926 23 2925
+Snat._pack:13 2926
+2927 2922 Snat._pack:13
+2928 99 2927
+2929 441 2928
+Snat._wn_size:15 2929
+2930 119 299
+Snat._flat:16 2930
+2931 :s Snat._flat:16
+2932 :b 2931
+2933 :b 2932
+2934 2933 2905
+Snat._step_78:18 2934
+2935 Snat._wn_size:15 Snat._step_78:18
+Snat.size__wn_78 2935
 Snat.size__smallest__wn Snat.size__wn_78
-3042 18 const
-3043 104 3042
-3044 18 3043
-3045 :c 3044
-3046 3045 const
-Snat._lagged_size:43 3046
-Snat._tie:41 2967
-3047 Snat._lagged_size:43 Snat._tie:41
-3048 23 Snat._fork_self:11
-3049 3029 3048
-Snat._loop_counted:48 3049
-3050 4 1
-3051 4 3050
-Snat._b2:44 3051
-3052 199 Snat._b2:44
-3053 22 3052
-3054 22 3053
-Snat._lag2:46 3054
-3055 :c Snat._lag2:46
-3056 22 2939
-3057 :s 3056
-3058 3057 24
-Snat._park:45 3058
-3059 3055 Snat._park:45
-3060 264 3059
-Snat._step_100:47 3060
-3061 Snat._loop_counted:48 Snat._step_100:47
-3062 3047 3061
-Snat.size__wn_100 3062
-3063 :s 1429
-3064 compose Snat._b2:44
-3065 199 3064
-3066 3063 3065
-Snat._tie_lagged:53 3066
-3067 Snat._lagged_size:43 Snat._tie_lagged:53
-3068 3029 Snat._fork_self:11
-Snat._loop:40 3068
-3069 23 128
-3070 22 3069
-3071 22 3070
-Snat._recount:50 3071
-3072 Snat._s:1 Snat._recount:50
-3073 :b 3072
-3074 3073 const
-3075 22 3074
-3076 22 3075
-Snat._state_103:51 3076
-3077 :s Snat._state_103:51
-3078 3077 923
-Snat._step_103:52 3078
-3079 Snat._loop:40 Snat._step_103:52
-3080 3067 3079
-Snat.size__wn_103 3080
-3081 191 3059
-3082 264 3081
-Snat._step_104:49 3082
-3083 Snat._loop:40 Snat._step_104:49
-3084 3047 3083
-Snat.size__wn_104 3084
-3085 3063 const
-Snat._tie_open:42 3085
-3086 Snat._lagged_size:43 Snat._tie_open:42
-3087 3073 3052
-3088 22 3087
-3089 22 3088
-Snat._state_106:54 3089
-3090 :s Snat._state_106:54
-3091 :c Snat._b2:44
-3092 3091 △
-3093 3090 3092
-Snat._step_106:55 3093
-3094 Snat._loop:40 Snat._step_106:55
-3095 3086 3094
-Snat.size__wn_106 3095
-3096 const Snat._tie_open:42
-3097 :c 3096
-3098 triage Snat.two
-3099 3098 △
-3100 22 3099
-3101 :s 3100
-3102 :b 128
-3103 3102 const
-Snat._b2__left:56 3103
-3104 :b Snat._b2__left:56
-3105 3102 3104
-3106 3104 3105
-Snat._carved_states:57 3106
-3107 :s Snat._carved_states:57
-3108 3107 199
-3109 3101 3108
-Snat._carved:58 3109
-3110 191 Snat._carved:58
-Snat._step_carved:59 3110
-3111 Snat._loop:40 Snat._step_carved:59
-3112 3097 3111
-3113 :s 3112
-3114 3113 671
-Snat.size__wn_108 3114
-3115 Snat._s:1 Snat._tie:41
-3116 :b 3115
-3117 3116 const
-3118 :c 3117
-3119 3118 3111
-3120 :c 3119
-3121 3120 △
-Snat.size__wn_113 3121
-3122 Snat._wn_size:15 Snat._step_95:17
-Snat.size__wn_95 3122
-3123 728 389
-3124 fix 3123
-Snat.to_nat 3124
-3125 :b Nat.to_string
-3126 3125 Snat.to_nat
-Snat.to_string 3126
-3127 :k Nat.succ
-3128 List.foldr 3127
-3129 3128 △
-String._length:3 3129
-3130 472 String._length:3
-3131 :s 3130
-3132 :b 3131
-3133 :b 3132
-3134 :b 529
-3135 :b List.repeat
-3136 :b 3135
-3137 3136 Nat.sub
-3138 18 3137
-3139 3134 3138
-3140 119 3139
-3141 457 3140
-3142 104 3141
-3143 2691 3142
-3144 149 3143
-3145 119 3144
-3146 18 3145
-3147 :s 3146
-3148 3147 Nat.is_lte
-3149 547 3148
-3150 545 3149
-3151 3133 3150
-String.pad_left 3151
-3152 :b 713
-3153 :c 1930
-3154 :b 3153
-3155 3154 equal
-3156 3152 3155
-String.replace_char 3156
-3157 △ 2244
-3158 3157 △
-3159 List.concat 3158
+2936 38 const
+2937 100 2936
+2938 1178 2937
+Snat._lagged_size:43 2938
+Snat._tie:41 2864
+2939 Snat._lagged_size:43 Snat._tie:41
+2940 24 Snat._fork_self:11
+2941 18 2940
+2942 2941 2924
+Snat._loop_counted:48 2942
+2943 23 2837
+2944 :s 2943
+2945 2944 25
+Snat._park:45 2945
+2946 18 Snat._park:45
+2947 4 1
+2948 4 2947
+Snat._b2:44 2948
+2949 188 Snat._b2:44
+2950 23 2949
+2951 23 2950
+Snat._lag2:46 2951
+2952 2946 Snat._lag2:46
+2953 255 2952
+Snat._step_100:47 2953
+2954 Snat._loop_counted:48 Snat._step_100:47
+2955 2939 2954
+Snat.size__wn_100 2955
+2956 :s 1404
+2957 compose Snat._b2:44
+2958 188 2957
+2959 2956 2958
+Snat._tie_lagged:53 2959
+2960 Snat._lagged_size:43 Snat._tie_lagged:53
+2961 18 Snat._fork_self:11
+2962 2961 2924
+Snat._loop:40 2962
+2963 24 125
+2964 23 2963
+2965 23 2964
+Snat._recount:50 2965
+2966 Snat._s:1 Snat._recount:50
+2967 :b 2966
+2968 2967 const
+2969 23 2968
+2970 23 2969
+Snat._state_103:51 2970
+2971 :s Snat._state_103:51
+2972 2971 913
+Snat._step_103:52 2972
+2973 Snat._loop:40 Snat._step_103:52
+2974 2960 2973
+Snat.size__wn_103 2974
+2975 182 2952
+2976 255 2975
+Snat._step_104:49 2976
+2977 Snat._loop:40 Snat._step_104:49
+2978 2939 2977
+Snat.size__wn_104 2978
+2979 2956 const
+Snat._tie_open:42 2979
+2980 Snat._lagged_size:43 Snat._tie_open:42
+2981 2967 2949
+2982 23 2981
+2983 23 2982
+Snat._state_106:54 2983
+2984 :s Snat._state_106:54
+2985 19 Snat._b2:44
+2986 2984 2985
+Snat._step_106:55 2986
+2987 Snat._loop:40 Snat._step_106:55
+2988 2980 2987
+Snat.size__wn_106 2988
+2989 triage Snat.two
+2990 2989 △
+2991 23 2990
+2992 :s 2991
+2993 :b 125
+2994 2993 const
+Snat._b2__left:56 2994
+2995 :b Snat._b2__left:56
+2996 2993 2995
+2997 2995 2996
+Snat._carved_states:57 2997
+2998 :s Snat._carved_states:57
+2999 2998 188
+3000 2992 2999
+Snat._carved:58 3000
+3001 182 Snat._carved:58
+Snat._step_carved:59 3001
+3002 Snat._loop:40 Snat._step_carved:59
+3003 18 3002
+3004 const Snat._tie_open:42
+3005 3003 3004
+3006 :s 3005
+3007 3006 270
+Snat.size__wn_108 3007
+3008 Snat._s:1 Snat._tie:41
+3009 :b 3008
+3010 3009 const
+3011 3003 3010
+3012 19 3011
+Snat.size__wn_113 3012
+3013 Snat._wn_size:15 Snat._step_95:17
+Snat.size__wn_95 3013
+3014 679 377
+3015 fix 3014
+Snat.to_nat 3015
+3016 :b Nat.to_string
+3017 3016 Snat.to_nat
+Snat.to_string 3017
+3018 :k Nat.succ
+3019 List.foldr 3018
+3020 3019 △
+String._length:3 3020
+3021 463 String._length:3
+3022 :s 3021
+3023 :b 3022
+3024 :b 3023
+3025 :b 513
+3026 :b List.repeat
+3027 :b 3026
+3028 3027 Nat.sub
+3029 38 3028
+3030 3025 3029
+3031 116 3030
+3032 443 3031
+3033 100 3032
+3034 1178 3033
+3035 146 3034
+3036 116 3035
+3037 38 3036
+3038 :s 3037
+3039 3038 Nat.is_lte
+3040 564 3039
+3041 562 3040
+3042 3024 3041
+String.pad_left 3042
+3043 :b 698
+3044 :c 1893
+3045 :b 3044
+3046 3045 equal
+3047 3043 3046
+String.replace_char 3047
+3048 △ 2192
+3049 3048 △
+3050 List.concat 3049
+3051 :b 3050
+3052 :k 625
+3053 △ 3052
+3054 3053 3049
+3055 3048 3054
+3056 △ 3055
+3057 3053 △
+3058 3053 3057
+3059 3053 3058
+3060 △ 3059
+3061 △ 1469
+3062 59 △
+3063 3053 3062
+3064 3061 3063
+3065 △ 3064
+3066 △ 84
+3067 63 △
+3068 3053 3067
+3069 3066 3068
+3070 △ 3069
+3071 3070 △
+3072 3065 3071
+3073 3060 3072
+3074 3056 3073
+String._escapes:1 3074
+3075 18 String._escapes:1
+3076 :b 1892
+3077 3076 Pair.snd
+3078 38 3077
+3079 :s 3078
+3080 :b 3079
+3081 :b equal
+3082 3081 Pair.fst
+3083 :c 3082
+3084 3080 3083
+3085 143 3084
+3086 :s 3085
+3087 3086 270
+3088 3075 3087
+String._escape_char:2 3088
+3089 241 String._escape_char:2
+3090 List.foldr 3089
+3091 3090 3049
+3092 3051 3091
+String.to_source 3092
+3093 :k 2275
+3094 Nat.add 3093
+3095 :b 3094
+3096 :b Nat.div2
+3097 3096 Nat.div2
+3098 3096 3097
+3099 3096 3098
+3100 3096 3099
+3101 3096 3100
+String._shr6:5 3101
+3102 :b String._shr6:5
+3103 3102 String._shr6:5
+3104 3102 3103
+3105 3095 3104
+3106 23 3105
+3107 :s 3106
+3108 :k 619
+3109 :k 3108
+3110 Nat.add 3109
+3111 :b 3110
+3112 :s Nat.sub
+3113 Nat.mul_const 3108
+3114 :b 3113
+3115 3114 String._shr6:5
+3116 3112 3115
+String._low6:6 3116
+3117 :b String._low6:6
+3118 3117 3103
+3119 3111 3118
+3120 23 3119
+3121 :s 3120
+3122 3117 String._shr6:5
+3123 3111 3122
+3124 23 3123
+3125 :s 3124
+3126 3111 String._low6:6
+3127 23 3126
+3128 19 3127
+3129 3125 3128
+3130 3121 3129
+3131 3107 3130
+3132 Bool.match 3131
+3133 :k 2265
+3134 Nat.add 3133
+3135 :b 3134
+3136 3135 3103
+3137 23 3136
+3138 :s 3137
+3139 3138 3129
+3140 3132 3139
+3141 :b 3140
+3142 :k 3109
+3143 :k 3142
+3144 :k 3143
+3145 :k 3144
+3146 :k 3145
+3147 :k 3146
+3148 :k 3147
+3149 :k 3148
+3150 :k 3149
+3151 18 3150
+3152 3151 Nat.is_lt
+3153 3141 3152
+3154 :s 3153
+3155 3154 :i
+3156 Bool.match 3155
+3157 :k 81
+3158 :k 3157
+3159 Nat.add 3158
 3160 :b 3159
-3161 :b 1290
-3162 3161 Pair.snd
-3163 18 3162
-3164 :s 3163
-3165 :b 3164
-3166 :b equal
-3167 3166 Pair.fst
-3168 :c 3167
-3169 3165 3168
-3170 146 3169
-3171 :s 3170
-3172 3171 283
-3173 :c 3172
-3174 :k 644
-3175 △ 3174
-3176 3175 3158
-3177 3157 3176
-3178 △ 3177
-3179 3175 △
-3180 3175 3179
-3181 3175 3180
-3182 △ 3181
-3183 △ 1495
-3184 63 △
-3185 3175 3184
-3186 3183 3185
-3187 △ 3186
-3188 △ 88
-3189 67 △
-3190 3175 3189
-3191 3188 3190
-3192 △ 3191
-3193 3192 △
-3194 3187 3193
-3195 3182 3194
-3196 3178 3195
-String._escapes:1 3196
-3197 3173 String._escapes:1
-String._escape_char:2 3197
-3198 250 String._escape_char:2
-3199 List.foldr 3198
-3200 3199 3158
-3201 3160 3200
-String.to_source 3201
-3202 :k 2327
-3203 Nat.add 3202
-3204 :b 3203
-3205 :b Nat.div2
-3206 3205 Nat.div2
-3207 3205 3206
-3208 3205 3207
-3209 3205 3208
-3210 3205 3209
-String._shr6:5 3210
-3211 :b String._shr6:5
-3212 3211 String._shr6:5
-3213 3211 3212
-3214 3204 3213
-3215 22 3214
-3216 :s 3215
-3217 :k 638
-3218 :k 3217
-3219 Nat.add 3218
-3220 :b 3219
-3221 :s Nat.sub
-3222 Nat.mul_const 3217
-3223 :b 3222
-3224 3223 String._shr6:5
-3225 3221 3224
-String._low6:6 3225
-3226 :b String._low6:6
-3227 3226 3212
-3228 3220 3227
-3229 22 3228
-3230 :s 3229
-3231 3226 String._shr6:5
-3232 3220 3231
-3233 22 3232
-3234 :s 3233
-3235 3220 String._low6:6
-3236 22 3235
-3237 249 3236
-3238 3234 3237
-3239 3230 3238
-3240 3216 3239
-3241 Bool.match 3240
-3242 :k 2317
-3243 Nat.add 3242
-3244 :b 3243
-3245 3244 3212
-3246 22 3245
-3247 :s 3246
-3248 3247 3238
-3249 3241 3248
-3250 :b 3249
-3251 :k 3218
-3252 :k 3251
-3253 :k 3252
-3254 :k 3253
-3255 :k 3254
-3256 :k 3255
-3257 :k 3256
-3258 :k 3257
-3259 :k 3258
-3260 19 3259
-3261 3260 Nat.is_lt
-3262 3250 3261
-3263 :s 3262
-3264 3263 :i
-3265 Bool.match 3264
-3266 :k 85
-3267 :k 3266
-3268 Nat.add 3267
-3269 :b 3268
-3270 3269 String._shr6:5
-3271 22 3270
-3272 :s 3271
-3273 3272 3237
-3274 3265 3273
-3275 :b 3274
-3276 19 3254
-3277 3276 Nat.is_lt
-3278 3275 3277
-3279 :s 3278
-3280 3279 :i
-3281 Bool.match 3280
-3282 3281 283
-3283 :b 3282
-3284 19 3218
-3285 3284 Nat.is_lt
-3286 3283 3285
-3287 :s 3286
-3288 3287 :i
-String._utf8_char:7 3288
-3289 250 String._utf8_char:7
-3290 List.foldr 3289
-3291 3290 △
-String.to_utf8 3291
-3292 triage 348
-3293 :b 3292
-3294 18 351
-3295 :c 3294
-3296 3295 105
-3297 3293 3296
-3298 :s 3297
-3299 149 364
-3300 119 3299
-3301 148 3300
-3302 18 3301
-3303 :s 3302
-3304 3303 :i
-3305 362 3304
-3306 3298 3305
-3307 fix 3306
-equal__common 3307
-3308 self_apply _equal_body:1
-equal__fastest 3308
-3309 :b 362
-3310 430 Pair.fst
-3311 365 3310
-3312 23 3311
-3313 23 3312
-3314 148 3313
-3315 18 3314
-3316 :s 3315
-3317 3316 807
-3318 1376 3317
-3319 1376 3318
-3320 3309 3319
-3321 547 3320
-3322 545 3321
-3323 3298 3322
-3324 fix 3323
-equal__parallel 3324
+3161 3160 String._shr6:5
+3162 23 3161
+3163 :s 3162
+3164 3163 3128
+3165 3156 3164
+3166 :b 3165
+3167 18 3145
+3168 3167 Nat.is_lt
+3169 3166 3168
+3170 :s 3169
+3171 3170 :i
+3172 Bool.match 3171
+3173 3172 270
+3174 :b 3173
+3175 18 3109
+3176 3175 Nat.is_lt
+3177 3174 3176
+3178 :s 3177
+3179 3178 :i
+String._utf8_char:7 3179
+3180 241 String._utf8_char:7
+3181 List.foldr 3180
+3182 3181 △
+String.to_utf8 3182
+3183 triage 328
+3184 :b 3183
+3185 332 333
+3186 3184 3185
+3187 :s 3186
+3188 146 344
+3189 116 3188
+3190 145 3189
+3191 38 3190
+3192 :s 3191
+3193 3192 :i
+3194 342 3193
+3195 3187 3194
+3196 fix 3195
+equal__common 3196
+3197 self_apply _equal_body:1
+equal__fastest 3197
+3198 :b 342
+3199 :b 2469
+3200 3199 22
+3201 345 3200
+3202 24 3201
+3203 24 3202
+3204 145 3203
+3205 38 3204
+3206 :s 3205
+3207 3206 799
+3208 1357 3207
+3209 1357 3208
+3210 3198 3209
+3211 564 3210
+3212 562 3211
+3213 3187 3212
+3214 fix 3213
+equal__parallel 3214
 equal__smallest equal__common
-3325 :b 30
-3326 148 3325
-3327 18 3326
-3328 21 3327
-3329 :s 3328
-3330 3329 :i
-3331 362 3330
-3332 3298 3331
-3333 fix 3332
-equal_const 3333
-file 24
-3334 let self_apply
-3335 132 wait
-3336 2970 3335
-3337 3334 3336
-fix__naive 3337
+3215 :b 29
+3216 145 3215
+3217 38 3216
+3218 22 3217
+3219 :s 3218
+3220 3219 :i
+3221 342 3220
+3222 3187 3221
+3223 fix 3222
+equal_const 3223
+file 25
+3224 let self_apply
+3225 129 wait
+3226 2867 3225
+3227 3224 3226
+fix__naive 3227
 none △
-3338 :b 393
-3339 2917 871
-3340 :c 3339
-3341 3338 3340
-_size_body:1 3341
-3342 345 _size_body:1
-3343 249 3342
-size 3343
-3344 self_apply _size_body:1
-3345 249 3344
-size__fastest 3345
-3346 :b 400
-3347 :b 3346
-3348 2571 917
-3349 3347 3348
-3350 fix 3349
-3351 249 3350
-size__smallest 3351
+3228 :b 381
+3229 2817 863
+3230 :c 3229
+3231 3228 3230
+_size_body:1 3231
+3232 325 _size_body:1
+3233 19 3232
+size 3233
+3234 self_apply _size_body:1
+3235 19 3234
+size__fastest 3235
+3236 :b 388
+3237 :b 3236
+3238 2488 908
+3239 3237 3238
+3240 fix 3239
+3241 19 3240
+size__smallest 3241
 some △
-stage 3042
+stage 2936
