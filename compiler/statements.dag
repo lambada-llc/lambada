@@ -65,17 +65,17 @@ Bool.match Bool.match_ft
 53 40 △
 54 40 53
 55 52 54
-Lambada._piece_char:188 55
-56 Bool.match Lambada._piece_char:188
+Lambada.Compiler._piece_char:188 55
+56 Bool.match Lambada.Compiler._piece_char:188
 57 23 :i
 58 :b :s
 59 :b :k
 60 28 35
 61 59 60
-Lambada._piece_off:190 61
-62 triage Lambada._piece_off:190
+Lambada.Compiler._piece_off:190 61
+62 triage Lambada.Compiler._piece_off:190
 63 62 △
-64 Bool.match Lambada._piece_off:190
+64 Bool.match Lambada.Compiler._piece_off:190
 65 :k 25
 66 :ct 65
 67 :k 66
@@ -83,8 +83,8 @@ Lambada._piece_off:190 61
 69 :b 68
 70 :b 69
 71 70 35
-Lambada._piece_on:189 71
-72 64 Lambada._piece_on:189
+Lambada.Compiler._piece_on:189 71
+72 64 Lambada.Compiler._piece_on:189
 73 :b 72
 74 :b 57
 75 :b 58
@@ -155,20 +155,20 @@ equal_const 122
 129 :ct 123
 130 equal_const 129
 131 128 130
-Lambada._is_indent:183 131
-132 73 Lambada._is_indent:183
+Lambada.Compiler._is_indent:183 131
+132 73 Lambada.Compiler._is_indent:183
 133 59 132
 134 63 133
 135 :c 134
 136 58 135
 137 57 136
 138 :k 137
-Lambada._piece_newline:191 138
-139 56 Lambada._piece_newline:191
+Lambada.Compiler._piece_newline:191 138
+139 56 Lambada.Compiler._piece_newline:191
 140 :b 139
 141 equal_const 67
-Lambada._is_lf:182 141
-142 140 Lambada._is_lf:182
+Lambada.Compiler._is_lf:182 141
+142 140 Lambada.Compiler._is_lf:182
 143 :s 142
 144 143 :i
 145 :c 144
@@ -177,29 +177,29 @@ Lambada._is_lf:182 141
 148 40 147
 149 146 148
 150 47 149
-Lambada._piece:192 150
-151 :b Lambada._piece:192
+Lambada.Compiler._piece:192 150
+151 :b Lambada.Compiler._piece:192
 152 151 68
 153 :c 152
 154 46 153
-Lambada._text_step:193 154
-155 39 Lambada._text_step:193
+Lambada.Compiler._text_step:193 154
+155 39 Lambada.Compiler._text_step:193
 156 :c 155
 157 38 156
 158 self_apply 157
-Lambada._text_loop:194 158
-159 :c Lambada._text_loop:194
+Lambada.Compiler._text_loop:194 158
+159 :c Lambada.Compiler._text_loop:194
 160 :b 159
-161 Lambada._piece:192 △
+161 Lambada.Compiler._piece:192 △
 162 160 161
 163 14 162
-Lambada._statement_text:195 163
-164 31 Lambada._statement_text:195
+Lambada.Compiler._statement_text:195 163
+164 31 Lambada.Compiler._statement_text:195
 165 11 164
 166 29 165
 167 :k 166
-Lambada._st_end:196 167
-168 triage Lambada._st_end:196
+Lambada.Compiler._st_end:196 167
+168 triage Lambada.Compiler._st_end:196
 169 168 △
 170 58 165
 171 :c 170
@@ -216,8 +216,8 @@ List.match 147
 181 178 180
 182 :c 181
 183 176 182
-Nat._succ_body:1 183
-184 self_apply Nat._succ_body:1
+Nat.Nat._succ_body:1 183
+184 self_apply Nat.Nat._succ_body:1
 Nat.succ__fastest 184
 Nat.succ Nat.succ__fastest
 185 23 Nat.succ
@@ -230,7 +230,7 @@ Nat.succ Nat.succ__fastest
 192 :k :i
 193 191 192
 194 :b 193
-195 194 Lambada._is_lf:182
+195 194 Lambada.Compiler._is_lf:182
 196 :c 195
 197 190 196
 198 self_apply 197
@@ -246,80 +246,80 @@ Lambada.skip_line 198
 207 188 206
 208 187 207
 209 174 208
-Lambada._st_new:198 209
-210 Bool.match Lambada._st_new:198
+Lambada.Compiler._st_new:198 209
+210 Bool.match Lambada.Compiler._st_new:198
 211 :b 39
 212 188 201
 213 187 212
 214 :k 213
-Lambada._st_more:197 214
-215 188 Lambada._st_more:197
+Lambada.Compiler._st_more:197 214
+215 188 Lambada.Compiler._st_more:197
 216 211 215
 217 58 216
 218 :s 217
 219 218 12
-Lambada._st_piece:199 219
-220 210 Lambada._st_piece:199
+Lambada.Compiler._st_piece:199 219
+220 210 Lambada.Compiler._st_piece:199
 221 :b 220
-222 221 Lambada._is_indent:183
+222 221 Lambada.Compiler._is_indent:183
 223 :s 222
 224 223 :i
 225 169 224
-Lambada._st_after_gap:200 225
-226 :b Lambada._st_after_gap:200
+Lambada.Compiler._st_after_gap:200 225
+226 :b Lambada.Compiler._st_after_gap:200
 227 :b 226
 228 :k 35
-Lambada._nc_blank:185 228
-229 23 Lambada._nc_blank:185
+Lambada.Compiler._nc_blank:185 228
+229 23 Lambada.Compiler._nc_blank:185
 230 :b Bool.match
 231 59 △
-Lambada._nc_code:184 231
-232 Bool.match Lambada._nc_code:184
+Lambada.Compiler._nc_code:184 231
+232 Bool.match Lambada.Compiler._nc_code:184
 233 23 Lambada.skip_line
 234 40 35
 235 233 234
 236 :k 235
-Lambada._nc_comment:186 236
-237 232 Lambada._nc_comment:186
+Lambada.Compiler._nc_comment:186 236
+237 232 Lambada.Compiler._nc_comment:186
 238 :b 237
 239 :ct 124
 240 :ct 239
 241 equal_const 240
-Lambada._is_hash:30 241
-242 238 Lambada._is_hash:30
+Lambada.Compiler._is_hash:30 241
+242 238 Lambada.Compiler._is_hash:30
 243 230 242
 244 229 243
 245 :s 244
-246 245 Lambada._is_lf:182
+246 245 Lambada.Compiler._is_lf:182
 247 :s 246
 248 247 :i
 249 :c 248
 250 190 249
 251 self_apply 250
-Lambada._next_code:187 251
-252 :b Lambada._next_code:187
+Lambada.Compiler._next_code:187 251
+252 :b Lambada.Compiler._next_code:187
 253 :b 252
 254 253 △
 255 227 254
-Lambada._st_gap:201 255
-256 23 Lambada._st_gap:201
-257 210 Lambada._st_more:197
+Lambada.Compiler._st_gap:201 255
+256 23 Lambada.Compiler._st_gap:201
+257 210 Lambada.Compiler._st_more:197
 258 :b 257
-259 258 Lambada._is_indent:183
+259 258 Lambada.Compiler._is_indent:183
 260 230 259
 261 256 260
 262 :s 261
-263 262 Lambada._is_hash:30
+263 262 Lambada.Compiler._is_hash:30
 264 230 263
 265 256 264
 266 :s 265
-267 266 Lambada._is_lf:182
+267 266 Lambada.Compiler._is_lf:182
 268 :s 267
 269 268 :i
 270 169 269
-Lambada._statementsE:202 270
-271 23 Lambada._statementsE:202
-272 :b Lambada._statementsE:202
+Lambada.Compiler._statementsE:202 270
+271 23 Lambada.Compiler._statementsE:202
+272 :b Lambada.Compiler._statementsE:202
 273 272 Lambada.skip_line
 274 271 273
 275 :s 274
@@ -328,6 +328,6 @@ Lambada._statementsE:202 270
 278 27 277
 279 14 278
 280 :b 279
-281 280 Lambada._next_code:187
+281 280 Lambada.Compiler._next_code:187
 Lambada.statements 281
 Lambada.statements
