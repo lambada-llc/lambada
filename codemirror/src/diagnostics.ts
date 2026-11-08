@@ -33,7 +33,7 @@ export function diagnostics(config: Resolved): Extension {
         // Results arrive from a worker rather than from an edit, so the usual
         // "something changed in the document" is not enough of a signal.
         needsRefresh: (update) =>
-          update.startState.field(lambadaCompilations) !==
+          update.startState.field(lambadaCompilations, false) !==
           update.state.field(lambadaCompilations),
       },
     ),
