@@ -13,7 +13,7 @@
 const { readFileSync, writeFileSync, unlinkSync, readdirSync } = require('fs');
 const { Worker, isMainThread, workerData } = require('worker_threads');
 const { relative, resolve } = require('path');
-const { module_path, sources, physical_lines, namespace, test_symbol, source_symbol } = require('./project.js');
+const { module_path, sources, physical_lines, namespace, source_prefix, test_symbol, source_symbol } = require('./project.js');
 
 
 // The compiler names a bare expression's value after the code line its
@@ -96,7 +96,9 @@ function compile_source(runtime, compile_file, { root, cwd, prelude }, source_pa
   const module = DagModule.parse(prelude + compiled(compile_file, source, relative_path),
     { absorb_internal_aliases: false });
   name_tests(runtime, module, root, source_path);
-  module.qualify(namespace(root, source_path));
+  // Private names go under the file's own prefix: the files of a namespace
+  // share its export prefix, and each numbers its private names from 0.
+  module.qualify(namespace(root, source_path), source_prefix(root, source_path));
 
   // Which source this was, in the state it was in. The name is the whole
   // point, so what it names can be the leaf; it rides through linking and

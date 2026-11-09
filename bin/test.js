@@ -159,6 +159,19 @@ check('a bundle that is linked but not canonicalized is refused, not read as tes
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+check('files of one namespace keep their private names apart', async () => {
+  const runtime = load();
+  const dir = mkdtempSync(join(tmpdir(), 'lambada-test-'));
+  try {
+    mkdirSync(join(dir, 'src/n'), { recursive: true });
+    writeFileSync(join(dir, 'src/n/a.lamb'), '_h = "a"\nx = _h\n');
+    writeFileSync(join(dir, 'src/n/b.lamb'), '_h = "b"\ny = _h\nN.x\ny\n');
+    await build({ runtime, root: join(dir, 'src'), compiler, prelude, cwd: dir, jobs: 1 });
+    assert.strictEqual(readFileSync(join(dir, 'src/n/b.lamb'), 'utf8'),
+      '_h = "b"\ny = _h\nN.x\n# = a\ny\n# = b\n');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 check('build links a library under its own names, and leaves its tests alone', async () => {
   const runtime = load();
   const dir = mkdtempSync(join(tmpdir(), 'lambada-test-'));

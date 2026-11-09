@@ -123,8 +123,8 @@ Dlist.from_list 87
 95 :b 94
 96 65 67
 97 95 96
-Lambada._native_to_ddag:181 97
-98 Lambada._native_to_ddag:181 82
+Lambada.Compiler._native_to_ddag:181 97
+98 Lambada.Compiler._native_to_ddag:181 82
 Lambada.native_def_to_ddag 98
 99 List.foldr Lambada.native_def_to_ddag
 100 99 △
@@ -172,8 +172,8 @@ false △
 128 126 127
 129 :c 128
 130 120 129
-Nat._succ_body:1 130
-131 self_apply Nat._succ_body:1
+Nat.Nat._succ_body:1 130
+131 self_apply Nat.Nat._succ_body:1
 Nat.succ__fastest 131
 Nat.succ Nat.succ__fastest
 132 18 Nat.succ
@@ -243,8 +243,8 @@ Lambada.Native_assignment 175
 190 186 189
 191 :c 190
 192 151 191
-Nat._pred_body:2 192
-193 self_apply Nat._pred_body:2
+Nat.Nat._pred_body:2 192
+193 self_apply Nat.Nat._pred_body:2
 Nat.pred__fastest 193
 Nat.pred Nat.pred__fastest
 194 :b Nat.pred
@@ -273,8 +273,8 @@ Bool.or 209
 215 207 214
 216 35 215
 217 23 216
-Nat._canonicalize__common:11 217
-218 Nat._canonicalize__common:11 List.foldr__fastest
+Nat.Nat._canonicalize__common:11 217
+218 Nat.Nat._canonicalize__common:11 List.foldr__fastest
 Nat.canonicalize__fastest 218
 219 :b Nat.canonicalize__fastest
 220 :b 219
@@ -296,8 +296,8 @@ Nat.canonicalize__fastest 218
 236 235 228
 237 233 236
 238 232 237
-Nat._sub_3bits_k:7 238
-239 160 Nat._sub_3bits_k:7
+Nat.Nat._sub_3bits_k:7 238
+239 160 Nat.Nat._sub_3bits_k:7
 240 :c 239
 241 59 240
 242 43 241
@@ -307,8 +307,8 @@ Nat._sub_3bits_k:7 238
 246 244 245
 247 116 246
 248 fix 247
-Nat._sub__fastest:9 248
-249 :b Nat._sub__fastest:9
+Nat.Nat._sub__fastest:9 248
+249 :b Nat.Nat._sub__fastest:9
 250 :b 249
 251 :b 118
 252 :c 118
@@ -320,12 +320,12 @@ Nat._sub__fastest:9 248
 258 116 257
 259 59 258
 260 251 259
-List._zip_map:1 260
-261 List._zip_map:1 1
+List.List._zip_map:1 260
+261 List.List._zip_map:1 1
 262 :k 261
 263 List.match 262
 264 23 △
-265 List._zip_map:1 264
+265 List.List._zip_map:1 264
 266 List.match 265
 267 :b 266
 268 114 27
@@ -366,7 +366,7 @@ Nat.sub Nat.sub__fastest
 299 18 298
 300 149 Dlist.from_list
 301 299 300
-Lambada._emk_leaf:86 301
+Lambada.Compiler._emk_leaf:86 301
 302 :ct 69
 303 :ct 302
 304 :k 303
@@ -381,17 +381,17 @@ Lambada._emk_leaf:86 301
 313 △ 312
 314 313 △
 315 307 314
-316 Lambada._emk_leaf:86 315
-Lambada._eI:87 316
-317 Nat.match Lambada._eI:87
+316 Lambada.Compiler._emk_leaf:86 315
+Lambada.Compiler._eI:87 316
+317 Nat.match Lambada.Compiler._eI:87
 318 :ct 310
 319 :ct 318
 320 △ 319
 321 320 △
 322 307 321
-323 Lambada._emk_leaf:86 322
-Lambada._eK:88 323
-324 18 Lambada._eK:88
+323 Lambada.Compiler._emk_leaf:86 322
+Lambada.Compiler._eK:88 323
+324 18 Lambada.Compiler._eK:88
 325 :b 182
 326 :b 325
 327 :b 171
@@ -436,8 +436,8 @@ Nat.bits_to_dstring 362
 365 364 △
 366 355 365
 Nat.to_bits_dstring 366
-Lambada._ename:82 Nat.to_bits_dstring
-367 149 Lambada._ename:82
+Lambada.Compiler._ename:82 Nat.to_bits_dstring
+367 149 Lambada.Compiler._ename:82
 368 43 367
 369 43 368
 370 43 369
@@ -452,16 +452,16 @@ Lambada._ename:82 Nat.to_bits_dstring
 379 18 378
 380 43 :s
 381 379 380
-Lambada._eapp:92 381
+Lambada.Compiler._eapp:92 381
 382 :k 357
 383 △ 382
 384 383 △
 385 307 384
-386 Lambada._emk_leaf:86 385
-Lambada._eB:89 386
-387 Lambada._eapp:92 Lambada._eB:89
-388 387 Lambada._eK:88
-389 Lambada._eapp:92 388
+386 Lambada.Compiler._emk_leaf:86 385
+Lambada.Compiler._eB:89 386
+387 Lambada.Compiler._eapp:92 Lambada.Compiler._eB:89
+388 387 Lambada.Compiler._eK:88
+389 Lambada.Compiler._eapp:92 388
 390 18 389
 391 18 compose
 392 :b 103
@@ -486,7 +486,7 @@ Fn.pow 407
 409 324 408
 410 317 409
 411 18 410
-412 Lambada._eapp:92 Lambada._eK:88
+412 Lambada.Compiler._eapp:92 Lambada.Compiler._eK:88
 413 18 412
 414 413 Fn.pow
 415 43 414
@@ -494,11 +494,11 @@ Fn.pow 407
 417 295 416
 418 114 417
 419 Nat.match 418
-420 :b Lambada._eapp:92
+420 :b Lambada.Compiler._eapp:92
 421 18 387
 422 421 Fn.pow
-Lambada._ebn:161 422
-423 324 Lambada._ebn:161
+Lambada.Compiler._ebn:161 422
+423 324 Lambada.Compiler._ebn:161
 424 420 423
 425 18 424
 426 43 Fn.pow
@@ -511,18 +511,18 @@ Lambada._ebn:161 422
 433 △ 432
 434 433 △
 435 307 434
-436 Lambada._emk_leaf:86 435
-Lambada._eC:90 436
-437 18 Lambada._eC:90
-438 437 Lambada._ebn:161
+436 Lambada.Compiler._emk_leaf:86 435
+Lambada.Compiler._eC:90 436
+437 18 Lambada.Compiler._eC:90
+438 437 Lambada.Compiler._ebn:161
 439 420 438
 440 :s 439
 441 431 440
 442 fix 441
-Lambada._ector_dchain:162 442
-443 18 Lambada._ector_dchain:162
+Lambada.Compiler._ector_dchain:162 442
+443 18 Lambada.Compiler._ector_dchain:162
 444 :b 443
-445 :b Lambada._ebn:161
+445 :b Lambada.Compiler._ebn:161
 446 445 Nat.succ
 447 324 446
 448 420 447
@@ -542,8 +542,8 @@ Lambada._ector_dchain:162 442
 462 59 461
 463 138 462
 464 182 463
-Lambada._ector:163 464
-465 :c Lambada._ector:163
+Lambada.Compiler._ector:163 464
+465 :c Lambada.Compiler._ector:163
 466 136 465
 467 181 466
 468 179 467
@@ -604,9 +604,9 @@ Pair.let 520
 522 :b 521
 523 113 :k
 524 113 523
-Lambada._kS1:167 524
-525 △ Lambada._kS1:167
-526 525 Lambada._eI:87
+Lambada.Compiler._kS1:167 524
+525 △ Lambada.Compiler._kS1:167
+526 525 Lambada.Compiler._eI:87
 527 18 526
 528 :s List.match
 529 :b 528
@@ -620,48 +620,48 @@ List.foldl List.foldl__fastest
 534 43 Pair.let
 535 :c 534
 536 :b 535
-Lambada._edrop:165 410
-537 149 Lambada._edrop:165
+Lambada.Compiler._edrop:165 410
+537 149 Lambada.Compiler._edrop:165
 538 :s 537
 539 :b 538
 540 :b 539
 541 :k 167
 542 :k 541
-Lambada._kS4:170 542
-543 △ Lambada._kS4:170
+Lambada.Compiler._kS4:170 542
+543 △ Lambada.Compiler._kS4:170
 544 :b 543
 545 :b 544
-546 Lambada._eapp:92 Lambada._eC:90
-547 546 Lambada._eC:90
-Lambada._eR:94 547
-548 Lambada._eapp:92 Lambada._eR:94
+546 Lambada.Compiler._eapp:92 Lambada.Compiler._eC:90
+547 546 Lambada.Compiler._eC:90
+Lambada.Compiler._eR:94 547
+548 Lambada.Compiler._eapp:92 Lambada.Compiler._eR:94
 549 420 548
 550 :c 549
 551 :b 550
 552 489 △
 553 307 552
-554 Lambada._emk_leaf:86 553
-Lambada._eS:91 554
-555 387 Lambada._eS:91
-556 Lambada._eapp:92 555
+554 Lambada.Compiler._emk_leaf:86 553
+Lambada.Compiler._eS:91 554
+555 387 Lambada.Compiler._eS:91
+556 Lambada.Compiler._eapp:92 555
 557 :b 556
-558 387 Lambada._eC:90
+558 387 Lambada.Compiler._eC:90
 559 387 558
-560 Lambada._eapp:92 559
+560 Lambada.Compiler._eapp:92 559
 561 557 560
 562 551 561
 563 545 562
 564 114 563
 565 18 564
 566 :b 545
-567 Lambada._eapp:92 558
-Lambada._ebc:166 567
-568 :k Lambada._ebc:166
+567 Lambada.Compiler._eapp:92 558
+Lambada.Compiler._ebc:166 567
+568 :k Lambada.Compiler._ebc:166
 569 Nat.match 568
-570 387 Lambada._eB:89
-571 Lambada._eapp:92 570
+570 387 Lambada.Compiler._eB:89
+571 Lambada.Compiler._eapp:92 570
 572 :b 571
-573 572 Lambada._ebc:166
+573 572 Lambada.Compiler._ebc:166
 574 18 573
 575 43 549
 576 574 575
@@ -673,23 +673,23 @@ Lambada._ebc:166 567
 582 566 581
 583 18 582
 584 :k 523
-Lambada._kS2:168 584
-585 △ Lambada._kS2:168
+Lambada.Compiler._kS2:168 584
+585 △ Lambada.Compiler._kS2:168
 586 :b 585
 587 :b 586
-588 Lambada._eapp:92 Lambada._eS:91
+588 Lambada.Compiler._eapp:92 Lambada.Compiler._eS:91
 589 :b 588
-590 589 Lambada._ebc:166
+590 589 Lambada.Compiler._ebc:166
 591 420 590
 592 587 591
 593 114 592
 594 18 593
-595 546 Lambada._eI:87
-Lambada._eT:93 595
-596 :k Lambada._eT:93
+595 546 Lambada.Compiler._eI:87
+Lambada.Compiler._eT:93 595
+596 :k Lambada.Compiler._eT:93
 597 Nat.match 596
-598 387 Lambada._eT:93
-599 Lambada._eapp:92 598
+598 387 Lambada.Compiler._eT:93
+599 Lambada.Compiler._eapp:92 598
 600 :k 599
 601 597 600
 602 :c 601
@@ -711,25 +711,25 @@ Lambada._eT:93 595
 618 43 617
 619 611 618
 620 Bool.match 619
-621 18 Lambada._eI:87
-622 :b Lambada._ebc:166
+621 18 Lambada.Compiler._eI:87
+622 :b Lambada.Compiler._ebc:166
 623 622 560
 624 589 623
 625 420 624
 626 621 625
 627 544 626
 628 18 627
-Lambada._kS3:169 211
-629 △ Lambada._kS3:169
+Lambada.Compiler._kS3:169 211
+629 △ Lambada.Compiler._kS3:169
 630 :b 629
 631 621 591
 632 630 631
 633 18 632
 634 :b 546
-635 634 Lambada._ebc:166
+635 634 Lambada.Compiler._ebc:166
 636 544 635
 637 18 636
-638 629 Lambada._eT:93
+638 629 Lambada.Compiler._eT:93
 639 :k 638
 640 35 639
 641 637 640
@@ -775,8 +775,8 @@ Bool.and 669
 679 667 678
 680 663 679
 681 :c 680
-_equal_body:1 681
-682 650 _equal_body:1
+Equal._equal_body:1 681
+682 650 Equal._equal_body:1
 equal 682
 683 43 equal
 684 169 683
@@ -788,14 +788,14 @@ equal 682
 690 527 689
 691 522 690
 692 519 691
-Lambada._edispatch:171 692
-693 :c Lambada._edispatch:171
+Lambada.Compiler._edispatch:171 692
+693 :c Lambada.Compiler._edispatch:171
 694 513 693
 695 112 694
 696 475 695
 697 474 696
-Lambada._syntax_emit_adt_variant:173 697
-698 165 Lambada._syntax_emit_adt_variant:173
+Lambada.Compiler._syntax_emit_adt_variant:173 697
+698 165 Lambada.Compiler._syntax_emit_adt_variant:173
 699 136 698
 700 170 699
 701 166 700
@@ -808,12 +808,12 @@ Lambada._syntax_emit_adt_variant:173 697
 708 707 :i
 709 157 708
 710 :k 709
-Lambada._syntax_emit_adt:174 710
-711 43 Lambada._syntax_emit_adt:174
+Lambada.Compiler._syntax_emit_adt:174 710
+711 43 Lambada.Compiler._syntax_emit_adt:174
 712 148 711
 713 114 712
-Lambada._native_adt:178 713
-714 112 Lambada._native_adt:178
+Lambada.Compiler._native_adt:178 713
+714 112 Lambada.Compiler._native_adt:178
 715 18 714
 716 :b Pair.fst
 717 :b 522
@@ -844,8 +844,8 @@ Dlist.append compose
 741 18 740
 742 43 :c
 743 741 742
-Lambada._ealias:96 743
-744 :c Lambada._ealias:96
+Lambada.Compiler._ealias:96 743
+744 :c Lambada.Compiler._ealias:96
 745 :b 744
 746 :b 745
 747 307 △
@@ -933,8 +933,8 @@ Bool.not 819
 823 822 Bool.match
 824 151 823
 825 fix 824
-Nat._any:14 825
-826 18 Nat._any:14
+Nat.Nat._any:14 825
+826 18 Nat.Nat._any:14
 827 43 Bool.or
 828 826 827
 829 821 828
@@ -952,8 +952,8 @@ Nat._any:14 825
 841 832 840
 842 165 841
 843 817 842
-Nat._lte_t:15 843
-844 List.match Nat._any:14
+Nat.Nat._lte_t:15 843
+844 List.match Nat.Nat._any:14
 845 :b 844
 846 :c Bool.and
 847 :b 846
@@ -964,12 +964,12 @@ Nat._lte_t:15 843
 852 117 851
 853 165 852
 854 845 853
-Nat._lte_f:16 854
-855 Bool.match Nat._lte_f:16
-856 855 Nat._lte_t:15
+Nat.Nat._lte_f:16 854
+855 Bool.match Nat.Nat._lte_f:16
+856 855 Nat.Nat._lte_t:15
 857 :c 856
-Nat._lte_body:17 857
-858 Nat._lte_t:15 Nat._lte_body:17
+Nat.Nat._lte_body:17 857
+858 Nat.Nat._lte_t:15 Nat.Nat._lte_body:17
 Nat.is_lte__fastest 858
 859 43 Nat.is_lte__fastest
 860 43 859
@@ -995,8 +995,8 @@ Nat.divmod Nat.divmod__fastest
 878 784 877
 879 771 878
 880 54 879
-Nat._to_digits:19 880
-881 475 Nat._to_digits:19
+Nat.Nat._to_digits:19 880
+881 475 Nat.Nat._to_digits:19
 882 769 881
 883 766 882
 884 138 883
@@ -1012,8 +1012,8 @@ Nat.to_string_base 885
 893 136 892
 894 59 893
 895 :s 894
-Nat._copy_step:20 106
-896 :c Nat._copy_step:20
+Nat.Nat._copy_step:20 106
+896 :c Nat.Nat._copy_step:20
 897 26 896
 898 137 897
 899 43 898
@@ -1027,8 +1027,8 @@ Nat._copy_step:20 106
 907 18 906
 908 43 56
 909 907 908
-Nat._flip_step:21 909
-910 :b Nat._flip_step:21
+Nat.Nat._flip_step:21 909
+910 :b Nat.Nat._flip_step:21
 911 910 Nat.succ
 912 :c 911
 913 59 912
@@ -1037,11 +1037,11 @@ Nat._flip_step:21 909
 916 138 915
 917 137 916
 918 :s 917
-919 :b Nat._copy_step:20
+919 :b Nat.Nat._copy_step:20
 920 919 Nat.succ
 921 :c 920
 922 18 921
-923 :c Nat._flip_step:21
+923 :c Nat.Nat._flip_step:21
 924 59 923
 925 112 924
 926 138 925
@@ -1058,8 +1058,8 @@ Nat._flip_step:21 909
 937 934 936
 938 890 937
 939 fix 938
-Nat._add_chain:24 939
-940 716 Nat._add_chain:24
+Nat.Nat._add_chain:24 939
+940 716 Nat.Nat._add_chain:24
 Nat.add_const 940
 941 Nat.add_const 353
 942 886 941
@@ -1071,18 +1071,18 @@ Nat.to_string 942
 947 43 946
 948 945 947
 949 752 948
-Lambada._span_suffix:85 949
-950 746 Lambada._span_suffix:85
+Lambada.Compiler._span_suffix:85 949
+950 746 Lambada.Compiler._span_suffix:85
 951 112 950
 952 138 951
 953 221 952
 954 114 953
 955 728 954
-Lambada._espan:97 955
-956 724 Lambada._espan:97
+Lambada.Compiler._espan:97 955
+956 724 Lambada.Compiler._espan:97
 957 723 956
-Lambada._klow_span:157 957
-958 18 Lambada._klow_span:157
+Lambada.Compiler._klow_span:157 957
+958 18 Lambada.Compiler._klow_span:157
 959 :ct 351
 960 :ct 959
 961 :k 960
@@ -1116,8 +1116,8 @@ Lambada.fail 970
 988 163 987
 989 201 988
 990 985 989
-Lambada._kea:103 990
-991 :c Lambada._kea:103
+Lambada.Compiler._kea:103 990
+991 :c Lambada.Compiler._kea:103
 992 114 991
 993 triage 992
 994 993 △
@@ -1125,30 +1125,30 @@ Lambada._kea:103 990
 996 136 995
 997 137 996
 998 :s 997
-999 114 Lambada._kea:103
+999 114 Lambada.Compiler._kea:103
 1000 triage 999
 1001 1000 △
 1002 165 174
 1003 171 1002
 1004 325 1003
-Lambada._kc0F:109 1004
-1005 triage Lambada._kc0F:109
-1006 149 Lambada._emk_leaf:86
+Lambada.Compiler._kc0F:109 1004
+1005 triage Lambada.Compiler._kc0F:109
+1006 149 Lambada.Compiler._emk_leaf:86
 1007 984 1006
-Lambada._kdleaf:95 1007
-1008 Lambada._kdleaf:95 385
-Lambada._kdB:100 1008
-1009 Lambada._kea:103 Lambada._kdB:100
+Lambada.Compiler._kdleaf:95 1007
+1008 Lambada.Compiler._kdleaf:95 385
+Lambada.Compiler._kdB:100 1008
+1009 Lambada.Compiler._kea:103 Lambada.Compiler._kdB:100
 1010 18 1009
 1011 43 174
 1012 1010 1011
 1013 165 1012
 1014 171 1013
 1015 325 1014
-Lambada._kc0TB:110 1015
-1016 triage Lambada._kc0TB:110
-Lambada._kc0TV:111 584
-1017 :k Lambada._kc0TV:111
+Lambada.Compiler._kc0TB:110 1015
+1016 triage Lambada.Compiler._kc0TB:110
+Lambada.Compiler._kc0TV:111 584
+1017 :k Lambada.Compiler._kc0TV:111
 1018 1016 1017
 1019 1018 △
 1020 :b 1019
@@ -1157,35 +1157,35 @@ Lambada._kc0TV:111 584
 1023 List.match 1022
 1024 :k 653
 1025 1023 1024
-Lambada._k_is_var:108 1025
-1026 1021 Lambada._k_is_var:108
+Lambada.Compiler._k_is_var:108 1025
+1026 1021 Lambada.Compiler._k_is_var:108
 1027 59 1026
 1028 :s 1027
 1029 1028 :i
 1030 59 1029
 1031 138 1030
 1032 182 1031
-Lambada._kc0T:112 1032
-1033 :k Lambada._kc0T:112
+Lambada.Compiler._kc0T:112 1032
+1033 :k Lambada.Compiler._kc0T:112
 1034 1005 1033
 1035 1034 △
 1036 1001 1035
-Lambada._kc0E:113 1036
-1037 18 Lambada._kc0E:113
+Lambada.Compiler._kc0E:113 1036
+1037 18 Lambada.Compiler._kc0E:113
 1038 :b 1037
 1039 :b 1038
 1040 :b 1039
-1041 :b Lambada._kc0E:113
+1041 :b Lambada.Compiler._kc0E:113
 1042 :b 1041
 1043 1042 △
 1044 165 1043
 1045 1040 1044
 1046 998 1045
 1047 994 1046
-Lambada._kapE2c:128 1047
-1048 37 Lambada._kapE2c:128
-Lambada._kapEc:129 1048
-1049 :c Lambada._kapEc:129
+Lambada.Compiler._kapE2c:128 1047
+1048 37 Lambada.Compiler._kapE2c:128
+Lambada.Compiler._kapEc:129 1048
+1049 :c Lambada.Compiler._kapEc:129
 1050 triage 1049
 1051 1050 △
 1052 :s 280
@@ -1201,8 +1201,8 @@ Lambada._kapEc:129 1048
 1062 529 1061
 1063 59 1062
 1064 fix 1063
-Lambada._kor:127 1064
-1065 :b Lambada._kor:127
+Lambada.Compiler._kor:127 1064
+1065 :b Lambada.Compiler._kor:127
 1066 :b 1065
 1067 1066 △
 1068 59 1067
@@ -1213,7 +1213,7 @@ Lambada._kor:127 1064
 1073 137 1072
 1074 43 1073
 1075 :s 1074
-1076 1039 Lambada._kc0E:113
+1076 1039 Lambada.Compiler._kc0E:113
 1077 173 1076
 1078 triage 1077
 1079 1078 △
@@ -1229,10 +1229,10 @@ Lambada._kor:127 1064
 1089 166 1088
 1090 327 1089
 1091 326 1090
-Lambada._kcFF:114 1091
-1092 triage Lambada._kcFF:114
-1093 18 Lambada._kdB:100
-1094 1093 Lambada._kc0E:113
+Lambada.Compiler._kcFF:114 1091
+1092 triage Lambada.Compiler._kcFF:114
+1093 18 Lambada.Compiler._kdB:100
+1094 1093 Lambada.Compiler._kc0E:113
 1095 1038 1094
 1096 18 1095
 1097 136 1088
@@ -1241,15 +1241,15 @@ Lambada._kcFF:114 1091
 1100 166 1099
 1101 327 1100
 1102 326 1101
-Lambada._kcFTB:115 1102
-1103 triage Lambada._kcFTB:115
-Lambada._kcFTV:116 1017
-1104 :k Lambada._kcFTV:116
+Lambada.Compiler._kcFTB:115 1102
+1103 triage Lambada.Compiler._kcFTB:115
+Lambada.Compiler._kcFTV:116 1017
+1104 :k Lambada.Compiler._kcFTV:116
 1105 1103 1104
 1106 1105 △
 1107 :b 1106
 1108 :b 1107
-1109 1108 Lambada._k_is_var:108
+1109 1108 Lambada.Compiler._k_is_var:108
 1110 59 1109
 1111 :s 1110
 1112 1111 :i
@@ -1257,43 +1257,43 @@ Lambada._kcFTV:116 1017
 1114 165 1113
 1115 171 1114
 1116 325 1115
-Lambada._kcFT:117 1116
-1117 :k Lambada._kcFT:117
+Lambada.Compiler._kcFT:117 1116
+1117 :k Lambada.Compiler._kcFT:117
 1118 1092 1117
 1119 1118 △
 1120 1086 1119
-Lambada._kcFE:118 1120
-1121 :c Lambada._kcFE:118
+Lambada.Compiler._kcFE:118 1120
+1121 :c Lambada.Compiler._kcFE:118
 1122 triage 1121
-1123 Lambada._kdleaf:95 435
-Lambada._kdC:101 1123
-1124 Lambada._kea:103 Lambada._kdC:101
-1125 1124 Lambada._kdC:101
-Lambada._kdR:105 1125
-1126 Lambada._kea:103 Lambada._kdR:105
+1123 Lambada.Compiler._kdleaf:95 435
+Lambada.Compiler._kdC:101 1123
+1124 Lambada.Compiler._kea:103 Lambada.Compiler._kdC:101
+1125 1124 Lambada.Compiler._kdC:101
+Lambada.Compiler._kdR:105 1125
+1126 Lambada.Compiler._kea:103 Lambada.Compiler._kdR:105
 1127 18 1126
-1128 43 Lambada._kc0E:113
+1128 43 Lambada.Compiler._kc0E:113
 1129 1127 1128
 1130 59 1129
 1131 1039 1130
 1132 173 1131
-Lambada._kcTnR:119 1132
-1133 triage Lambada._kcTnR:119
-1134 Lambada._kdleaf:95 315
-Lambada._kdI:98 1134
-1135 1124 Lambada._kdI:98
-Lambada._kdT:104 1135
-1136 Lambada._kea:103 Lambada._kdT:104
+Lambada.Compiler._kcTnR:119 1132
+1133 triage Lambada.Compiler._kcTnR:119
+1134 Lambada.Compiler._kdleaf:95 315
+Lambada.Compiler._kdI:98 1134
+1135 1124 Lambada.Compiler._kdI:98
+Lambada.Compiler._kdT:104 1135
+1136 Lambada.Compiler._kea:103 Lambada.Compiler._kdT:104
 1137 113 1136
 1138 :k 1137
 1139 :k 1138
-Lambada._kcTnT:120 1139
-1140 :k Lambada._kcTnT:120
+Lambada.Compiler._kcTnT:120 1139
+1140 :k Lambada.Compiler._kcTnT:120
 1141 1133 1140
 1142 1141 △
 1143 :b 1142
 1144 :b 1143
-1145 1144 Lambada._k_is_var:108
+1145 1144 Lambada.Compiler._k_is_var:108
 1146 59 1145
 1147 :s 1146
 1148 1147 :i
@@ -1301,29 +1301,29 @@ Lambada._kcTnT:120 1139
 1150 22 1149
 1151 triage 1150
 1152 1151 △
-1153 18 Lambada._kdC:101
-1154 1153 Lambada._kc0E:113
+1153 18 Lambada.Compiler._kdC:101
+1154 1153 Lambada.Compiler._kc0E:113
 1155 1038 1154
 1156 18 1155
 1157 1156 1098
 1158 166 1157
 1159 327 1158
 1160 326 1159
-Lambada._kcTFC:121 1160
-1161 triage Lambada._kcTFC:121
-1162 18 Lambada._kdT:104
-1163 1162 Lambada._kc0E:113
+Lambada.Compiler._kcTFC:121 1160
+1161 triage Lambada.Compiler._kcTFC:121
+1162 18 Lambada.Compiler._kdT:104
+1163 1162 Lambada.Compiler._kc0E:113
 1164 1038 1163
 1165 114 1164
 1166 113 1165
 1167 113 1166
-Lambada._kcTFT:122 1167
-1168 :k Lambada._kcTFT:122
+Lambada.Compiler._kcTFT:122 1167
+1168 :k Lambada.Compiler._kcTFT:122
 1169 1161 1168
 1170 1169 △
 1171 :b 1170
 1172 :b 1171
-1173 1172 Lambada._k_is_var:108
+1173 1172 Lambada.Compiler._k_is_var:108
 1174 59 1173
 1175 :c 1174
 1176 165 1175
@@ -1331,36 +1331,36 @@ Lambada._kcTFT:122 1167
 1178 22 1177
 1179 138 1178
 1180 182 1179
-Lambada._kcTF:123 1180
-1181 triage Lambada._kcTF:123
-1182 Lambada._kdleaf:95 553
-Lambada._kdS:102 1182
-1183 18 Lambada._kdS:102
-1184 1183 Lambada._kc0E:113
+Lambada.Compiler._kcTF:123 1180
+1181 triage Lambada.Compiler._kcTF:123
+1182 Lambada.Compiler._kdleaf:95 553
+Lambada.Compiler._kdS:102 1182
+1183 18 Lambada.Compiler._kdS:102
+1184 1183 Lambada.Compiler._kc0E:113
 1185 1038 1184
 1186 18 1185
 1187 1186 1098
 1188 166 1187
 1189 327 1188
 1190 326 1189
-Lambada._kcTS:124 1190
-1191 :k Lambada._kcTS:124
+Lambada.Compiler._kcTS:124 1190
+1191 :k Lambada.Compiler._kcTS:124
 1192 1181 1191
 1193 1192 △
 1194 1152 1193
-Lambada._kcTE:125 1194
-1195 :c Lambada._kcTE:125
+Lambada.Compiler._kcTE:125 1194
+1195 :c Lambada.Compiler._kcTE:125
 1196 :k 1195
 1197 1122 1196
 1198 1197 △
 1199 1079 1198
-Lambada._kcE:126 1199
-1200 18 Lambada._kcE:126
+Lambada.Compiler._kcE:126 1199
+1200 18 Lambada.Compiler._kcE:126
 1201 :b 1200
 1202 :b 1201
 1203 :b 1202
 1204 :b 1203
-1205 :b Lambada._kcE:126
+1205 :b Lambada.Compiler._kcE:126
 1206 :b 1205
 1207 1206 △
 1208 59 1207
@@ -1371,16 +1371,16 @@ Lambada._kcE:126 1199
 1213 1204 1212
 1214 1075 1213
 1215 37 1214
-Lambada._kapEo:130 1215
-1216 :c Lambada._kapEo:130
+Lambada.Compiler._kapEo:130 1215
+1216 :c Lambada.Compiler._kapEo:130
 1217 59 1216
 1218 165 1217
 1219 1051 1218
-Lambada._kapE1:131 1219
-1220 37 Lambada._kapE1:131
-Lambada._kapE:132 1220
-Lambada._kapp:133 Lambada._kapE:132
-1221 :b Lambada._kapp:133
+Lambada.Compiler._kapE1:131 1219
+1220 37 Lambada.Compiler._kapE1:131
+Lambada.Compiler._kapE:132 1220
+Lambada.Compiler._kapp:133 Lambada.Compiler._kapE:132
+1221 :b Lambada.Compiler._kapp:133
 1222 :b 1221
 1223 :b 1222
 1224 1223 252
@@ -1388,30 +1388,30 @@ Lambada._kapp:133 Lambada._kapE:132
 1226 137 1225
 1227 43 1226
 1228 253 1227
-Lambada._klow_app:156 1228
-1229 18 Lambada._klow_app:156
-1230 Lambada._kdleaf:95 322
-Lambada._kdK:99 1230
-1231 Lambada._kea:103 Lambada._kdK:99
+Lambada.Compiler._klow_app:156 1228
+1229 18 Lambada.Compiler._klow_app:156
+1230 Lambada.Compiler._kdleaf:95 322
+Lambada.Compiler._kdK:99 1230
+1231 Lambada.Compiler._kea:103 Lambada.Compiler._kdK:99
 1232 113 1231
 1233 triage 1232
 1234 1233 △
 1235 :s 85
-1236 18 Lambada._kdK:99
-1237 1236 Lambada._kc0E:113
+1236 18 Lambada.Compiler._kdK:99
+1237 1236 Lambada.Compiler._kc0E:113
 1238 1038 1237
 1239 1235 1238
-Lambada._kabsF:134 1239
-1240 triage Lambada._kabsF:134
-Lambada._kabsT:135 △
+Lambada.Compiler._kabsF:134 1239
+1240 triage Lambada.Compiler._kabsF:134
+Lambada.Compiler._kabsT:135 △
 1241 1240 2
 1242 1241 △
 1243 1234 1242
-Lambada._kabsE1:136 1243
-1244 37 Lambada._kabsE1:136
-Lambada._kabsE:137 1244
-Lambada._kabs:138 Lambada._kabsE:137
-1245 :b Lambada._kabs:138
+Lambada.Compiler._kabsE1:136 1243
+1244 37 Lambada.Compiler._kabsE1:136
+Lambada.Compiler._kabsE:137 1244
+Lambada.Compiler._kabs:138 Lambada.Compiler._kabsE:137
+1245 :b Lambada.Compiler._kabs:138
 1246 :b 1245
 1247 :b 1246
 1248 :b 1247
@@ -1499,29 +1499,29 @@ Memo.gen_ascii 1304
 1320 fix 1319
 equal_const 1320
 1321 1306 equal_const
-Lambada._char_rec:80 1321
-1322 Bool.match Lambada._char_rec:80
+Lambada.Compiler._char_rec:80 1321
+1322 Bool.match Lambada.Compiler._char_rec:80
 1323 1322 equal_const
 1324 :b 1323
 1325 1305 true
 1326 1325 2
-Lambada._khigh:139 1326
-1327 1324 Lambada._khigh:139
+Lambada.Compiler._khigh:139 1326
+1327 1324 Lambada.Compiler._khigh:139
 1328 :s 1327
 1329 1328 :i
 1330 List.map 1329
-Lambada._krec:140 1330
-1331 25 Lambada._krec:140
+Lambada.Compiler._krec:140 1330
+1331 25 Lambada.Compiler._krec:140
 1332 1252 1331
 1333 1248 1332
-Lambada._klow_abs:155 1333
-1334 18 Lambada._klow_abs:155
+Lambada.Compiler._klow_abs:155 1333
+1334 18 Lambada.Compiler._klow_abs:155
 1335 496 △
 1336 307 1335
-1337 Lambada._kdleaf:95 1336
+1337 Lambada.Compiler._kdleaf:95 1336
 1338 1 1337
-Lambada._knilT:151 1338
-1339 18 Lambada._knilT:151
+Lambada.Compiler._knilT:151 1338
+1339 18 Lambada.Compiler._knilT:151
 1340 :b 1339
 1341 :ct 71
 1342 :ct 1341
@@ -1539,10 +1539,10 @@ Lambada._knilT:151 1338
 1354 492 1353
 1355 494 1354
 1356 1345 1355
-1357 Lambada._kdleaf:95 1356
+1357 Lambada.Compiler._kdleaf:95 1356
 1358 1 1357
-Lambada._knilMapSet:152 1358
-1359 Lambada._kapp:133 Lambada._knilMapSet:152
+Lambada.Compiler._knilMapSet:152 1358
+1359 Lambada.Compiler._kapp:133 Lambada.Compiler._knilMapSet:152
 1360 :b 1359
 1361 :b 1360
 1362 :b 1361
@@ -1560,9 +1560,9 @@ Lambada._knilMapSet:152 1358
 1374 1340 1373
 1375 59 1374
 1376 :c 1375
-Lambada._klow_map:154 1376
-1377 18 Lambada._klow_map:154
-1378 Lambada._kapp:133 Lambada._knilT:151
+Lambada.Compiler._klow_map:154 1376
+1377 18 Lambada.Compiler._klow_map:154
+1378 Lambada.Compiler._kapp:133 Lambada.Compiler._knilT:151
 1379 :b 1378
 1380 :b 1379
 1381 :b 1380
@@ -1572,11 +1572,11 @@ Lambada._klow_map:154 1376
 1385 1340 1384
 1386 59 1385
 1387 :c 1386
-Lambada._klow_list:153 1387
-1388 18 Lambada._klow_list:153
+Lambada.Compiler._klow_list:153 1387
+1388 18 Lambada.Compiler._klow_list:153
 1389 :s 367
 1390 :b 1389
-1391 :b Lambada._ename:82
+1391 :b Lambada.Compiler._ename:82
 1392 1391 Nat.succ
 1393 149 1392
 1394 43 1393
@@ -1586,9 +1586,9 @@ Lambada._klow_list:153 1387
 1398 18 1397
 1399 Dlist.cons 306
 1400 1399 496
-Lambada._dT:70 1400
-Lambada._dListEmpty:71 Lambada._dT:70
-1401 887 Lambada._dListEmpty:71
+Lambada.Compiler._dT:70 1400
+Lambada.Compiler._dListEmpty:71 Lambada.Compiler._dT:70
+1401 887 Lambada.Compiler._dListEmpty:71
 1402 List.match 1401
 1403 :b 1402
 1404 :b 1403
@@ -1596,13 +1596,13 @@ Lambada._dListEmpty:71 Lambada._dT:70
 1406 Dlist.cons 74
 Dlist.snoc 1272
 1407 1399 320
-Lambada._dTrue:72 1407
-Lambada._dConsFalse:73 Lambada._dTrue:72
-1408 Dlist.snoc Lambada._dConsFalse:73
+Lambada.Compiler._dTrue:72 1407
+Lambada.Compiler._dConsFalse:73 Lambada.Compiler._dTrue:72
+1408 Dlist.snoc Lambada.Compiler._dConsFalse:73
 1409 1408 74
 1410 1406 1409
-Lambada._dSegConsFalse:76 1410
-1411 :b Lambada._dSegConsFalse:76
+Lambada.Compiler._dSegConsFalse:76 1410
+1411 :b Lambada.Compiler._dSegConsFalse:76
 1412 :b 1411
 1413 1412 82
 1414 1405 1413
@@ -1611,12 +1611,12 @@ Lambada._dSegConsFalse:76 1410
 1417 433 1335
 1418 307 1417
 1419 Dlist.from_list 1418
-Lambada._dConsTrue:74 1419
-1420 Dlist.snoc Lambada._dConsTrue:74
+Lambada.Compiler._dConsTrue:74 1419
+1420 Dlist.snoc Lambada.Compiler._dConsTrue:74
 1421 1420 74
 1422 1406 1421
-Lambada._dSegConsTrue:77 1422
-1423 :b Lambada._dSegConsTrue:77
+Lambada.Compiler._dSegConsTrue:77 1422
+1423 :b Lambada.Compiler._dSegConsTrue:77
 1424 :b 1423
 1425 1424 82
 1426 1405 1425
@@ -1628,15 +1628,15 @@ Lambada._dSegConsTrue:77 1422
 1432 :c 1431
 1433 :b 1432
 1434 1399 313
-Lambada._dI:75 1434
-1435 Dlist.append Lambada._dI:75
-1436 1406 Lambada._dT:70
+Lambada.Compiler._dI:75 1434
+1435 Dlist.append Lambada.Compiler._dI:75
+1436 1406 Lambada.Compiler._dT:70
 1437 1435 1436
 1438 Dlist.snoc 1437
 1439 1438 79
 1440 1406 1439
-Lambada._dSegSeed:78 1440
-1441 18 Lambada._dSegSeed:78
+Lambada.Compiler._dSegSeed:78 1440
+1441 18 Lambada.Compiler._dSegSeed:78
 1442 1441 :b
 1443 1433 1442
 1444 59 1443
@@ -1651,8 +1651,8 @@ Lambada._dSegSeed:78 1440
 1453 1404 1452
 1454 137 1453
 1455 22 1454
-Lambada._dag_nat:79 1455
-1456 149 Lambada._dag_nat:79
+Lambada.Compiler._dag_nat:79 1455
+1456 149 Lambada.Compiler._dag_nat:79
 1457 43 1456
 1458 :s 1457
 1459 :c Pair.let
@@ -1675,12 +1675,12 @@ Lambada._dag_nat:79 1455
 1476 :c 1475
 1477 :b 1476
 1478 :b 1477
-1479 18 Lambada._char_rec:80
+1479 18 Lambada.Compiler._char_rec:80
 1480 :b 1479
 1481 :b 172
 1482 :b 335
 1483 :b 68
-1484 :b Lambada._dT:70
+1484 :b Lambada.Compiler._dT:70
 1485 :b 1484
 1486 :b 1485
 1487 :b Lambada.newline
@@ -1722,8 +1722,8 @@ Lambada._dag_nat:79 1455
 1523 201 1522
 1524 137 1523
 1525 1519 1524
-Lambada._dag_str_step:81 1525
-1526 392 Lambada._dag_str_step:81
+Lambada.Compiler._dag_str_step:81 1525
+1526 392 Lambada.Compiler._dag_str_step:81
 1527 59 1526
 1528 :s 1527
 1529 25 1442
@@ -1737,8 +1737,8 @@ Lambada._dag_str_step:81 1525
 1537 1398 1536
 1538 1396 1537
 1539 1390 1538
-Lambada._equote_str:84 1539
-1540 149 Lambada._equote_str:84
+Lambada.Compiler._equote_str:84 1539
+1540 149 Lambada.Compiler._equote_str:84
 1541 984 1540
 Lambada.quote_str 1541
 1542 113 Lambada.quote_str
@@ -1749,22 +1749,22 @@ Lambada.quote_str 1541
 1547 :b 1546
 1548 18 174
 1549 :b 1548
-1550 :c Lambada._dag_nat:79
+1550 :c Lambada.Compiler._dag_nat:79
 1551 522 1550
 1552 1549 1551
 1553 1547 1552
-Lambada._equote_nat:83 1553
-1554 149 Lambada._equote_nat:83
+Lambada.Compiler._equote_nat:83 1553
+1554 149 Lambada.Compiler._equote_nat:83
 1555 984 1554
 Lambada.quote_nat 1555
 1556 113 Lambada.quote_nat
 1557 113 1556
 1558 113 1557
 1559 18 1558
-1560 :k Lambada._knilT:151
+1560 :k Lambada.Compiler._knilT:151
 1561 :k 1560
 1562 18 1561
-1563 113 Lambada._kdleaf:95
+1563 113 Lambada.Compiler._kdleaf:95
 1564 triage 1563
 1565 1564 △
 1566 160 524
@@ -1772,8 +1772,8 @@ Lambada.quote_nat 1555
 1568 1567 :i
 1569 25 1568
 1570 37 1569
-Lambada._klkW:145 1570
-1571 :b Lambada._klkW:145
+Lambada.Compiler._klkW:145 1570
+1571 :b Lambada.Compiler._klkW:145
 1572 :b 1571
 1573 113 1563
 1574 triage 1573
@@ -1782,15 +1782,15 @@ Lambada._klkW:145 1570
 1577 138 174
 1578 182 1577
 1579 1576 1578
-Lambada._klkMiss:146 1579
-1580 triage Lambada._klkMiss:146
+Lambada.Compiler._klkMiss:146 1579
+1580 triage Lambada.Compiler._klkMiss:146
 1581 △ 69
-1582 △ Lambada._eI:87
-1583 19 Lambada._eI:87
+1582 △ Lambada.Compiler._eI:87
+1583 19 Lambada.Compiler._eI:87
 1584 1582 1583
 1585 1581 1584
-Lambada._kvar0:106 1585
-1586 :k Lambada._kvar0:106
+Lambada.Compiler._kvar0:106 1585
+1586 :k Lambada.Compiler._kvar0:106
 1587 :k 1586
 1588 :k 1587
 1589 :k 1588
@@ -1805,11 +1805,11 @@ Lambada._kvar0:106 1585
 1598 1597 △
 1599 triage 1024
 1600 1599 △
-Lambada._krr_no:142 1024
+Lambada.Compiler._krr_no:142 1024
 1601 138 1087
 1602 182 1601
-Lambada._krr_go:141 1602
-1603 :k Lambada._krr_go:141
+Lambada.Compiler._krr_go:141 1602
+1603 :k Lambada.Compiler._krr_go:141
 1604 1599 1603
 1605 1604 △
 1606 :b 1605
@@ -1817,26 +1817,26 @@ Lambada._krr_go:141 1602
 1608 1607 35
 1609 59 1608
 1610 1600 1609
-Lambada._krr2:143 1610
-1611 :c Lambada._krr2:143
+Lambada.Compiler._krr2:143 1610
+1611 :c Lambada.Compiler._krr2:143
 1612 59 1611
 1613 1598 1612
-Lambada._krrE:144 1613
-1614 18 Lambada._krrE:144
+Lambada.Compiler._krrE:144 1613
+1614 18 Lambada.Compiler._krrE:144
 1615 :b 1614
-1616 1615 Lambada._krrE:144
+1616 1615 Lambada.Compiler._krrE:144
 1617 1593 1616
 1618 59 1617
 1619 138 1618
 1620 182 1619
 1621 1575 1620
-Lambada._klkE:147 1621
-1622 18 Lambada._klkE:147
+Lambada.Compiler._klkE:147 1621
+1622 18 Lambada.Compiler._klkE:147
 1623 :b 1622
-1624 1623 Lambada._klkE:147
+1624 1623 Lambada.Compiler._klkE:147
 1625 1572 1624
-Lambada._klkMiss0:148 1625
-1626 triage Lambada._klkMiss0:148
+Lambada.Compiler._klkMiss0:148 1625
+1626 triage Lambada.Compiler._klkMiss0:148
 1627 1626 1588
 1628 1627 △
 1629 :b 1628
@@ -1846,10 +1846,10 @@ Lambada._klkMiss0:148 1625
 1633 138 1632
 1634 182 1633
 1635 1565 1634
-Lambada._klkE0:149 1635
-1636 :c Lambada._klkE0:149
-Lambada._klookup:150 1636
-1637 113 Lambada._klookup:150
+Lambada.Compiler._klkE0:149 1635
+1636 :c Lambada.Compiler._klkE0:149
+Lambada.Compiler._klookup:150 1636
+1637 113 Lambada.Compiler._klookup:150
 1638 35 1637
 1639 1562 1638
 1640 1559 1639
@@ -1862,20 +1862,20 @@ Lambada._klookup:150 1636
 1647 980 1646
 1648 958 1647
 1649 :c 1648
-Lambada._klower_open:158 1649
-1650 self_apply Lambada._klower_open:158
-Lambada._klower:159 1650
-1651 23 Lambada._klower:159
+Lambada.Compiler._klower_open:158 1649
+1650 self_apply Lambada.Compiler._klower_open:158
+Lambada.Compiler._klower:159 1650
+1651 23 Lambada.Compiler._klower:159
 1652 613 1651
 1653 716 1652
-Lambada._syntax_to_native:160 1653
-1654 18 Lambada._syntax_to_native:160
+Lambada.Compiler._syntax_to_native:160 1653
+1654 18 Lambada.Compiler._syntax_to_native:160
 1655 43 Lambada.Native_assignment
 1656 1654 1655
 1657 26 1656
 1658 24 1657
-Lambada._native_def:177 1658
-1659 26 Lambada._native_def:177
+Lambada.Compiler._native_def:177 1658
+1659 26 Lambada.Compiler._native_def:177
 1660 18 1659
 1661 35 2
 1662 23 1661
@@ -1891,8 +1891,8 @@ Lambada._native_def:177 1658
 1672 :b 1671
 1673 1672 523
 1674 fix 1673
-Lambada._statement_under:179 1674
-1675 18 Lambada._statement_under:179
+Lambada.Compiler._statement_under:179 1674
+1675 18 Lambada.Compiler._statement_under:179
 1676 :b 1675
 1677 :b Option.get_or
 1678 :b 1677
@@ -1903,53 +1903,53 @@ Lambada.Native_expr 1680
 1682 1681 1022
 1683 25 1682
 1684 23 1683
-Lambada._native_expr_of:175 1684
-1685 :b Lambada._native_expr_of:175
+Lambada.Compiler._native_expr_of:175 1684
+1685 :b Lambada.Compiler._native_expr_of:175
 1686 :b 1685
 1687 :b 1686
-1688 18 Lambada._klower_open:158
+1688 18 Lambada.Compiler._klower_open:158
 1689 :b 1688
 1690 :b 1689
-1691 1690 Lambada._klow_span:157
+1691 1690 Lambada.Compiler._klow_span:157
 1692 475 1691
 1693 1687 1692
 1694 1679 1693
 1695 138 1694
 1696 1676 1695
 1697 18 1696
-1698 18 Lambada._native_adt:178
-1699 18 Lambada._native_def:177
-1700 1689 Lambada._klow_app:156
+1698 18 Lambada.Compiler._native_adt:178
+1699 18 Lambada.Compiler._native_def:177
+1700 1689 Lambada.Compiler._klow_app:156
 1701 24 1700
 1702 1686 1701
 1703 18 1702
-1704 1689 Lambada._klow_abs:155
+1704 1689 Lambada.Compiler._klow_abs:155
 1705 24 1704
 1706 1686 1705
 1707 18 1706
-1708 1688 Lambada._klow_map:154
+1708 1688 Lambada.Compiler._klow_map:154
 1709 23 1708
 1710 1685 1709
 1711 18 1710
-1712 1688 Lambada._klow_list:153
+1712 1688 Lambada.Compiler._klow_list:153
 1713 23 1712
 1714 1685 1713
 1715 18 1714
-1716 1681 Lambada._equote_str:84
+1716 1681 Lambada.Compiler._equote_str:84
 1717 25 1716
 1718 23 1717
 1719 18 1718
-1720 1681 Lambada._equote_nat:83
+1720 1681 Lambada.Compiler._equote_nat:83
 1721 25 1720
 1722 23 1721
 1723 18 1722
-1724 Lambada._emk_leaf:86 1336
+1724 Lambada.Compiler._emk_leaf:86 1336
 1725 Lambada.Native_expr 1724
 1726 △ 1725
 1727 1726 △
-Lambada._native_null:176 1727
-1728 18 Lambada._native_null:176
-1729 1681 Lambada._emk_leaf:86
+Lambada.Compiler._native_null:176 1727
+1728 18 Lambada.Compiler._native_null:176
+1729 1681 Lambada.Compiler._emk_leaf:86
 1730 25 1729
 1731 23 1730
 1732 35 1731
@@ -1966,16 +1966,16 @@ Lambada._native_null:176 1727
 Lambada.syntax_to_native 1742
 1743 List.concat_map Lambada.syntax_to_native
 1744 25 1743
-Lambada._compiler_lower:180 1744
-1745 Option.bind Lambada._compiler_lower:180
+Lambada.Compiler._compiler_lower:180 1744
+1745 Option.bind Lambada.Compiler._compiler_lower:180
 1746 :b 1745
 Parser.match_result 55
 1747 203 △
 1748 43 1747
 1749 :c 1748
 1750 151 1749
-Parser._extract_if:1 1750
-1751 43 Parser._extract_if:1
+Parser.Parser._extract_if:1 1750
+1751 43 Parser.Parser._extract_if:1
 Parser.value_if 1751
 List.is_empty 760
 1752 Parser.value_if List.is_empty
@@ -1993,7 +1993,7 @@ Parser.return △
 1761 59 1760
 1762 251 1761
 Parser.many 1762
-Lambada._one_then:36 150
+Lambada.Compiler._one_then:36 150
 1763 114 35
 1764 114 1763
 1765 114 1764
@@ -2067,7 +2067,7 @@ Lambada.Token_identifier_adt_Dispatch 1823
 1824 Lambada.Token_identifier_adt_Dispatch △
 Parser.fail 2
 1825 1824 Parser.fail
-1826 Lambada._one_then:36 1825
+1826 Lambada.Compiler._one_then:36 1825
 Lambada.parse_identifier_adt 1826
 1827 Parser.seq_pair Lambada.parse_identifier_adt
 1828 :c 1813
@@ -2083,7 +2083,7 @@ Lambada.parse_identifier_adt 1826
 Lambada.Token_identifier_Dispatch 1837
 1838 Lambada.Token_identifier_Dispatch △
 1839 1838 Parser.fail
-1840 Lambada._one_then:36 1839
+1840 Lambada.Compiler._one_then:36 1839
 Lambada.parse_identifier 1840
 1841 Parser.many Lambada.parse_identifier
 1842 1827 1841
@@ -2139,8 +2139,8 @@ Lambada.parse_pipe 1885
 1887 1886 Lambada.parse_adt_variant
 1888 Parser.many 1887
 1889 1843 1888
-Lambada._adt_variants:37 1889
-1890 18 Lambada._adt_variants:37
+Lambada.Compiler._adt_variants:37 1889
+1890 18 Lambada.Compiler._adt_variants:37
 1891 :b 1890
 1892 43 Parser.map_result
 Parser.map 1892
@@ -2161,13 +2161,13 @@ Lambada.Syntax_adt 1904
 1906 :c 1905
 1907 1894 1906
 1908 1891 1907
-Lambada._adt_arm:38 1908
-1909 Lambada._adt_arm:38 true
+Lambada.Compiler._adt_arm:38 1908
+1909 Lambada.Compiler._adt_arm:38 true
 1910 18 1909
-Lambada._adt_no:39 653
-1911 Lambada._adt_arm:38 △
+Lambada.Compiler._adt_no:39 653
+1911 Lambada.Compiler._adt_arm:38 △
 1912 18 1911
-1913 35 Lambada._adt_no:39
+1913 35 Lambada.Compiler._adt_no:39
 1914 657 1913
 1915 657 1914
 1916 1912 1915
@@ -2181,7 +2181,7 @@ Lambada._adt_no:39 653
 1924 657 1923
 1925 1910 1924
 1926 Lambada.Token_special_char_Dispatch 1925
-1927 1926 Lambada._adt_no:39
+1927 1926 Lambada.Compiler._adt_no:39
 1928 :c 1927
 1929 151 1928
 1930 113 1929
@@ -2546,8 +2546,8 @@ Lambada.Schar_dollar_Dispatch 2243
 2261 2224 2260
 2262 :c 2261
 2263 59 2262
-Lambada._expr_tail:40 2263
-2264 113 Lambada._expr_tail:40
+Lambada.Compiler._expr_tail:40 2263
+2264 113 Lambada.Compiler._expr_tail:40
 2265 277 2264
 2266 2222 2265
 2267 43 2266
@@ -2560,10 +2560,10 @@ Lambada._expr_tail:40 2263
 2274 137 2273
 2275 2206 2274
 2276 2205 2275
-Lambada._parse_expr_body:41 2276
-2277 fix Lambada._parse_expr_body:41
-2278 Lambada._parse_expr_body:41 2277
-2279 Lambada._parse_expr_body:41 2278
+Lambada.Compiler._parse_expr_body:41 2276
+2277 fix Lambada.Compiler._parse_expr_body:41
+2278 Lambada.Compiler._parse_expr_body:41 2277
+2279 Lambada.Compiler._parse_expr_body:41 2278
 Lambada.parse_expr 2279
 2280 Parser.many Lambada.parse_expr
 Lambada.parse_exprs 2280
@@ -2580,15 +2580,15 @@ Lambada.compiler_parse 2281
 2290 18 2289
 2291 :b 2290
 2292 113 187
-Lambada._scan_stop:6 2292
-2293 Bool.match Lambada._scan_stop:6
+Lambada.Compiler._scan_stop:6 2292
+2293 Bool.match Lambada.Compiler._scan_stop:6
 2294 18 118
 2295 160 27
 2296 43 2295
 2297 43 2296
 2298 2294 2297
-Lambada._scan_go:7 2298
-2299 2293 Lambada._scan_go:7
+Lambada.Compiler._scan_go:7 2298
+2299 2293 Lambada.Compiler._scan_go:7
 2300 :b 2299
 2301 18 2300
 2302 :b 1305
@@ -2597,8 +2597,8 @@ Lambada._scan_go:7 2298
 2305 2301 2304
 2306 201 2305
 2307 2291 2306
-Lambada._mk_scanner:8 2307
-2308 Lambada._mk_scanner:8 true
+Lambada.Compiler._mk_scanner:8 2307
+2308 Lambada.Compiler._mk_scanner:8 true
 2309 208 211
 2310 :b 2309
 2311 59 2310
@@ -2612,8 +2612,8 @@ Fn.p_or 2313
 2318 138 2317
 2319 182 2318
 Fn.p_and 2319
-2320 wait Nat._lte_t:15
-2321 2320 Nat._lte_body:17
+2320 wait Nat.Nat._lte_t:15
+2321 2320 Nat.Nat._lte_body:17
 Nat.is_lte 2321
 2322 :k 74
 2323 Nat.is_lte 2322
@@ -2641,8 +2641,8 @@ Fn.p_not 820
 2344 2328 2343
 2345 Fn.p_not 2344
 2346 2324 2345
-Lambada.is_alpha_char:1 2346
-2347 Fn.p_or Lambada.is_alpha_char:1
+Lambada.Compiler.is_alpha_char:1 2346
+2347 Fn.p_or Lambada.Compiler.is_alpha_char:1
 2348 :c Nat.is_lte
 2349 18 2348
 2350 671 Nat.is_lte
@@ -2654,16 +2654,16 @@ Nat.in_range 2353
 2355 2354 487
 Char.is_digit 2355
 2356 2347 Char.is_digit
-Lambada.is_alphanum_char:2 2356
-2357 Fn.p_or Lambada.is_alphanum_char:2
+Lambada.Compiler.is_alphanum_char:2 2356
+2357 Fn.p_or Lambada.Compiler.is_alphanum_char:2
 2358 equal 1346
 2359 2357 2358
-Lambada.is_identifier_char:3 2359
-2360 1325 Lambada.is_identifier_char:3
+Lambada.Compiler.is_identifier_char:3 2359
+2360 1325 Lambada.Compiler.is_identifier_char:3
 Lambada.is_identifier_char 2360
 2361 2308 Lambada.is_identifier_char
-Lambada._scan_identifier:17 2361
-2362 18 Lambada._scan_identifier:17
+Lambada.Compiler._scan_identifier:17 2361
+2362 18 Lambada.Compiler._scan_identifier:17
 2363 113 1765
 Lambada.Token_identifier 2363
 2364 Bool.match Lambada.Token_identifier
@@ -2688,8 +2688,8 @@ Memo.mk_gen_fork_strict 2375
 2381 59 2380
 2382 :s 2381
 2383 2382 523
-Memo._gen_set:1 2383
-2384 Memo.mk_gen_fork_strict Memo._gen_set:1
+Memo.Memo._gen_set:1 2383
+2384 Memo.mk_gen_fork_strict Memo.Memo._gen_set:1
 2385 2384 Memo.gen_leaf
 2386 2376 2385
 2387 2376 2386
@@ -2709,8 +2709,8 @@ Char.is_uppercase 2397
 Char.is_uppercase__fastest 2398
 Lambada.is_uppercase_char Char.is_uppercase__fastest
 2399 :b Lambada.is_uppercase_char
-Lambada._lh_next:13 1578
-2400 triage Lambada._lh_next:13
+Lambada.Compiler._lh_next:13 1578
+2400 triage Lambada.Compiler._lh_next:13
 2401 165 891
 2402 59 2401
 2403 :s 2402
@@ -2719,8 +2719,8 @@ Lambada._lh_next:13 1578
 2406 182 2405
 2407 114 2406
 2408 1594 2407
-Lambada._lh_promote:14 2408
-2409 :k Lambada._lh_promote:14
+Lambada.Compiler._lh_promote:14 2408
+2409 :k Lambada.Compiler._lh_promote:14
 2410 2400 2409
 2411 2410 △
 2412 :b 2411
@@ -2730,17 +2730,17 @@ Memo.gen_ascii_low 2413
 2415 2414 △
 2416 equal_const 1346
 2417 2415 2416
-Lambada._is_dot:12 2417
-2418 2412 Lambada._is_dot:12
+Lambada.Compiler._is_dot:12 2417
+2418 2412 Lambada.Compiler._is_dot:12
 2419 1594 2418
-Lambada._lh_elim:15 2419
-2420 18 Lambada._lh_elim:15
+Lambada.Compiler._lh_elim:15 2419
+2420 18 Lambada.Compiler._lh_elim:15
 2421 :b 2420
-2422 :c Lambada._lh_elim:15
+2422 :c Lambada.Compiler._lh_elim:15
 2423 2421 2422
 2424 150 2423
-Lambada._local_head:16 2424
-2425 2399 Lambada._local_head:16
+Lambada.Compiler._local_head:16 2424
+2425 2399 Lambada.Compiler._local_head:16
 2426 2368 2425
 2427 :s 2426
 2428 2427 :i
@@ -2753,8 +2753,8 @@ Lambada.token_identifier 2428
 2434 43 2433
 2435 2362 2434
 2436 150 2435
-Lambada._parse_identifier_token:18 2436
-2437 1305 Lambada._parse_identifier_token:18
+Lambada.Compiler._parse_identifier_token:18 2436
+2437 1305 Lambada.Compiler._parse_identifier_token:18
 2438 :c Bool.match
 2439 :b 2438
 2440 2439 Pair.snd
@@ -2766,7 +2766,7 @@ Lambada._parse_identifier_token:18 2436
 2446 103 2445
 2447 :c 2446
 2448 59 2447
-Lambada._first_matching:25 2448
+Lambada.Compiler._first_matching:25 2448
 Lambada.Token_special_char 1766
 2449 Parser.map Lambada.Token_special_char
 2450 :c △
@@ -2805,8 +2805,8 @@ Lambada.Token_special_char 1766
 2483 2458 2482
 2484 59 2483
 2485 fix 2484
-Map.Structural._to_func:42 2485
-2486 Map.Structural._to_func:42 id
+Map.Structural.Map._to_func:42 2485
+2486 Map.Structural.Map._to_func:42 id
 Map.Structural.to_func 2486
 Map.to_func Map.Structural.to_func
 2487 2454 Map.to_func
@@ -2826,10 +2826,10 @@ Lambada.parse_char_map 2488
 2500 26 2499
 2501 59 2500
 2502 2494 2501
-Map.Structural._set_v:11 2502
-2503 :c Map.Structural._set_v:11
-Map.Structural._at_v:14 2503
-2504 :k Map.Structural._at_v:14
+Map.Structural.Map._set_v:11 2502
+2503 :c Map.Structural.Map._set_v:11
+Map.Structural.Map._at_v:14 2503
+2504 :k Map.Structural.Map._at_v:14
 2505 triage 2504
 2506 25 2455
 2507 23 2506
@@ -2840,27 +2840,27 @@ Map.Structural._at_v:14 2503
 2512 26 2511
 2513 59 2512
 2514 2509 2513
-Map.Structural._set_s:12 2514
-2515 :c Map.Structural._set_s:12
+Map.Structural.Map._set_s:12 2514
+2515 :c Map.Structural.Map._set_s:12
 2516 :b 2515
-2517 2516 Map.Structural._at_v:14
-Map.Structural._set_vs:17 2517
-2518 :k Map.Structural._set_vs:17
+2517 2516 Map.Structural.Map._at_v:14
+Map.Structural.Map._set_vs:17 2517
+2518 :k Map.Structural.Map._set_vs:17
 2519 triage 2518
-Map.Structural._at_s:15 2515
-2520 2516 Map.Structural._at_s:15
-Map.Structural._set_ss:18 2520
-2521 :b Map.Structural._set_ss:18
+Map.Structural.Map._at_s:15 2515
+2520 2516 Map.Structural.Map._at_s:15
+Map.Structural.Map._set_ss:18 2520
+2521 :b Map.Structural.Map._set_ss:18
 2522 :b 2521
 2523 :b 2522
 2524 2523 252
 2525 2519 2524
-Map.Structural._set_f:13 2511
-2526 :c Map.Structural._set_f:13
-Map.Structural._at_f:16 2526
-2527 2516 Map.Structural._at_f:16
-Map.Structural._set_sf:19 2527
-2528 :b Map.Structural._set_sf:19
+Map.Structural.Map._set_f:13 2511
+2526 :c Map.Structural.Map._set_f:13
+Map.Structural.Map._at_f:16 2526
+2527 2516 Map.Structural.Map._at_f:16
+Map.Structural.Map._set_sf:19 2527
+2528 :b Map.Structural.Map._set_sf:19
 2529 :b 2528
 2530 :b 2529
 2531 :b 2530
@@ -2871,24 +2871,24 @@ Map.Structural._set_sf:19 2527
 2536 2525 2535
 2537 2505 2536
 2538 :b 2526
-2539 2538 Map.Structural._at_v:14
-Map.Structural._set_fv:20 2539
-2540 :b Map.Structural._set_fv:20
+2539 2538 Map.Structural.Map._at_v:14
+Map.Structural.Map._set_fv:20 2539
+2540 :b Map.Structural.Map._set_fv:20
 2541 :b 2540
 2542 :b 2541
 2543 2542 252
 2544 triage 2543
-2545 2538 Map.Structural._at_s:15
-Map.Structural._set_fs:21 2545
-2546 :b Map.Structural._set_fs:21
+2545 2538 Map.Structural.Map._at_s:15
+Map.Structural.Map._set_fs:21 2545
+2546 :b Map.Structural.Map._set_fs:21
 2547 :b 2546
 2548 :b 2547
 2549 :b 2548
 2550 2549 2534
 2551 2544 2550
-2552 2538 Map.Structural._at_f:16
-Map.Structural._set_ff:22 2552
-2553 :b Map.Structural._set_ff:22
+2552 2538 Map.Structural.Map._at_f:16
+Map.Structural.Map._set_ff:22 2552
+2553 :b Map.Structural.Map._set_ff:22
 2554 :b 2553
 2555 :b 2554
 2556 :b 2555
@@ -2900,8 +2900,8 @@ Map.Structural._set_ff:22 2552
 2562 2551 2561
 2563 2537 2562
 2564 :c 2563
-Map.Structural._set_body:23 2564
-2565 650 Map.Structural._set_body:23
+Map.Structural.Map._set_body:23 2564
+2565 650 Map.Structural.Map._set_body:23
 2566 43 2565
 2567 121 2566
 Map.Structural.pmap_set 2567
@@ -3031,11 +3031,11 @@ Lambada.Schar_curly_close 2664
 2678 Lambada.parse_char_map 2677
 Lambada.parse_special_char 2678
 2679 2449 Lambada.parse_special_char
-2680 Lambada._first_matching:25 2679
-2681 1325 Lambada.is_alpha_char:1
+2680 Lambada.Compiler._first_matching:25 2679
+2681 1325 Lambada.Compiler.is_alpha_char:1
 Lambada.is_alpha_char 2681
 2682 △ Lambada.is_alpha_char
-2683 2682 Lambada._parse_identifier_token:18
+2683 2682 Lambada.Compiler._parse_identifier_token:18
 2684 △ 2683
 2685 2415 Char.is_digit
 Char.is_digit__fastest 2685
@@ -3048,29 +3048,29 @@ Lambada.Token_const_nat 2689
 2690 Parser.map Lambada.Token_const_nat
 2691 149 Nat.canonicalize
 2692 :s 2691
-2693 Nat._copy_step:20 △
-Nat._keep:22 2693
-2694 :b Nat._keep:22
+2693 Nat.Nat._copy_step:20 △
+Nat.Nat._keep:22 2693
+2694 :b Nat.Nat._keep:22
 2695 113 2694
 2696 116 2695
 2697 fix 2696
-Nat._mask:26 2697
-2698 277 Nat._mask:26
+Nat.Nat._mask:26 2697
+2698 277 Nat.Nat._mask:26
 2699 43 2698
 2700 :s 2699
 2701 887 Nat.pred
 2702 List.match 2701
 2703 :b 2702
-2704 25 Nat._keep:22
+2704 25 Nat.Nat._keep:22
 2705 43 2704
 2706 :s 2705
-2707 Nat._flip_step:21 △
+2707 Nat.Nat._flip_step:21 △
 2708 :c 2707
 2709 2706 2708
 2710 768 2709
 2711 137 2710
 2712 :s 2711
-2713 18 Nat._keep:22
+2713 18 Nat.Nat._keep:22
 2714 26 2708
 2715 137 2714
 2716 2713 2715
@@ -3083,13 +3083,13 @@ Nat._mask:26 2697
 2723 2720 2722
 2724 2703 2723
 2725 fix 2724
-Nat._sub_chain:23 2725
-2726 716 Nat._sub_chain:23
+Nat.Nat._sub_chain:23 2725
+2726 716 Nat.Nat._sub_chain:23
 Nat.ncsub_const 2726
 2727 43 Nat.ncsub_const
 2728 :c 2727
 2729 :b 2728
-2730 2729 Nat._mask:26
+2730 2729 Nat.Nat._mask:26
 2731 114 2730
 2732 114 2731
 2733 2700 2732
@@ -3107,8 +3107,8 @@ Nat.ncsub_const 2726
 2745 2744 :i
 2746 List.foldr 2745
 2747 2746 △
-Nat._strip_high_run:25 2747
-2748 149 Nat._strip_high_run:25
+Nat.Nat._strip_high_run:25 2747
+2748 149 Nat.Nat._strip_high_run:25
 2749 2737 2748
 Nat.ncsub_const_block 2749
 2750 220 Nat.ncsub_const_block
@@ -3116,8 +3116,8 @@ Nat.sub_const_block 2750
 2751 Nat.sub_const_block 353
 Nat.sub_x_48 2751
 2752 2415 Nat.sub_x_48
-Nat._decimal_digit:1 2752
-2753 18 Nat._decimal_digit:1
+Nat.From_string._decimal_digit:1 2752
+2753 18 Nat.From_string._decimal_digit:1
 2754 43 63
 2755 43 2754
 2756 391 2755
@@ -3134,10 +3134,10 @@ Memo.precompute_multi 2758
 2766 2765 :i
 2767 Bool.match 2766
 2768 2767 Nat.succ
-Nat._carry:4 2768
-2769 23 Nat._carry:4
+Nat.Nat._carry:4 2768
+2769 23 Nat.Nat._carry:4
 2770 triage 2769
-2771 :c Nat._carry:4
+2771 :c Nat.Nat._carry:4
 2772 2770 2771
 2773 :b 2772
 2774 Bool.match 225
@@ -3150,8 +3150,8 @@ Nat._carry:4 2768
 2781 229 234
 2782 2780 2781
 2783 2779 2782
-Nat._add_3bits_k:3 2783
-2784 160 Nat._add_3bits_k:3
+Nat.Nat._add_3bits_k:3 2783
+2784 160 Nat.Nat._add_3bits_k:3
 2785 :c 2784
 2786 59 2785
 2787 43 2786
@@ -3160,8 +3160,8 @@ Nat._add_3bits_k:3 2783
 2790 2789 245
 2791 2773 2790
 2792 fix 2791
-Nat._add:6 2792
-2793 :b Nat._add:6
+Nat.Nat._add:6 2792
+2793 :b Nat.Nat._add:6
 2794 :b 2793
 2795 151 268
 2796 113 2795
@@ -3171,8 +3171,8 @@ Nat._add:6 2792
 2800 :b 2799
 2801 2800 284
 2802 fix 2801
-Nat._zip_rest:5 2802
-2803 2794 Nat._zip_rest:5
+Nat.Nat._zip_rest:5 2802
+2803 2794 Nat.Nat._zip_rest:5
 2804 24 2803
 Nat.add 2804
 2805 :b Nat.add
@@ -3184,8 +3184,8 @@ Nat.add 2804
 2811 2810 :i
 2812 137 2811
 2813 2807 2812
-Nat._smart_compose:13 2813
-2814 Nat._smart_compose:13 Nat.double
+Nat.Nat._smart_compose:13 2813
+2814 Nat.Nat._smart_compose:13 Nat.double
 2815 767 2814
 2816 :s 2815
 2817 :s Nat.add
@@ -3206,15 +3206,15 @@ Nat.mul_const 2829
 2830 Nat.mul_const 79
 2831 2805 2830
 2832 2763 2831
-Nat._pair_val_tab:2 2832
-2833 :b Nat._pair_val_tab:2
-2834 2833 Nat._decimal_digit:1
+Nat.From_string._pair_val_tab:2 2832
+2833 :b Nat.From_string._pair_val_tab:2
+2834 2833 Nat.From_string._decimal_digit:1
 2835 43 2834
 2836 2753 2835
-Nat._pair_val:3 2836
-2837 18 Nat._pair_val:3
-Nat._gen_carry:4 1304
-2838 △ Nat._gen_carry:4
+Nat.From_string._pair_val:3 2836
+2837 18 Nat.From_string._pair_val:3
+Nat.From_string._gen_carry:4 1304
+2838 △ Nat.From_string._gen_carry:4
 2839 2838 △
 2840 Memo.precompute_multi 2839
 2841 :k 1348
@@ -3389,28 +3389,28 @@ Nat.div2 2853
 3009 2852 3008
 3010 2851 3009
 3011 2846 3010
-Nat._hp_entry:5 3011
+Nat.From_string._hp_entry:5 3011
 3012 18 1578
 3013 3012 333
-3014 Nat._hp_entry:5 3013
+3014 Nat.From_string._hp_entry:5 3013
 3015 2840 3014
-Nat._hundred_plus_tab:6 3015
-3016 149 Nat._hundred_plus_tab:6
+Nat.From_string._hundred_plus_tab:6 3015
+3016 149 Nat.From_string._hundred_plus_tab:6
 3017 :c 3016
 3018 :b 3017
 3019 3018 66
-3020 Nat._hp_entry:5 3019
+3020 Nat.From_string._hp_entry:5 3019
 3021 2840 3020
-Nat._hundred_plus_tab2:7 3021
-3022 18 Nat._hundred_plus_tab2:7
+Nat.From_string._hundred_plus_tab2:7 3021
+3022 18 Nat.From_string._hundred_plus_tab2:7
 3023 :b 3022
 3024 3023 1602
-Nat._hundred_plus:8 3024
-3025 43 Nat._hundred_plus:8
+Nat.From_string._hundred_plus:8 3024
+3025 43 Nat.From_string._hundred_plus:8
 3026 43 3025
 3027 2837 3026
-Nat._pair_step:9 3027
-3028 18 Nat._pair_step:9
+Nat.From_string._pair_step:9 3027
+3028 18 Nat.From_string._pair_step:9
 3029 triage 2
 3030 3029 △
 3031 triage 541
@@ -3428,32 +3428,32 @@ Nat._pair_step:9 3027
 3043 :c 3042
 3044 3040 3043
 3045 37 3044
-Nat._pelim2:10 3045
-3046 :c Nat._pelim2:10
+Nat.From_string._pelim2:10 3045
+3046 :c Nat.From_string._pelim2:10
 3047 3032 3046
-Nat._pelim1:11 3047
-3048 18 Nat._pelim1:11
-3049 3048 Nat._pelim1:11
+Nat.From_string._pelim1:11 3047
+3048 18 Nat.From_string._pelim1:11
+3049 3048 Nat.From_string._pelim1:11
 3050 59 3049
 3051 43 3050
 3052 :c 3051
 3053 :b 3052
-3054 :c Nat._pair_val:3
+3054 :c Nat.From_string._pair_val:3
 3055 3053 3054
 3056 3030 3055
-Nat._elim_e2:13 3056
-3057 :c Nat._elim_e2:13
+Nat.From_string._elim_e2:13 3056
+3057 :c Nat.From_string._elim_e2:13
 3058 3030 3057
-Nat._elim_e1:14 3058
-3059 :c Nat._elim_e1:14
-Nat._from_even:17 3059
-3060 triage Nat._from_even:17
-3061 113 Nat._decimal_digit:1
+Nat.From_string._elim_e1:14 3058
+3059 :c Nat.From_string._elim_e1:14
+Nat.From_string._from_even:17 3059
+3060 triage Nat.From_string._from_even:17
+3061 113 Nat.From_string._decimal_digit:1
 3062 triage 3061
 3063 3062 △
 3064 :b 2753
 3065 :b 3048
-3066 :b Nat._pelim1:11
+3066 :b Nat.From_string._pelim1:11
 3067 :b 3066
 3068 3067 △
 3069 3065 3068
@@ -3461,17 +3461,17 @@ Nat._from_even:17 3059
 3071 136 3070
 3072 3064 3071
 3073 3063 3072
-Nat._elim_o2:15 3073
-3074 :c Nat._elim_o2:15
+Nat.From_string._elim_o2:15 3073
+3074 :c Nat.From_string._elim_o2:15
 3075 3030 3074
-Nat._elim_o:16 3075
-3076 :c Nat._elim_o:16
-Nat._from_odd:18 3076
-3077 :k Nat._from_odd:18
+Nat.From_string._elim_o:16 3075
+3076 :c Nat.From_string._elim_o:16
+Nat.From_string._from_odd:18 3076
+3077 :k Nat.From_string._from_odd:18
 3078 3060 3077
 3079 3078 △
-Nat._parity:19 3079
-3080 :b Nat._parity:19
+Nat.From_string._parity:19 3079
+3080 :b Nat.From_string._parity:19
 3081 :b 759
 3082 113 118
 3083 3081 3082
@@ -3480,8 +3480,8 @@ Nat._parity:19 3079
 3086 115 3085
 3087 :c 3086
 3088 self_apply 3087
-Nat._odd_len:12 3088
-3089 3080 Nat._odd_len:12
+Nat.From_string._odd_len:12 3088
+3089 3080 Nat.From_string._odd_len:12
 3090 3028 3089
 3091 :s 3090
 3092 3091 :i
@@ -3490,13 +3490,13 @@ Nat.from_string__fastest 3092
 3094 150 △
 Parser.one 3094
 3095 Parser.seq_pair Parser.one
-3096 Lambada._mk_scanner:8 △
+3096 Lambada.Compiler._mk_scanner:8 △
 3097 3096 Char.is_digit
-Lambada._scan_digits:9 3097
-3098 3095 Lambada._scan_digits:9
+Lambada.Compiler._scan_digits:9 3097
+3098 3095 Lambada.Compiler._scan_digits:9
 3099 3093 3098
-Lambada.parse_nat:10 3099
-3100 2690 Lambada.parse_nat:10
+Lambada.Compiler.parse_nat:10 3099
+3100 2690 Lambada.Compiler.parse_nat:10
 Lambada.parse_nat 3100
 3101 2686 Lambada.parse_nat
 3102 △ 3101
@@ -3509,15 +3509,15 @@ Lambada.Token_const_str 3107
 3108 Pair.match Lambada.Token_const_str
 3109 Parser.map 3108
 3110 Parser.seq_snd Parser.one
-Lambada._is_quot:20 3103
-3111 Fn.p_or Lambada._is_quot:20
+Lambada.Compiler._is_quot:20 3103
+3111 Fn.p_or Lambada.Compiler._is_quot:20
 3112 :k 1346
 3113 equal_const 3112
 3114 3111 3113
 3115 Fn.p_not 3114
 3116 2308 3115
-Lambada._scan_str_chars:22 3116
-3117 Parser.compose_dep Lambada._scan_str_chars:22
+Lambada.Compiler._scan_str_chars:22 3116
+3117 Parser.compose_dep Lambada.Compiler._scan_str_chars:22
 3118 :b 3117
 3119 :b 1253
 3120 133 995
@@ -3542,8 +3542,8 @@ Lambada._scan_str_chars:22 3116
 3139 3126 3138
 3140 3124 3139
 3141 Lambada.parse_char_map 3140
-Lambada._parse_escaped_char:21 3141
-3142 3122 Lambada._parse_escaped_char:21
+Lambada.Compiler._parse_escaped_char:21 3141
+3142 3122 Lambada.Compiler._parse_escaped_char:21
 3143 :c 3142
 3144 18 3143
 3145 26 List.concat
@@ -3559,7 +3559,7 @@ Lambada._parse_escaped_char:21 3141
 3155 114 3154
 3156 3152 3155
 3157 :b 3156
-3158 3157 Lambada._is_quot:20
+3158 3157 Lambada.Compiler._is_quot:20
 3159 :c 3158
 3160 59 3159
 3161 166 3160
@@ -3571,13 +3571,13 @@ Lambada._parse_escaped_char:21 3141
 3167 182 3166
 3168 3118 3167
 3169 fix 3168
-Lambada._parse_str_body:23 3169
-3170 Parser.seq_fst Lambada._parse_str_body:23
+Lambada.Compiler._parse_str_body:23 3169
+3170 Parser.seq_fst Lambada.Compiler._parse_str_body:23
 3171 59 205
 3172 :s 3171
 3173 151 3172
 Parser.satisfy 3173
-3174 Parser.satisfy Lambada._is_quot:20
+3174 Parser.satisfy Lambada.Compiler._is_quot:20
 3175 3170 3174
 3176 3110 3175
 3177 3109 3176
@@ -3588,8 +3588,8 @@ Lambada.parse_str 3177
 3181 equal_const 3180
 3182 △ 3181
 3183 Parser.seq_fst Parser.one
-Lambada._is_quot:24 3181
-3184 Parser.satisfy Lambada._is_quot:24
+Lambada.Compiler._is_quot:24 3181
+3184 Parser.satisfy Lambada.Compiler._is_quot:24
 3185 3183 3184
 3186 3110 3185
 3187 2690 3186
@@ -3624,8 +3624,8 @@ Lambada.Schar_scott_equals 3208
 3213 :c 3212
 3214 :b 3213
 3215 equal_const 2333
-Lambada._is_equals:26 3215
-3216 3214 Lambada._is_equals:26
+Lambada.Compiler._is_equals:26 3215
+3216 3214 Lambada.Compiler._is_equals:26
 3217 59 3216
 3218 :c 3217
 3219 3197 3218
@@ -3633,8 +3633,8 @@ Lambada._is_equals:26 3215
 3221 3220 :i
 3222 :k 3221
 3223 150 3222
-Lambada._parse_backslash:27 3223
-3224 3190 Lambada._parse_backslash:27
+Lambada.Compiler._parse_backslash:27 3223
+3224 3190 Lambada.Compiler._parse_backslash:27
 3225 △ 3224
 3226 3225 △
 3227 3189 3226
@@ -3643,8 +3643,8 @@ Lambada._parse_backslash:27 3223
 3230 2684 3229
 3231 2680 3230
 3232 2437 3231
-Lambada._parse_token_dispatch:28 3232
-3233 43 Lambada._parse_token_dispatch:28
+Lambada.Compiler._parse_token_dispatch:28 3232
+3233 43 Lambada.Compiler._parse_token_dispatch:28
 3234 :s 3233
 3235 3234 △
 3236 18 3235
@@ -3659,10 +3659,10 @@ none △
 3244 43 3243
 3245 43 3244
 3246 3236 3245
-Lambada._tok_token:31 3246
-3247 1305 Lambada._tok_token:31
+Lambada.Compiler._tok_token:31 3246
+3247 1305 Lambada.Compiler._tok_token:31
 3248 18 3082
-3249 Bool.match Lambada._tok_token:31
+3249 Bool.match Lambada.Compiler._tok_token:31
 3250 2414 118
 3251 Bool.match 118
 3252 3251 167
@@ -3679,16 +3679,16 @@ Char.is_newline 3257
 3262 59 3261
 3263 251 3262
 3264 3260 3263
-Lambada._skip_comment:29 3264
-3265 18 Lambada._skip_comment:29
+Lambada.Compiler._skip_comment:29 3264
+3265 18 Lambada.Compiler._skip_comment:29
 3266 3265 837
 3267 113 3266
 3268 3249 3267
 3269 :b 3268
 3270 :ct 482
 3271 equal_const 3270
-Lambada._is_hash:30 3271
-3272 3269 Lambada._is_hash:30
+Lambada.Compiler._is_hash:30 3271
+3272 3269 Lambada.Compiler._is_hash:30
 3273 767 3272
 3274 3248 3273
 3275 :s 3274
@@ -3700,8 +3700,8 @@ Char.is_whitespace__fastest 3278
 Lambada.is_whitespace_char Char.is_whitespace__fastest
 3279 3275 Lambada.is_whitespace_char
 3280 3247 3279
-Lambada._tok_dispatch:32 3280
-3281 59 Lambada._tok_dispatch:32
+Lambada.Compiler._tok_dispatch:32 3280
+3281 59 Lambada.Compiler._tok_dispatch:32
 3282 :s 3281
 3283 3282 :i
 3284 59 3283

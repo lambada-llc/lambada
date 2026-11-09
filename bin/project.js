@@ -105,6 +105,11 @@ function namespace(root, source_path) {
   return namespace_parts(root, source_path).slice(0, -1).join('');
 }
 
+/** What a source's own names are prefixed with: its namespace, then its file, e.g. `Bool.Bool.`. */
+function source_prefix(root, source_path) {
+  return namespace_parts(root, source_path).join('');
+}
+
 /**
  * The name of the test that a bare top-level expression on `code_line` becomes.
  *
@@ -112,7 +117,7 @@ function namespace(root, source_path) {
  * which line — so nothing else has to be written down and kept in sync.
  */
 function test_symbol(root, source_path, code_line) {
-  return `:test.${namespace_parts(root, source_path).join('')}${code_line}`;
+  return `:test.${source_prefix(root, source_path)}${code_line}`;
 }
 
 /** Where the namespace segments of a `:test.…` or `:source.…` symbol came from. */
@@ -142,7 +147,7 @@ const is_test_symbol = symbol => TEST_SYMBOL.test(symbol);
  * does: the name is the record, so there is nothing else to keep in sync.
  */
 function source_symbol(root, source_path, content) {
-  return `:source.${namespace_parts(root, source_path).join('')}${fingerprint(content)}`;
+  return `:source.${source_prefix(root, source_path)}${fingerprint(content)}`;
 }
 
 /** Read a source symbol back: which source it names, and what it looked like. */
@@ -165,6 +170,7 @@ module.exports = {
   physical_lines,
   fingerprint,
   namespace,
+  source_prefix,
   test_symbol,
   parse_test_symbol,
   is_test_symbol,
