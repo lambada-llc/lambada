@@ -23,8 +23,10 @@
 // The pushes are written out per length rather than spread. Forcing reduces a
 // node to a value, so every operand pushed here holds at most two arguments,
 // and a spread costs a variadic call where a fixed-arity push does not. The
-// exception is rule 2's `y`, which is not forced, so its common lengths are
-// unrolled and the general case kept.
+// exception is rule 2's `y`, which is not forced: a value's entries are pushed
+// per length, and an unreduced one is not copied at all (see the rule).
+
+const leaf = [];
 
 function force_root(root) {
   const work = [root];
@@ -57,17 +59,18 @@ function force_root(root) {
           continue outer;
         }
         steps.count++;
-        // [z, ...y] is tricky:
-        // - if y is unreduced and we don't force it, we may end up reducing it multiple times
-        // - if y is unreduced and we force it, it might end up getting dropped
+        // y z, with y unreduced, is △ △ y △ z rather than [z, ...y]. Copying y's
+        // entries would reduce y again at every use, and forcing it now would
+        // reduce it where y z may be dropped; as K's first argument, y is forced
+        // in place once y z is, and every other use of it sees the value.
         const yz =
-          y.length === 0
-            ? [z]
-            : y.length === 1
-              ? [z, y[0]]
-              : y.length === 2
-                ? [z, y[0], y[1]]
-                : [z, ...y];
+          y.length > 2
+            ? [z, leaf, y, leaf]
+            : y.length === 0
+              ? [z]
+              : y.length === 1
+                ? [z, y[0]]
+                : [z, y[0], y[1]];
         if (u.length === 0) s.push(yz, z);
         else if (u.length === 1) s.push(yz, z, u[0]);
         else s.push(yz, z, u[0], u[1]);
@@ -122,7 +125,7 @@ function force_root(root) {
 const steps = { count: 0 };
 
 const evaluator = {
-  leaf: [],
+  leaf,
   stem: (u) => [u],
   fork: (u, v) => [v, u],
   apply: (a, b) => [b, ...a],
