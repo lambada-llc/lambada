@@ -57,7 +57,7 @@ $ ./lambada.js <command> [options]
 | `--jobs <n>` | Compile this many sources, or evaluate this many tests, at once, each in a thread with a reducer of its own. Defaults to one per core, as far as 3 GB each goes: a reducer peaks at about 1.1 GB under the runner's default collection threshold. |
 | `--compiler <file>` | The compiler to use, as a `.dag`: a function from a whole source's text to its DAG, like `compile_file`. Defaults to the one shipped in [`compiler/`](../compiler/). |
 | `--prelude <file>` | The combinator definitions compiled code refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |
-| `--tree-calculus <path>` | A [tree-calculus](https://github.com/lambada-llc/tree-calculus) checkout to use, instead of downloading the published runtime. Also settable as `$LAMBADA_TREE_CALCULUS`. |
+| `--tree-calculus <path>` | A [tree-calculus](https://github.com/lambada-llc/tree-calculus) checkout to use, instead of downloading the revision [`runtime.js`](./runtime.js) pins. Also settable as `$LAMBADA_TREE_CALCULUS`. |
 | `--eval`, `-e <source>` | For `repl`: evaluate this and exit, instead of reading input. Repeat it for several, in order. |
 | `--format <f>` | For `repl`: how a result is shown. `auto` (the default) shows it as an expect test does: through `_to_string` when one is in scope, a file described, otherwise a term. `term`, `nat`, `string`, `bool`, `ternary`, `dag` or `minbin` show the value itself. |
 | `--timeout <s>` | For `repl`: stop an expression that runs longer than this many seconds, and carry on with the next. |
@@ -112,5 +112,5 @@ echo 'Nat.mul 6 7' | lambada.js repl src/.dag-bundle-canonical --format nat
 | `expect-test.js` | Evaluating tests and writing results back into sources. |
 | `repl.js` | The interactive session. |
 | `result.js` | How a value is shown, by `expect-test` and the repl alike. |
-| `runtime.js` | Locating the tree calculus runtime. |
+| `runtime.js` | Locating the tree calculus runtime, and the revision it downloads when there is no checkout. |
 | `test.js` | Tests for the conventions in `project.js`, the repl, and that the playground's [snippets](../examples/snippets/) need nothing but `△` and the ones before them (what CI runs). |

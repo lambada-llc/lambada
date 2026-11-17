@@ -82,7 +82,7 @@ Options:
                         one shipped beside it.
   --tree-calculus <path>
                         A tree-calculus checkout to use, instead of downloading
-                        the published runtime. Also settable as
+                        the revision bin/runtime.js pins. Also settable as
                         $LAMBADA_TREE_CALCULUS.
 
 build is the steps below; between compile and expect-test, link and
