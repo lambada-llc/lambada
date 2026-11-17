@@ -29,7 +29,6 @@
 // is written into a sibling output directory instead (`out/` unless the project
 // names another), and the comment records its name and content hash.
 
-const { createHash } = require('crypto');
 const {
   mkdirSync, readdirSync, readFileSync, rmdirSync, unlinkSync, writeFileSync,
 } = require('fs');
@@ -39,6 +38,7 @@ const {
   fingerprint, is_lamb_file, is_source_line, is_source_symbol, is_test_symbol,
   parse_source_symbol, parse_test_symbol, physical_lines,
 } = require('./project.js');
+const { describe_file, fork, halves } = require('./result.js');
 
 // Only these lines are ours to rewrite; anything else in the source is the
 // author's and is left alone.
@@ -48,15 +48,6 @@ const RESULT_TAIL = '#   ';
 function comment_block(result) {
   const [first, ...rest] = result.replace(/\n+$/, '').split('\n');
   return [RESULT_HEAD + first, ...rest.map(line => RESULT_TAIL + line)];
-}
-
-/**
- * What a file result is recorded as: everything the file is, on one line — the
- * hash unabbreviated, so `shasum -a 256 <file>` reproduces it.
- */
-function file_result(name, media_type, bytes) {
-  const hash = createHash('sha256').update(bytes).digest('hex');
-  return `${name} ${media_type} ${bytes.length} bytes sha256:${hash}`;
 }
 
 /**
@@ -178,18 +169,14 @@ function check_compiled_from(source_path, content, recorded) {
 }
 
 /**
- * One test as a DAG to be read against the library, ending in a fork of the two
- * values it yields: the expression itself, which is what a file has to be
- * recognized on, and the expression through `_to_string`, which is what the
- * result comment says.
- *
- * One fork rather than two reductions, because the first value is inside the
- * second — asked for separately they would be computed twice, and neither half
- * is forced before something reads it.
+ * One test as a DAG to be read against the library, ending in the fork of the
+ * expression and the expression through `_to_string`, which is what the result
+ * comment says.
  */
-function test_dag({ box, LEAF }, own, expression, symbol) {
-  const [stem, pair] = [box(':stem'), box(':pair')];
-  own.lines.push([stem, box(LEAF), box(expression)], [pair, stem, box(symbol)]);
+function test_dag(runtime, own, expression, symbol) {
+  const { box } = runtime;
+  const { pair, lines } = fork(runtime, box(expression), box(symbol));
+  own.lines.push(...lines);
   return own.toString([pair.symbol]);
 }
 
@@ -246,8 +233,7 @@ function serve({ tree_calculus, library, bundle_path }) {
   const runtime = require('./runtime.js').load(tree_calculus);
   const { LEAF, environment, evaluator, marshal, to_file } = runtime;
   const get = environment(evaluator, library, { origin: bundle_path });
-  const not_a_pair = () => { throw new Error('a test did not reduce to a pair of values'); };
-  const halves = evaluator.triage(not_a_pair, not_a_pair, (raw, rendered) => [raw, rendered]);
+  const apart = halves(runtime);
 
   // Read the library before the first test rather than during it — asking for
   // anything at all is what pulls it into scope, and what it costs is its own
@@ -262,7 +248,7 @@ function serve({ tree_calculus, library, bundle_path }) {
     const { index, text, where } = task;
     process.stderr.write(`  ${where}\n`);
     try {
-      const [raw, rendered] = halves(get.reduce(text));
+      const [raw, rendered] = apart(get.reduce(text));
       const file = to_file(evaluator, raw);
       const answer = file
         ? { file: { name: file.name, media_type: file.media_type, bytes: Buffer.from(file.bytes).toString('base64') } }
@@ -358,7 +344,7 @@ async function expect_test({ runtime, root, out = 'out', bundle_path, jobs = 1, 
       writeFileSync(path, bytes);
       stale.delete(path);
     }
-    blocks.get(source_path).set(code_line, comment_block(file ? file_result(file.name, file.media_type, bytes) : result));
+    blocks.get(source_path).set(code_line, comment_block(file ? describe_file({ ...file, bytes }) : result));
   }
   for (const [source_path, content] of contents) {
     write_results(source_path, content, blocks.get(source_path));
