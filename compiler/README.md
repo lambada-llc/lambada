@@ -20,7 +20,7 @@ text changes. The spanned variant emits the same DAG plus `X::s,e Y` alias
 lines recording where each node was written — what the
 [codemirror package](../codemirror/) resolves go to definition on.
 
-`compile.sh` needs `curl` (it fetches the latest tree calculus runtime) and Node.js; it is a thin wrapper over `bin/lambada.js emit`, which needs only Node.js.
+`compile.sh` is a thin wrapper over `bin/lambada.js emit`. Both need Node.js, and `curl` the first time, to fetch the tree calculus runtime at the revision [`bin/runtime.js`](../bin/runtime.js) pins; `compile.sh` leaves that runtime's CLI beside it as `tree-calculus.js`, which runs what it writes.
 
 ## Examples
 
