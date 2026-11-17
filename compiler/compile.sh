@@ -7,7 +7,7 @@ set -euo pipefail
 # Compiles the definitions and the expression, links them, and writes the DAG
 # of the expression's value. `lambada emit` does the compiling; the runtime's
 # CLI does the linking, and is what runs the result afterwards. Both use the
-# runtime revision bin/runtime.js pins, or $LAMBADA_TREE_CALCULUS.
+# runtime revision tree-calculus-revision names, or $LAMBADA_TREE_CALCULUS.
 
 here="$(dirname "$0")"
 # Compiled sources are kept beside this script, unless the caller keeps them

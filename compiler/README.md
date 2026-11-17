@@ -4,6 +4,9 @@
 by [arboretum's build](https://github.com/lambada-llc/arboretum/blob/main/build.sh), which extracts them
 from the library it just compiled and writes them here.
 
+`tree-calculus-revision` is the tree calculus runtime they were built and probed with,
+which [`bin/runtime.js`](../bin/runtime.js) downloads when no checkout is given.
+
 `compile_file` compiles a whole source: it splits it into statements by
 indentation, compiles each, and names each bare expression's value
 `:line.<n>` after the code line it ends on, which is what an expect test is
@@ -20,7 +23,7 @@ text changes. The spanned variant emits the same DAG plus `X::s,e Y` alias
 lines recording where each node was written — what the
 [codemirror package](../codemirror/) resolves go to definition on.
 
-`compile.sh` is a thin wrapper over `bin/lambada.js emit`. Both need Node.js, and `curl` the first time, to fetch the tree calculus runtime at the revision [`bin/runtime.js`](../bin/runtime.js) pins; `compile.sh` leaves that runtime's CLI beside it as `tree-calculus.js`, which runs what it writes.
+`compile.sh` is a thin wrapper over `bin/lambada.js emit`. Both need Node.js, and `curl` the first time, to fetch the tree calculus runtime at the revision `tree-calculus-revision` names; `compile.sh` leaves that runtime's CLI beside it as `tree-calculus.js`, which runs what it writes.
 
 ## Examples
 

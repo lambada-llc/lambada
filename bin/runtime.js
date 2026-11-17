@@ -7,15 +7,16 @@
 // which has no dependencies of its own beyond Node.
 //
 // Point at a checkout with --tree-calculus or $LAMBADA_TREE_CALCULUS. Failing
-// that we download the runtime at REVISION and keep it, so every run without a
-// checkout uses the same one, and moving to a newer runtime is a change to
-// REVISION, tested like any other.
+// that we download the runtime at the revision compiler/tree-calculus-revision
+// names, and keep it, so every run without a checkout uses the same one. The
+// build that writes the compiler beside it writes that revision too: the one
+// the compiler was built and probed with.
 
 const { execFileSync } = require('child_process');
-const { existsSync, mkdirSync, renameSync } = require('fs');
+const { existsSync, mkdirSync, readFileSync, renameSync } = require('fs');
 const { dirname, resolve } = require('path');
 
-const REVISION = 'dc0209ea817ccb5b15f565b294e4394d7b43edc4';
+const REVISION = readFileSync(resolve(__dirname, '../compiler/tree-calculus-revision'), 'utf8').trim();
 const CACHE = resolve(__dirname, '.tree-calculus', REVISION);
 
 /** `file` of the runtime's bin/ in `hint`: a checkout, a bin directory, or a file beside it. */
