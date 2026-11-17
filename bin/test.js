@@ -266,6 +266,9 @@ check('repl: a result is shown in the format asked for, or as a term when it is 
     assert.strictEqual(repl.show(number, 'nat'), '6');
     assert.strictEqual(repl.show(text, 'string'), 'hi');
     assert.throws(() => repl.show(text, 'bool'), /^Error: not a bool .*; as a term: /);
+    const [file] = repl.prepare('', { source: '△ (△ "a.txt" "text/plain") "hi"\n' }).expressions;
+    const hash = require('crypto').createHash('sha256').update('hi').digest('hex');
+    assert.strictEqual(repl.show(file, 'auto'), `a.txt text/plain 2 bytes sha256:${hash}`, 'a file, as expect-test records it');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

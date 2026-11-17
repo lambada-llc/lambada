@@ -111,5 +111,6 @@ echo 'Nat.mul 6 7' | lambada.js repl src/.dag-bundle-canonical --format nat
 | `compile.js` | Applying the compiler to each source and namespacing the result. |
 | `expect-test.js` | Evaluating tests and writing results back into sources. |
 | `repl.js` | The interactive session. |
+| `result.js` | How a value is shown, by `expect-test` and the repl alike. |
 | `runtime.js` | Locating the tree calculus runtime. |
 | `test.js` | Tests for the conventions in `project.js`, the repl, and that the playground's [snippets](../examples/snippets/) need nothing but `△` and the ones before them (what CI runs). |

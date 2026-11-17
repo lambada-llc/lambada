@@ -26,6 +26,7 @@
 const { readFileSync } = require('fs');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const { is_lamb_file, physical_lines } = require('./project.js');
+const { describe_file, fork, halves } = require('./result.js');
 
 // As in compile.js: a bare expression's value is named after the code line its
 // statement ends on, and a statement that did not compile is recorded the same way.
@@ -66,8 +67,7 @@ function session_evaluator({ runtime, environment: paths, compiler, prelude: pre
   const nameable = names => [...new Set(names)].filter(is_nameable).sort();
   const names = nameable(defined);
 
-  const not_a_pair = () => { throw new Error('expected a pair'); };
-  const halves = evaluator.triage(not_a_pair, not_a_pair, (raw, shown) => [raw, shown]);
+  const apart = halves(runtime);
   const text_of = bytes => new TextDecoder().decode(bytes);
 
   /**
@@ -112,10 +112,9 @@ function session_evaluator({ runtime, environment: paths, compiler, prelude: pre
       const at = Number(test[1]);
       const expression = { line: code ? code[at] : at, value: line[0].symbol };
       if (to_string) {
-        // One fork of the value and the value shown, so that showing it does
-        // not compute it a second time; the value is what a file is told by.
-        const [shown, stem, pair] = [box(`:shown.${at}`), box(`:stem.${at}`), box(`:pair.${at}`)];
-        lines.push([shown, to_string, line[0]], [stem, box(LEAF), line[0]], [pair, stem, shown]);
+        const shown = box(`:shown.${at}`);
+        const { pair, lines: forked } = fork(runtime, line[0], shown, `.${at}`);
+        lines.push([shown, to_string, line[0]], ...forked);
         expression.pair = pair.symbol;
       }
       expressions.push(expression);
@@ -128,9 +127,9 @@ function session_evaluator({ runtime, environment: paths, compiler, prelude: pre
   function show({ module, value, pair }, format) {
     const auto = format === 'auto';
     const reduce = symbol => get.reduce(module.extract([symbol]).toString());
-    const [raw, shown] = auto && pair ? halves(reduce(pair)) : [reduce(value), null];
+    const [raw, shown] = auto && pair ? apart(reduce(pair)) : [reduce(value), null];
     const file = auto && to_file(evaluator, raw);
-    if (file) return `file ${file.name} (${file.media_type}, ${file.bytes.length} bytes)`;
+    if (file) return describe_file(file);
     if (shown) return marshal.to_string(shown);
     const as = auto ? 'term' : format;
     try {
