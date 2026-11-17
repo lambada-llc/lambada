@@ -47,6 +47,7 @@ $ ./lambada.js <command> [options]
 | `compile` | Compile every `.lamb` file under the root into a sibling `.<name>.dag` module, namespaced by where it lives. Modules from a previous run are removed first, so a deleted source leaves nothing behind. Each compiled source is kept in the runtime's cache, keyed by the source and the compiler, so a rebuild compiles only the sources that changed, and changing the compiler correctly invalidates everything. |
 | `expect-test <bundle>` | Evaluate the tests in a linked, canonicalized bundle and record each result in the source it came from. A bundle that is linked but not canonicalized is refused. Each result is kept in the runtime's cache under the fingerprint of its test's term, so a rerun evaluates only the tests whose terms changed. |
 | `emit [file]` | One source as the compiler emits it, after the prelude, on standard output, nothing named or qualified. Reads stdin without a file. For a snippet to run against a library, or to see what the compiler makes of a file. |
+| `repl [file]...` | An interactive session against the given DAG files, linked into one environment, with any `.lamb` sources among them loaded into it — see [The repl](#the-repl). |
 
 | Option | |
 | --- | --- |
@@ -57,6 +58,9 @@ $ ./lambada.js <command> [options]
 | `--compiler <file>` | The compiler to use, as a `.dag`: a function from a whole source's text to its DAG, like `compile_file`. Defaults to the one shipped in [`compiler/`](../compiler/). |
 | `--prelude <file>` | The combinator definitions compiled code refers to, as `.dag` lines, put at the top of each module. They belong to the compiler that emits those references, so a project passing its own `compiler` passes its prelude too. Defaults to the one shipped beside it. |
 | `--tree-calculus <path>` | A [tree-calculus](https://github.com/lambada-llc/tree-calculus) checkout to use, instead of downloading the published runtime. Also settable as `$LAMBADA_TREE_CALCULUS`. |
+| `--eval`, `-e <source>` | For `repl`: evaluate this and exit, instead of reading input. Repeat it for several, in order. |
+| `--format <f>` | For `repl`: how a result is shown. `auto` (the default) shows it as an expect test does: through `_to_string` when one is in scope, a file described, otherwise a term. `term`, `nat`, `string`, `bool`, `ternary`, `dag` or `minbin` show the value itself. |
+| `--timeout <s>` | For `repl`: stop an expression that runs longer than this many seconds, and carry on with the next. |
 
 Compiling produces one [DAG module](https://github.com/lambada-llc/tree-calculus/tree/main/conventions#dag-modules) per source. Putting those together into one program is [`dag.js`](https://github.com/lambada-llc/tree-calculus/tree/main/bin)'s job, so `build` without libraries is:
 
@@ -73,6 +77,30 @@ A project using [arboretum](https://github.com/lambada-llc/arboretum) as its sta
 lambada.js build --library submodules/arboretum/src
 ```
 
+## The repl
+
+`repl` evaluates LambAda against an environment of DAG files: a project's `.dag-bundle-canonical`, a library's modules, anything `dag.js link` takes. Several are linked into one. The definitions of `.lamb` sources given alongside are then loaded in order, as `:load` would.
+
+```
+$ lambada.js repl src/.dag-bundle-canonical
+λ> double = \x Nat.add x x
+λ> _to_string = List.to_source Nat.to_source
+λ> List.map double [1, 2, 3]
+[2; 4; 6]
+```
+
+A session is a DAG that grows one step at a time: an input compiled on its own, or a file — a `.lamb` source compiled, a DAG as it is. In a DAG a reference means the definition above it, so a step's definitions stay in scope and a later one hides an earlier one, as in a file. The bare expressions an input adds are evaluated and shown as an expect test shows them — through `_to_string` when one is in scope, a file described, otherwise a term — unless `--format` asks for a format, which shows the value itself. A file's bare expressions are its tests, `expect-test`'s business, so loading one brings its definitions only. A name a step uses that nothing defines is reported before anything runs, and a statement that does not compile is named by the input's own line.
+
+Evaluation runs in a thread of its own, so Ctrl-C (or `--timeout`) stops a term that does not finish without losing the session.
+
+An input whose last statement does not compile yet continues on an indented line, as a statement does in a source, until it compiles or an empty line ends it. Alt-Enter starts a new line without running the input, and a pasted block runs as one input. `:load <file>` makes the definitions of a `.lamb` source, or of any other file as a DAG, the next step. `:undo [n]` takes back the last step that defined something, or the last n. `:names <prefix>` lists the names in scope, `:format` and `:quit` do what they say, and `:help` lists them.
+
+Not at a terminal — with `--eval`, or input piped in — it shows each expression's result on standard output, reports problems on standard error, and exits with status 1 if there were any:
+
+``` bash
+echo 'Nat.mul 6 7' | lambada.js repl src/.dag-bundle-canonical --format nat
+```
+
 ## Layout
 
 | | |
@@ -82,5 +110,6 @@ lambada.js build --library submodules/arboretum/src
 | `project.js` | What a directory of LambAda sources means: how a path becomes a namespace and back, and which lines of a source are code. |
 | `compile.js` | Applying the compiler to each source and namespacing the result. |
 | `expect-test.js` | Evaluating tests and writing results back into sources. |
+| `repl.js` | The interactive session. |
 | `runtime.js` | Locating the tree calculus runtime. |
-| `test.js` | Tests for the conventions in `project.js`, and that the playground's [snippets](../examples/snippets/) need nothing but `△` and the ones before them (what CI runs). |
+| `test.js` | Tests for the conventions in `project.js`, the repl, and that the playground's [snippets](../examples/snippets/) need nothing but `△` and the ones before them (what CI runs). |
