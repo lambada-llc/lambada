@@ -1,11 +1,19 @@
 ## Source
 
-`compile_file.dag`, `compile_to_dag.dag`, `compile_to_dag_with_spans.dag` and `statements.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
+`compile.dag`, `compile_file.dag`, `compile_to_dag.dag`, `compile_to_dag_with_spans.dag` and `statements.dag` are built from [`src/lambada/compiler.lamb`](https://github.com/lambada-llc/arboretum/blob/main/src/lambada/compiler.lamb)
 by [arboretum's build](https://github.com/lambada-llc/arboretum/blob/main/build.sh), which extracts them
 from the library it just compiled and writes them here.
 
 `tree-calculus-revision` is the tree calculus runtime they were built and probed with,
 which [`bin/runtime.js`](../bin/runtime.js) downloads when no checkout is given.
+
+`compile` compiles one expression straight to the tree it denotes, prelude
+included, so it is the one file that needs nothing but the tree calculus
+runtime's [`main.js`](https://github.com/lambada-llc/tree-calculus/tree/main/bin):
+
+``` bash
+./main.js -dag -file compile.dag -string '\x \y x' -nat 42 -nat 1337   # 42
+```
 
 `compile_file` compiles a whole source: it splits it into statements by
 indentation, compiles each, and names each bare expression's value
